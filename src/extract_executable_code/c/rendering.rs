@@ -280,7 +280,8 @@ fn c_name(name: &str) -> String {
 fn is_c_runtime_name(name: &str) -> bool {
     if matches!(
         name,
-        "abort"
+        "main"
+            | "abort"
             | "exit"
             | "_Exit"
             | "atexit"

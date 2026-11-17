@@ -93,6 +93,7 @@ identity may need the defining equation as an explicit bridge.
 | Basic proof writing | Turn a mathematical sentence into the right declaration, goal, proof block and witness | [Basic decisions](#basic-decisions-before-writing-a-proof) |
 | Dictionaries and practice | Look up native contracts and choose a mathematical proof formulation | [S](#statement-dictionary), [O](#object-dictionary), [F/C](#builtin-atomic-fact-dictionary-and-relationships), [pitfalls](#pitfalls-and-missing-proof-steps), [recipes](#recommended-mathematical-formulations) |
 | Advanced interfaces | Read deeper function, struct and template contracts | [Interface details](#advanced-interface-details) |
+| Calculus | Find limits, continuity, derivatives, integrals and their maintained source libraries | [Calculus](#calculus) |
 | Native rules and inference | Find extra guarded laws, calculation limits and inference triggers | [Verification rules](#builtin-verification-rules), [inference](#builtin-inference) |
 | Execution and extraction | Run algorithms/eval and inspect Python/C extraction boundaries | [Executable path](#execution-and-extraction) |
 | Compatibility and evidence | Interpret removed forms, assumptions and verification records | [Compatibility](#removed-and-renamed-public-forms), [coverage](#verification-and-coverage), [appendix](#appendix) |
@@ -170,7 +171,7 @@ Then use [syntax](#syntax-reference), [fact grammar](#factual-statements),
 The S/O/F/C dictionaries and P/R entries provide the detailed lookup route.
 
 The final technical chapters continue with [advanced interfaces](#advanced-interface-details),
-[native rules](#builtin-verification-rules) and [inference](#builtin-inference),
+[calculus](#calculus), [native rules](#builtin-verification-rules) and [inference](#builtin-inference),
 then [execution/extraction](#execution-and-extraction). Each deep note links
 back to its dictionary entry; domains, facts and scope have the same meaning
 in both views.
@@ -640,9 +641,11 @@ proof route. Existing explicit BT names and arities remain available.
 
 ### Builtin short names (preview)
 
-The following short spellings normalize during parsing to the existing builtin
-objects, predicates and theorem calls. Each pair has the same argument order,
-domains and proof requirements. Stored expressions and semantic JSON fields
+The following short spellings normalize during parsing to builtin objects,
+predicates and theorem calls. Predicate and theorem aliases preserve argument
+order, domains and proof requirements. Integral expression syntax introduces
+a bound variable and supplies an anonymous function to the canonical operation.
+Stored expressions and semantic JSON fields
 use the long spelling, while source excerpts retain the text the author wrote.
 Both spellings can be used together in one proof.
 
@@ -653,7 +656,7 @@ Both spellings can be used together in one proof.
 | `grad_at(f,p,n)` | `gradient_at(f,p,n)` |
 | `set_sum(S,f)` | `finite_set_sum(S,f)` |
 | `set_prod(S,f)` | `finite_set_product(S,f)` |
-| `integ(f,a,b)` | `integral(f,a,b)` |
+| `integ(x,a,b,E)` | `integral(fn(x '[min(a,b),max(a,b)]) R {E},a,b)` |
 
 | Predicate short name | Canonical name |
 | --- | --- |
@@ -714,15 +717,15 @@ deriv(square,3)=derivative(square,3)=6
 
 Short names are reserved in declarations, just like their long forms. Alias
 recognition uses the relevant object, predicate or bare-theorem position.
-Qualified names follow module resolution. `integ` has exactly the existing
-three-argument real Riemann integral contract. `lim(a)` and `fn_lim(f,x0)`
+Qualified names follow module resolution. `integ(x,a,b,E)` takes exactly four
+arguments. The function interface is `integral(f,a,b)`. `lim(a)` and `fn_lim(f,x0)`
 retain their separate contracts.
 
 The [runnable mixed-spelling example](../examples/wd/builtin_short_names.lit)
 also covers finite aggregates and explicit integral theorem selection.
 
 For integral predicates, `$has_integ(f,a,b,I)` specifies a candidate value,
-`$integrable(f,a,b)` states existence, and `integ(f,a,b)` selects the value.
+`$integrable(f,a,b)` states existence, and `integral(f,a,b)` selects the value.
 The `fold` and `unfold` theorem suffixes introduce a predicate from its
 defining clauses and recover those clauses, respectively. `integ_congr`
 transports an integral across pointwise-equal functions, `integ_mono` uses
@@ -735,7 +738,7 @@ have fn square(x R) R=x^2
 release thm integ_pow(square,0,1,2)
 $has_integ(square,0,1,1/3)
 $integrable(square,0,1)
-integ(square,0,1)=1/3
+integral(square,0,1)=1/3
 ```
 
 The [integral alias example](../examples/wd/riemann_short_names.lit) also
@@ -6674,79 +6677,8 @@ For a checked complete unary domain `fn(x S) T`, both inverse-image forms are su
 
 **Source and evidence:** [bounded construction](../src/execute/execute_fact_stmt/function_preimage.rs), [maintained strict example](../examples/wd/function_preimages.lit), and `cargo test --release function_preimages`. `have by fn_preimage` continues to extract witnesses from known function-range membership.
 
-### Finite real Riemann integrals (preview)
-
-`integral(f,a,b)` is the finite real oriented Riemann integral. Its domain
-requires `$is_riemann_integrable(f,a,b)` alongside the function and interval
-conditions below. WD asks the shared verifier to prove these conditions at
-the caller's permitted search level and retains the resulting evidence.
-Existing facts, candidate inferences, definition expansion and polynomial or
-continuous-expression strategies are handled by that verifier.
-`$has_riemann_integral(f,a,b,I)` states a particular integral value. Computing
-that value uses the integral equality rules.
-
-The actual complete unary real function domain must cover the closed interval
-between the endpoints. Equal endpoints require the function to be defined
-there and give zero; reversing endpoints negates the integral. The definition
-uses boundedness and Darboux step-function enclosures of arbitrarily small
-upper-minus-lower sum. Continuity is sufficient for integrability and is not
-part of its definition. This ordinary Riemann integral excludes interior
-singularities and unbounded functions.
-
-```litex
-have fn square(x R) R=x^2
-integral(square,0,1)=1/3
-integral(square,0,1)+2=7/3
-```
-
-An arbitrary real function still requires provable integrability, including
-inside `0*integral(f,0,1)`. A guarded function may require an explicit
-interval-in-domain proof;
-see [actual-domain examples](../examples/real_analysis/riemann_integral_domains.lit).
-
-These reserved explicit theorem calls check every premise before publishing
-their conclusions. Functions named `h` are supplied result functions: the
-corresponding pointwise formula must hold on the integration interval.
-
-| Call | Contract |
-| --- | --- |
-| `riemann_integral_from_definition(f,a,b,I)` | Prove the defining Darboux clauses to introduce the candidate. |
-| `riemann_integral_to_definition(f,a,b,I)` | Expose those clauses from a candidate. |
-| `riemann_integral_exists(f,a,b,I)` | A candidate supplies real candidate existence. |
-| `riemann_integrable_from_candidate(f,a,b,I)` | A candidate supplies integrability. |
-| `riemann_integral_selected(f,a,b)` | Existing integrability supplies the candidate at the selected value. |
-| `riemann_integral_unique(f,a,b,I,J)` | Two candidates have equal values. |
-| `riemann_integral_zero(f,a)` | The singleton integral is zero under the actual-domain condition. |
-| `riemann_integral_constant(f,a,b,c)` | A function equal to `c` throughout the interval has value `c*(b-a)`. |
-| `riemann_integral_power(f,a,b,n)` | For natural `n` and `f(x)=x^n`, give `(b^(n+1)-a^(n+1))/(n+1)`. |
-| `riemann_integral_reverse(f,a,b,I)` | Reverse a proved candidate and negate its value. |
-| `riemann_integral_add(f,g,h,a,b,I,J)` | Candidates for `f,g` and `h(x)=f(x)+g(x)` give value `I+J`. |
-| `riemann_integral_subtract(f,g,h,a,b,I,J)` | The corresponding difference gives value `I-J`. |
-| `riemann_integral_scale(f,h,a,b,c,I)` | A candidate and `h(x)=c*f(x)` give value `c*I`. |
-| `riemann_integral_split(f,a,c,b,I,J)` | With `c` between the endpoints, combine candidates on the two pieces. |
-| `riemann_integral_extensional(f,g,a,b,I)` | Pointwise equality on the interval transfers a candidate between actual domains. |
-| `riemann_integral_compare(f,g,a,b,I,J)` | For `a<=b`, pointwise order and two candidates give `I<=J`. |
-| `riemann_integral_bound(f,a,b,I,M)` | A candidate, `M>=0`, and `abs(f(x))<=M` give `abs(I)<=M*abs(b-a)`. |
-| `riemann_integrable_continuous(f,a,b)` | Continuity at every point of the closed interval supplies integrability. |
-| `riemann_integral_newton_leibniz(f,F,a,b)` | Integrable `f`, closed-interval continuity of `F`, and `F'=f` at every interior point give value `F(b)-F(a)`. |
-| `riemann_integral_step(f,a,c,b,L,U)` | For `a<=c<=b`, constants on `[a,c)` and `(c,b]` give `L*(c-a)+U*(b-c)`; the value at `c` may differ. |
-| `darboux_enclosure_from_definition(f,a,b,n,p,l,u)` | Check a positive-length partition and pointwise lower/upper cell bounds to introduce `$is_darboux_enclosure(...)`. |
-| `darboux_enclosure_to_definition(f,a,b,n,p,l,u)` | Expose those finite partition and bound conditions. |
-
-The enclosure certificate has seven arguments. Its finite index families use
-guarded integer domains (`p`: `0<=k<=n`; `l,u`: `1<=k<=n`). Merely writing
-the certificate never proves it. The integral definition quantifies over
-arbitrary precision and bounds the function throughout every cell. Convergence
-of one sampled sum sequence alone does not establish integrability.
-
-See the [primary example](../examples/real_analysis/riemann_integral.lit),
-[explicit theorem examples](../examples/stmt_nodes/release_and_expand/builtin_thm/riemann_integral_power.lit),
-and [implementation](../src/execute/execute_fact_stmt/riemann_integral.rs).
-LaTeX output renders the selected integral. Lean replay supports the existing
-candidate and existence routes and checked integrability obtained from known
-facts. Automatic integrability and structural integral-value strategies retain
-explicit unsupported replay boundaries.
-
+The finite real integral `integral(f,a,b)`, its integrability conditions and
+explicit theorem interfaces are collected in [Calculus](#calculus-integrals).
 
 ### O82. Sums over integer ranges
 
@@ -9401,6 +9333,8 @@ claim:
         ? from n = 1:
             a^n = a^1 = a
         ? induc:
+            n $in N+
+            0 <= a^n
             a^(n+1) = a^n*a^1 = a^n*a <= a^n*1 = a^n <= a
 ```
 
@@ -10303,6 +10237,495 @@ disjunctive defining condition or admit an invalid template argument.
 
 **Entry:** [O93](#o93-template-instances).
 
+<a id="calculus"></a>
+
+## Calculus
+
+This chapter is the maintained entry point for calculus in Litex. Start here
+when writing calculus proofs or updating calculus support, then follow the
+linked implementation, examples and source-library contracts.
+
+```litex
+have fn square(x R) R=x^2
+deriv(square,3)=6
+integral(square,0,1)=1/3
+```
+
+Both equations use ordinary mathematical values. The shared verifier checks
+differentiability or integrability before the value proof. For this polynomial,
+the supported expression rules establish those conditions directly. For an
+arbitrary function, supply the required existence or regularity facts.
+
+| Topic | Main interfaces | Reference |
+| --- | --- | --- |
+| Sequences | `$has_seq_limit(a,L)`, `lim(a)` | [Sequence limits](#calculus-sequence-limits) |
+| Function limits | `fn_lim`, `lim_left`, `lim_right`, `lim_pos_inf`, `lim_neg_inf` | [Function limits](#calculus-function-limits) |
+| Continuity | `$cont_at`, `$cont_left`, `$cont_right`, `$unif_cont` | [Continuity](#calculus-continuity) |
+| First derivatives | `deriv(f,x)`, `$diff_at(f,x)` | [Differentiation](#calculus-derivatives) |
+| Definite integrals and primitives | `integral(f,a,b)`, `$integrable`, `$antideriv_on` | [Integration](#calculus-integrals) |
+| Several variables | `pderiv`, `grad_at`, `jacobian`, `scalar_differential`, `differential` | [Multivariable calculus](#calculus-multivariable) |
+| Higher orders, regularity and series | Imported source definitions and theorems | [Source libraries](#calculus-source-libraries) |
+
+### Names and conditions
+
+Predicate and theorem aliases retain their canonical contracts. Integral
+expression syntax introduces a bound variable and constructs an anonymous
+function before using the canonical integral operation. This chapter uses
+the short spellings in new examples. Diagnostic output may use canonical names.
+The parser's alias registry defines the exact correspondence.
+[Alias registry](../src/parse/builtin_aliases.rs)
+
+| Short form | Canonical form |
+| --- | --- |
+| `deriv(f,x)` | `derivative(f,x)` |
+| `$diff_at(f,x)` | `$is_differentiable_at(f,x)` |
+| `$has_deriv_at(f,x,v)` | `$has_derivative_at(f,x,v)` |
+| `$cont_at(f,x)` | `$is_continuous_at(f,x)` |
+| `$cont_left(f,x)` / `$cont_right(f,x)` | `$is_continuous_left(f,x)` / `$is_continuous_right(f,x)` |
+| `$unif_cont(f)` | `$is_uniformly_continuous(f)` |
+| `integ(x,a,b,E)` | `integral(fn(x '[min(a,b),max(a,b)]) R {E},a,b)` |
+| `$integrable(f,a,b)` | `$is_riemann_integrable(f,a,b)` |
+| `$has_integ(f,a,b,I)` | `$has_riemann_integral(f,a,b,I)` |
+| `$darboux_bounds(f,a,b,n,p,l,u)` | `$is_darboux_enclosure(f,a,b,n,p,l,u)` |
+| `$antideriv_on(F,f,S)` | `$is_antiderivative_on(F,f,S)` |
+| `pderiv(f,p,n,i)` / `grad_at(f,p,n)` | `partial_derivative(f,p,n,i)` / `gradient_at(f,p,n)` |
+
+A value equation, a candidate relation and an existence property carry distinct
+information. `deriv(f,x)=v` states the selected derivative value,
+`$has_deriv_at(f,x,v)` exposes the defining relation for that candidate, and
+`$diff_at(f,x)` states that a real derivative exists. Use the equation for an
+ordinary value goal and the candidate relation when a definition or explicit
+theorem consumes it. The same pattern applies to limits and integrals.
+
+The function's complete actual domain, including guards, participates in every
+check. A finite-point limit requires accumulation in its stated direction.
+Continuity requires the point to belong to the domain. A classical derivative
+requires an interior neighbourhood. A finite integral requires coverage of the
+whole sorted closed interval. These conditions remain required inside larger
+expressions containing a selected value.
+
+<a id="calculus-sequence-limits"></a>
+
+### Real sequence limits (preview)
+
+`$has_seq_limit(a,L)` is the epsilon-N candidate relation on `a seq(R)`,
+equivalently `a fn(k N+) R`, and `L R`. After a candidate or finite convergence
+existence is proved, `lim(a)` is a well-defined real object. WD consumes the
+proof. Establish the candidate before selecting the value. For explicit epsilon
+proofs and native limit laws, follow the sequence examples below.
+
+```litex
+forall a seq(R), L R:
+    $has_seq_limit(a,L)
+    =>:
+        lim(a) = L
+        lim(a) $in R
+```
+
+**Direct structural limit laws (preview).** After the leaf limits are known,
+the checker can follow a checked anonymous function body through negation,
+absolute value, constant real scaling, natural powers and the four arithmetic
+operations. The following theorem checks the sum of two established limits.
+
+```litex
+thm sum_limit:
+    ? forall a,b seq(R),A,B R:
+        $has_seq_limit(a,A)
+        $has_seq_limit(b,B)
+        =>:
+            $has_seq_limit(fn(k N+) R {a(k)+b(k)},A+B)
+```
+
+Fixed shifts `a(k+s)` additionally require `s N`. The
+[sequence examples](../examples/proof_nodes/atomic/by_builtin_strategy/structural_sequence_limit_arithmetic.lit)
+cover all ten interfaces. Division retains both a nonzero denominator limit
+and a well-defined quotient at every positive index. For an opaque leaf, supply its limit candidate. Prove the candidate before
+selecting `lim(a)`. The explicit `seq_limit_*` theorem calls remain available.
+
+<a id="calculus-function-limits"></a>
+
+### Finite-point real function limits (preview)
+
+`$has_limit_at(f,x0,L)` includes both nontrivial approach through the actual
+unary real domain and punctured epsilon-delta control. After a candidate or
+finite existence proof, `fn_lim(f,x0)` selects the unique real value. The point
+may lie outside the domain. The accumulation condition requires domain
+points arbitrarily close to it in the chosen direction. WD requires the corresponding existence evidence.
+
+`lim(a)` takes exactly one sequence argument. For a finite-point function
+limit, use `fn_lim(f,x0)` with exactly two arguments. Each name has one fixed
+mathematical and parameter contract.
+
+```litex
+forall f fn(x R) R, x0,L R:
+    $has_limit_at(f,x0,L)
+    =>:
+        fn_lim(f,x0) = L
+        fn_lim(f,x0) $in R
+```
+
+The same bounded arithmetic strategy checks finite real limit candidates at a
+finite point, from the left or right, and as the input tends to either infinity.
+It retains the actual complete domain and the exact approach direction.
+Constant and finite identity rules require accumulation. An established leaf
+candidate can supply that geometric evidence on the same domain, and the
+real line supplies its standard accumulation evidence. The identity function
+does not acquire a finite limit at infinity. See the
+[48 direct function-limit cases](../examples/proof_nodes/atomic/by_builtin_strategy/structural_function_limit_arithmetic.lit).
+
+| Approach | Candidate relation | Selected real value |
+| --- | --- | --- |
+| Finite point | `$has_limit_at(f,x0,L)` | `fn_lim(f,x0)` |
+| From the left | `$has_limit_left(f,x0,L)` | `lim_left(f,x0)` |
+| From the right | `$has_limit_right(f,x0,L)` | `lim_right(f,x0)` |
+| Input tends to positive infinity | `$has_limit_pos_inf(f,L)` | `lim_pos_inf(f)` |
+| Input tends to negative infinity | `$has_limit_neg_inf(f,L)` | `lim_neg_inf(f)` |
+
+All five relations describe a finite real output limit and retain their actual
+domain and approach condition. Explicit `fn_limit_at_*`, `fn_limit_left_*`,
+`fn_limit_right_*`, `fn_limit_pos_inf_*` and `fn_limit_neg_inf_*` theorem families
+provide definition, existence, uniqueness, arithmetic, comparison, squeeze and
+local-equality routes. Composition checks the required approach to the outer
+function's domain. The removable-centre examples show the relevant distinction.
+[Limit examples](../examples/real_analysis/local_composition_removable_centre.lit)
+
+<a id="calculus-continuity"></a>
+
+### Continuity
+
+`$cont_at(f,x0)`, `$cont_left(f,x0)` and `$cont_right(f,x0)` express relative
+continuity at a point of the actual domain. Isolated domain points are allowed.
+`$is_continuous(f)` quantifies pointwise continuity on the domain, while
+`$unif_cont(f)` requires one delta to work for every pair of domain points.
+`$is_lipschitz(f,K)` includes the nonnegative real bound `K`.
+
+```litex
+have fn square(x R) R=x^2
+$cont_at(square,3)
+release thm fn_limit_at_real_accumulation(3)
+release thm fn_continuous_at_to_limit(square,3)
+fn_lim(square,3)=9
+```
+
+This example supplies accumulation to pass from continuity to a punctured
+limit. Arithmetic and supported elementary expressions have bounded structural
+continuity checks. For `g(f(x))`, the outer function must be continuous from
+both sides at `f(x0)`, including when the requested input continuity is one-sided.
+A quotient retains its actual domain and the nonzero denominator condition.
+
+Explicit `fn_continuous_at_*`, `fn_continuous_left_*` and
+`fn_continuous_right_*` calls provide definition and arithmetic laws, composition,
+and bridges to limits. The whole-domain and uniform-continuity interfaces have
+separate premises. Examples include isolated points, jump discontinuities,
+Lipschitz continuity and a continuous function that fails uniform continuity.
+[Directional arithmetic](../examples/proof_nodes/atomic/by_builtin_strategy/directional_continuity_arithmetic.lit),
+[isolated points](../examples/real_analysis/isolated_point_continuity.lit),
+[uniform continuity](../examples/real_analysis/lipschitz_uniform_continuous.lit),
+[continuous versus uniformly continuous](../examples/real_analysis/continuous_not_uniform.lit)
+
+<a id="calculus-derivatives"></a>
+
+### First derivatives
+
+`deriv(f,x0)` is the real classical derivative at an interior point of the
+complete unary real domain. `$diff_at(f,x0)` asserts existence, and
+`$has_deriv_at(f,x0,v)` relates a proposed value to the punctured difference
+quotient limit. Either form of proved existence can support the selector's WD.
+
+```litex
+have fn wave(x R) R=sin(x^2)
+forall x R:
+    deriv(wave,x)=2*x*cos(x^2)
+```
+
+The bounded derivative strategy follows supported arithmetic and elementary
+function bodies, including composition. It checks the necessary interior,
+positivity and denominator conditions and compares the resulting formula with
+the requested value. For example, a logarithm requires a positive argument and
+a reciprocal retains its nonzero domain. Opaque functions need their derivative
+facts supplied in the surrounding proof.
+
+| Explicit route | Use |
+| --- | --- |
+| `deriv_add`, `deriv_sub`, `deriv_mul`, `deriv_div` | Combine supplied derivative candidates and a result function with the required pointwise formula. |
+| `deriv_chain`, `deriv_pow` | Apply composition or a natural-power rule with checked domains and candidate values. |
+| `fn_derivative_at_from_limit`, `fn_derivative_at_to_limit` | Connect the derivative candidate to its difference-quotient limit. |
+| `fn_derivative_at_exists`, `fn_derivative_at_unique` | Publish existence or compare two candidates. |
+| `diff_cont` | Derive continuity from differentiability at the point. |
+
+The theorem signatures and their argument order are exercised in the linked
+examples. The textbook examples also express positive-base variable powers
+through `exp(v(x)*ln(u(x)))` and retain the necessary hypotheses for inverse
+function differentiation.
+[Derivative strategy](../examples/proof_nodes/atomic/by_builtin_strategy/pointwise_derivative.lit),
+[textbook derivatives and chain rules](../examples/calculus/textbook_derivatives_and_chain_rule.lit),
+[implementation](../src/execute/execute_fact_stmt/function_derivative.rs)
+
+<a id="calculus-integrals"></a>
+
+### Finite real Riemann integrals (preview)
+
+`integral(f,a,b)` is the finite real oriented Riemann integral. Its domain
+requires `$integrable(f,a,b)` alongside the function and interval
+conditions below. WD asks the shared verifier to prove these conditions at
+the caller's permitted search level and retains the resulting evidence.
+Existing facts, candidate inferences, definition expansion and polynomial or
+continuous-expression strategies are handled by that verifier.
+`$has_integ(f,a,b,I)` states a particular integral value. Computing
+that value uses the integral equality rules.
+
+The actual complete unary real function domain must cover the closed interval
+between the endpoints. Equal endpoints require the function to be defined
+there and give zero. Reversing endpoints negates the integral. The definition
+uses boundedness and Darboux step-function enclosures of arbitrarily small
+upper-minus-lower sum. Continuity supplies a sufficient condition for integrability. This ordinary Riemann integral excludes interior
+singularities and unbounded functions.
+
+```litex
+have fn square(x R) R=x^2
+integral(square,0,1)=1/3
+integral(square,1,0)=-1/3
+integral(square,1,1)=0
+```
+
+The expression syntax `integ(x,a,b,E)` binds `x` only in `E`. Endpoints are
+read in the outer scope. Its function domain is the sorted closed interval,
+so the expression must be defined at both endpoints. This form takes four
+arguments. Existing function-valued calls use `integral(f,a,b)`.
+
+Repeated expression forms may use fresh bound names when reusing stored
+equalities. The verifier retains each cited equality and the structural
+identity connecting its bound variables.
+
+An arbitrary real function still requires provable integrability, including
+inside `0*integral(f,0,1)`. A guarded function may require an explicit
+interval-in-domain proof. See [actual-domain examples](../examples/real_analysis/riemann_integral_domains.lit).
+
+#### Improper integrals
+
+The five improper integral operations select finite real values. Each requires
+coverage of its whole integration region, Riemann integrability on every closed
+subinterval of that region, and convergence of the corresponding truncated
+integrals. Finite open-endpoint operations require distinct endpoints.
+
+| Expression syntax | Function interface | Integrability predicate |
+| --- | --- | --- |
+| `integ_oc(x,a,b,E)` | `integral_open_closed(f,a,b)` | `$integrable_oc(f,a,b)` |
+| `integ_co(x,a,b,E)` | `integral_closed_open(f,a,b)` | `$integrable_co(f,a,b)` |
+| `integ_oo(x,a,b,E)` | `integral_open(f,a,b)` | `$integrable_oo(f,a,b)` |
+| `integ_pos_inf(x,a,E)` | `integral_pos_inf(f,a)` | `$integrable_pos_inf(f,a)` |
+| `integ_neg_inf(x,b,E)` | `integral_neg_inf(f,b)` | `$integrable_neg_inf(f,b)` |
+
+For `a<b`, the first three regions are `(a,b]`, `[a,b)` and `(a,b)`.
+The suffix identifies the first and second endpoint. Reversing a finite
+integral swaps `oc` with `co` and changes the sign. The infinite operations
+use `[a,+infinity)` and `(-infinity,b]`, including their finite endpoint.
+
+The open-closed definition takes the limit of
+`integral(f,a+t*(b-a),b)` as `t` tends to zero from above. The closed-open
+version uses `integral(f,a,b+t*(a-b))`. Both use `0<t<1`. With both endpoints
+open, split at `(a+b)/2` and require the two one-sided integrals to converge
+independently. The infinite definitions use `integral(f,a,t)` as `t` tends to positive
+infinity, or `integral(f,t,b)` as `t` tends to negative infinity. For closed
+numeric finite bounds the implementation uses the equivalent direct
+one-sided truncation parameter. Symbolic bounds retain the affine segment
+anchors used by interval-membership proofs.
+
+Finite truncations retain their affine endpoint expression, including a zero
+anchor. The structural strategy verifies and retains the endpoint and domain
+requirements in its local proof scope before checking compact subintervals
+and limits. This supports symbolic endpoints and irrational endpoints such
+as `integ_oc(x,0,pi,1)=pi`.
+
+A well-defined zero integrand has value zero on either infinite ray. The
+structural limit rule checks a parameter-independent zero factor while
+retaining the complete function-domain and accumulation requirements.
+
+```litex
+integ_pos_inf(x,1,0)=0
+integ_neg_inf(x,1,0)=0
+integ_oc(t,0,1,t)=1/2
+integ_co(z,0,1,z)=1/2
+integ_oc(t,0,1,t)=integ_co(z,0,1,z)
+```
+
+LaTeX groups each complete open endpoint before applying its marker, including
+endpoints such as `2^2`. Reading retains the improper integral formula and
+labels zero-width and reciprocal antiderivative steps. These cases are covered by the
+[integral repair examples](../examples/calculus/integral_audit_repairs.lit).
+
+Candidate predicates use `$has_integral_open_closed`,
+`$has_integral_closed_open`, `$has_integral_open`, `$has_integral_pos_inf`
+and `$has_integral_neg_inf`, with the value as their last argument.
+Their short spellings are `$has_integ_oc`, `$has_integ_co`, `$has_integ_oo`,
+`$has_integ_pos_inf` and `$has_integ_neg_inf`.
+
+For each improper canonical name, the suffixes `_from_definition` and
+`_to_definition` connect a candidate to local integrability and truncation
+limits. `_selected` consumes integrability, `_unique` compares two candidates,
+`_add` and `_scale` require the pointwise formula for a supplied result function,
+and `_congr` transports a candidate across pointwise equality on the region.
+The three finite operations also provide `_reverse`. For example,
+`integral_open_closed_reverse(f,a,b,I)` supplies the closed-open candidate
+from `b` to `a` with value `-I`. See the
+[improper integral examples](../examples/calculus/improper_integrals.lit).
+
+These reserved explicit theorem calls check every premise before publishing
+their conclusions. Functions named `h` are supplied result functions whose
+corresponding pointwise formulas must hold on the integration interval.
+
+| Call | Contract |
+| --- | --- |
+| `integ_fold(f,a,b,I)` | Prove the defining Darboux clauses to introduce the candidate. |
+| `integ_unfold(f,a,b,I)` | Expose those clauses from a candidate. |
+| `integ_exists(f,a,b,I)` | A candidate supplies real candidate existence. |
+| `integ_integrable(f,a,b,I)` | A candidate supplies integrability. |
+| `integ_select(f,a,b)` | Existing integrability supplies the candidate at the selected value. |
+| `integ_unique(f,a,b,I,J)` | Two candidates have equal values. |
+| `integ_zero(f,a)` | The singleton integral is zero under the actual-domain condition. |
+| `integ_const(f,a,b,c)` | A function equal to `c` throughout the interval has value `c*(b-a)`. |
+| `integ_pow(f,a,b,n)` | For natural `n` and `f(x)=x^n`, give `(b^(n+1)-a^(n+1))/(n+1)`. |
+| `integ_rev(f,a,b,I)` | Reverse a proved candidate and negate its value. |
+| `integ_add(f,g,h,a,b,I,J)` | Candidates for `f,g` and `h(x)=f(x)+g(x)` give value `I+J`. |
+| `integ_sub(f,g,h,a,b,I,J)` | The corresponding difference gives value `I-J`. |
+| `integ_scale(f,h,a,b,c,I)` | A candidate and `h(x)=c*f(x)` give value `c*I`. |
+| `integ_split(f,a,c,b,I,J)` | With `c` between the endpoints, combine candidates on the two pieces. |
+| `integ_congr(f,g,a,b,I)` | Pointwise equality on the interval transfers a candidate between actual domains. |
+| `integ_mono(f,g,a,b,I,J)` | For `a<=b`, pointwise order and two candidates give `I<=J`. |
+| `integ_bound(f,a,b,I,M)` | A candidate, `M>=0`, and `abs(f(x))<=M` give `abs(I)<=M*abs(b-a)`. |
+| `cont_integrable(f,a,b)` | Continuity at every point of the closed interval supplies integrability. |
+| `integ_eval(f,F,a,b)` | Integrable `f`, closed-interval continuity of `F`, and `F'=f` at every interior point give value `F(b)-F(a)`. |
+| `integ_step(f,a,c,b,L,U)` | For `a<=c<=b`, constants on `[a,c)` and `(c,b]` give `L*(c-a)+U*(b-c)`. The value at `c` may differ. |
+| `darboux_fold(f,a,b,n,p,l,u)` | Check a positive-length partition and pointwise lower/upper cell bounds to introduce `$is_darboux_enclosure(...)`. |
+| `darboux_unfold(f,a,b,n,p,l,u)` | Expose those finite partition and bound conditions. |
+
+The additional explicit routes are `integ_parts(u,du,v,dv,h,k,a,b,J)` and
+`integ_subst(f,g,dg,h,S,a,b,J)`. The first uses `u'=du`, `v'=dv`,
+`h=u*dv`, `k=du*v` and the known integral `J` of `k`, with the checked C1
+conditions. The second uses `g'=dg`, `h=(f composed with g)*dg`, the outer
+function's interval/domain conditions on `S`, and its known integral `J` from
+`g(a)` to `g(b)`. These calls check their complete premises before returning a
+candidate. [Parts example](../examples/real_analysis/integration_by_parts.lit),
+[substitution and actual domains](../examples/real_analysis/integral_substitution_domains.lit)
+
+The enclosure certificate has seven arguments. Its finite index families use
+guarded integer domains (`p`: `0<=k<=n`; `l,u`: `1<=k<=n`). Merely writing
+the certificate never proves it. The integral definition quantifies over
+arbitrary precision and bounds the function throughout every cell. Convergence
+of one sampled sum sequence alone does not establish integrability.
+
+See the [primary example](../examples/real_analysis/riemann_integral.lit),
+[explicit theorem examples](../examples/stmt_nodes/release_and_expand/builtin_thm/riemann_integral_power.lit),
+and [implementation](../src/execute/execute_fact_stmt/riemann_integral.rs).
+
+Integrability search supports arithmetic closure, products, absolute values,
+natural powers and supported continuous expressions. A quotient requires a
+continuous denominator that is nonzero throughout the interval. Integral-value
+search supports constants, natural powers of the variable, linear combinations,
+constant scaling/division and established leaf integrals. Newton–Leibniz,
+interval splitting, integration by parts and substitution are available through
+the explicit theorem calls above.
+
+Use `$antideriv_on(F,f,S)` for a supplied primitive `F` with derivative `f`
+throughout `S`. Here `S` is `R` or an explicit nonempty open real interval,
+and both functions must be defined throughout `S`.
+Definition, restriction, linearity and composition laws are
+available through the `antiderivative_*` theorem family.
+[Antiderivative examples](../examples/real_analysis/antiderivative_relations.lit),
+[chain rule](../examples/real_analysis/antiderivative_chain_rule.lit)
+
+<a id="calculus-multivariable"></a>
+
+### Multivariable calculus
+
+A native multivariable function takes one vector in `cart_n(R,n)`, equivalently
+`fn(k closed_range(1,n)) R`. Dimensions are positive and coordinates start at 1.
+Scalar and vector outputs have separate named contracts. The functions' actual
+domains and the point, coordinate and dimension requirements are checked.
+
+```litex
+have fn bowl(x cart_n(R,2)) R=x(1)^2+x(2)^2
+$has_multi_limit_at(bowl,(1,2),2,5)
+lim_multi_at(bowl,(1,2),2)=5
+$has_gradient_at(bowl,(1,2),2,(2,4))
+grad_at(bowl,(1,2),2)(2)=4
+```
+
+The example proves candidates before selecting their values. Expression
+strategies cover supported smooth coordinate formulas. More general functions
+use explicit definitions and theorem premises.
+
+| Selected object | Candidate relation | Result |
+| --- | --- | --- |
+| `lim_multi_at(f,p,n)` | `$has_multi_limit_at(f,p,n,L)` | Real scalar limit |
+| `lim_vector_at(F,p,n,m)` | `$has_vector_limit_at(F,p,n,m,v)` | Vector limit in `cart_n(R,m)` |
+| `pderiv(f,p,n,i)` | `$has_partial_derivative_at(f,p,n,i,L)` | Scalar coordinate derivative |
+| `grad_at(f,p,n)` | `$has_gradient_at(f,p,n,v)` | Vector of first partials |
+| `scalar_differential(f,p,n)` | `$has_scalar_differential_at(f,p,n,A)` | Full scalar differential as a 1 by n matrix |
+| `differential(F,p,n,m)` | `$has_total_derivative_at(F,p,n,m,A)` | Full vector differential as an m by n matrix |
+| `jacobian(F,p,n,m)` | `$has_jacobian_at(F,p,n,m,A)` | Matrix of component partials |
+| `hessian(f,p,n)` | `$has_hessian_at(f,p,n,H)` | Ordered second partials as an n by n matrix |
+| `divergence(F,p,n)` | `$has_divergence_at(F,p,n,L)` | Scalar divergence for an n-component field |
+| `curl(F,p)` | `$has_curl_at(F,p,v)` | Three-dimensional vector curl |
+| `laplacian(f,p,n)` | `$has_laplacian_at(f,p,n,L)` | Scalar sum of diagonal second partials |
+
+Continuity uses `$is_multi_continuous_at(f,p,n)` and
+`$is_vector_continuous_at(F,p,n,m)`. Full differentiability uses
+`$is_multi_differentiable_at(f,p,n)` and
+`$is_vector_differentiable_at(F,p,n,m)`. Gradient or Jacobian existence alone
+supplies the partial derivatives. Full differentiability additionally requires
+the corresponding linear approximation. Exchanging mixed partials requires
+the relevant neighbourhood and continuity hypotheses.
+[Native examples and rules](../examples/real_analysis/multivariable/README.md),
+[Jacobian counterexample](../examples/real_analysis/jacobian_counterexample/README.md)
+
+<a id="calculus-source-libraries"></a>
+
+### Higher orders, regularity and series
+
+The following imported source libraries build on the native calculus
+interfaces. Their READMEs own exact namespaces, signatures, dependency imports
+and proof guards. Follow the module's configuration example when using it.
+
+| Source module | Scope |
+| --- | --- |
+| [real_multivariable](../std/real_multivariable/README.md) | Coordinate and line paths, directional derivatives, ordered rectangular iterated integrals, finite higher derivatives and ordered partials. |
+| [real_higher_order_laws](../std/real_higher_order_laws/README.md) | Linearity of finite unary derivatives and ordered partial derivatives with supplied derivative profiles. |
+| [real_regularity](../std/real_regularity/README.md) | Unary and scalar multivariable C^k and smoothness on actual open domains. |
+| [real_regularity_laws](../std/real_regularity_laws/README.md) | Linear-combination closure of the supported regularity classes. |
+| [real_integral_laws](../std/real_integral_laws/README.md) | Absolute-value and difference bounds for finite Riemann integrals. |
+| [real_sequences](../std/real_sequences/README.md), [real_standard_limits](../std/real_standard_limits/README.md) | Real sequences on integer tails and standard reciprocal-root, geometric and fixed-base nth-root limits. |
+| [real_series](../std/real_series/README.md) | Ordered real series through partial sums, with convergence, comparison, geometric, telescoping, ratio and root tests. |
+
+A higher derivative retains its supplied intermediate functions and domains.
+An iterated integral retains its chosen integration order. A series sum
+requires convergence of its partial sums. Each library's theorem hypotheses
+carry those conditions into callers.
+[Higher derivative examples](../examples/real_analysis/higher_derivatives/README.md),
+[series examples](../examples/real_analysis/series/README.md)
+
+<a id="calculus-maintenance"></a>
+
+### Coverage and maintenance
+
+The chapter's runnable blocks exercise native checking. Lean compilation has
+route-specific coverage, including explicit calculus theorems and implemented
+derivative and polynomial-integral proof paths. Improper integral certificates,
+reciprocal antiderivative extensions, direct structural limit certificates,
+and the general `RiemannIntegrability` strategy still have explicit
+unsupported compiler paths. Check the actual generated output and independent
+Lean result for the route being used.
+[Compiler guide](Litex_To_Lean_Compiler_Guide.md),
+[calculus examples](../examples/calculus/README.md)
+
+For every calculus update, first read this chapter and the affected source or
+library contract. Update the relevant subsection, its public spelling and
+parameter contract, domain and existence requirements, automatic or explicit
+proof route, example links and backend coverage together. Verify changed
+runnable blocks independently with the documentation harness. New calculus
+topics belong in this chapter's topic table and their own subsection, with a
+link to the maintained implementation or source module.
+
 ## Builtin Verification Rules
 
 Builtin verification rules are small mathematical patterns implemented by the
@@ -10480,90 +10903,8 @@ The type rule preserves the domains: `gcd(0, 0)` is undefined, `sign(0)` and
 `lcm(0, 0)` cannot be assigned `N+`, and complex exponential and negative
 factorial inputs remain unsupported.
 
-### Real sequence limits (preview)
-
-`$has_seq_limit(a,L)` is the epsilon-N candidate relation on `a seq(R)`,
-equivalently `a fn(k N+) R`, and `L R`. After a candidate or finite convergence
-existence is proved, `lim(a)` is a well-defined real object. WD consumes the
-proof; it does not infer a limit from the sequence body. For explicit epsilon
-proofs, native limit laws, exact premises and compatibility, see
-the maintained examples under `examples/wd/`.
-
-```litex
-forall a seq(R), L R:
-    $has_seq_limit(a,L)
-    =>:
-        lim(a) = L
-        lim(a) $in R
-```
-
-**Preview: direct structural limit laws.** After the leaf limits are known,
-the checker can follow a checked anonymous function body through negation,
-absolute value, constant real scaling, natural powers and the four arithmetic
-operations. For example, this theorem needs no explicit `seq_limit_add` call:
-
-```litex
-thm sum_limit:
-    ? forall a,b seq(R),A,B R:
-        $has_seq_limit(a,A)
-        $has_seq_limit(b,B)
-        =>:
-            $has_seq_limit(fn(k N+) R {a(k)+b(k)},A+B)
-```
-
-Fixed shifts `a(k+s)` additionally require `s N`. The
-[sequence examples](../examples/proof_nodes/atomic/by_builtin_strategy/structural_sequence_limit_arithmetic.lit)
-cover all ten interfaces. Division retains both a nonzero denominator limit
-and a well-defined quotient at every positive index. This strategy does not
-discover a limit for an opaque leaf or make `lim(a)` well-defined by inspecting
-its body. Prove the candidate first; the existing explicit BT calls remain
-available.
-
-### Finite-point real function limits (preview)
-
-`$has_limit_at(f,x0,L)` includes both nontrivial approach through the actual
-unary real domain and punctured epsilon-delta control. After a candidate or
-finite existence proof, `fn_lim(f,x0)` selects the unique real value. The point
-need not belong to the domain; empty or isolated domains supply no vacuous
-limit. WD consumes proof and never discovers a limit from the function body.
-
-`lim(a)` is reserved for sequences and takes exactly one argument. The old
-`lim(f,x0)` form is rejected; use `fn_lim(f,x0)` with exactly two arguments.
-
-```litex
-forall f fn(x R) R, x0,L R:
-    $has_limit_at(f,x0,L)
-    =>:
-        fn_lim(f,x0) = L
-        fn_lim(f,x0) $in R
-```
-
-The same bounded arithmetic strategy checks finite real limit candidates at a
-finite point, from the left or right, and as the input tends to either infinity.
-It retains the actual complete domain and the exact approach direction.
-Constant and finite identity rules require accumulation; an established leaf
-candidate can supply that geometric evidence on the same domain, and the
-real line supplies its standard accumulation evidence. The identity function
-does not acquire a finite limit at infinity. See the
-[48 direct function-limit cases](../examples/proof_nodes/atomic/by_builtin_strategy/structural_function_limit_arithmetic.lit).
-
-Pointwise continuity has matching structural checks for both-sided, left and
-right continuity. Direct calls `f(x)` use the requested side; a composite
-`g(f(x))` requires the outer function to be both-sided continuous at `f(x0)`.
-Continuity retains point membership and permits isolated domains; it does not
-require limit accumulation. For a quotient, supply `g(x0)!=0` and use its
-actual checked domain, including a guard when necessary. The
-[directional examples](../examples/proof_nodes/atomic/by_builtin_strategy/directional_continuity_arithmetic.lit)
-cover 22 left/right interfaces.
-
-These routes run at the existing strategy stage with lower-ceiling leaf
-checks. They descend a visible checked body, reuse the enclosing atomic WD
-for that exact subject, and independently check any unfolded body endpoint.
-They do not search arbitrary extensional equations or raise WD permissions.
-Detailed output records `StructuralLimit` or `PointwiseContinuity`, the child
-evidence, domain/direction and final value comparison. The direct structural
-certificates currently remain unsupported by Lean compilation and produce an
-explicit compiler error; supported explicit theorem routes remain available.
+For sequence limits, directional function limits and continuity, use the
+[Calculus chapter](#calculus), including its domain and proof requirements.
 
 ### Native real trigonometry (beta preview)
 
@@ -13283,6 +13624,8 @@ rule sections for additional law shapes, not another copy of that definition.
 Use P entries for a failed/working pair and R entries for complete recommended
 formulations. Keep project and output contracts in their dedicated guide sections.
 When code changes, update the relevant entry and affected examples together.
+For calculus changes, first consult [Calculus](#calculus) and follow its
+[maintenance instructions](#calculus-maintenance).
 
 <a id="latex-conversion-preview"></a>
 

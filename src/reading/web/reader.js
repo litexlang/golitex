@@ -470,7 +470,72 @@
   // Interpret the document compiler's typography only. Mathematical expressions
   // remain its unchanged TeX, rendered by the bundled KaTeX engine. Ownership
   // comes from compiler byte spans, never formula/text matching.
-  function compiledLatex(block,statementIndex,source,onUnit,displayMath=value=>value,interactive=true){
+  function sourceProse(content){
+    const passages=[], encoder=new TextEncoder();
+    let offset=0,group=null,quoted=false;
+    const close=()=>{if(group?.lines.some(line=>line.trim()))passages.push(group);group=null;};
+    for(const raw of content.split("\n")){
+      const line=raw.replace(/\r$/,""),marker=line.trim()==='"""',comment=/^#(?: ?)(.*)$/.exec(line);
+      if(quoted){
+        if(marker){quoted=false;close();}else group.lines.push(line);
+      }else if(marker){
+        close();quoted=true;group={start:offset,lines:[]};
+      }else if(comment){
+        if(!group)group={start:offset,lines:[]};
+        if(!/^[-=_*# ]{3,}$/.test(comment[1]))group.lines.push(comment[1]);
+      }else close();
+      offset+=encoder.encode(raw).length+1;
+    }
+    if(!quoted)close();
+    return passages;
+  }
+
+  function renderSourceProse(lines){
+    const prose=element("section","lr-reading-prose");
+    const inline=(target,value)=>{
+      for(const part of value.split(/(`[^`]+`|\*\*[^*]+\*\*|\$[^$]+\$)/g)){
+        if(part.startsWith("`")&&part.endsWith("`"))target.append(element("code",null,part.slice(1,-1)));
+        else if(part.startsWith("**")&&part.endsWith("**"))target.append(element("strong",null,part.slice(2,-2)));
+        else if(part.length>2&&part.startsWith("$")&&part.endsWith("$")&&global.katex?.render){
+          const math=element("span","lr-latex-math");
+          try{global.katex.render(part.slice(1,-1),math,{throwOnError:true,trust:false,maxExpand:500,maxSize:50});target.append(math);}
+          catch(_){target.append(document.createTextNode(part));}
+        }else target.append(document.createTextNode(part));
+      }
+    };
+    let paragraph=[],list=null,fence=null;
+    function flush(){if(paragraph.length){const p=element("p");inline(p,paragraph.join(" "));prose.append(p);paragraph=[];}}
+    for(const raw of lines){
+      const line=raw.trim(),heading=/^(#{1,4})\s+(.+)$/.exec(line),item=/^([-*]|\d+\.)\s+(.+)$/.exec(line),tag=item&&(item[1].endsWith(".")?"ol":"ul");
+      if(fence){
+        if(line===fence.marker){appendFence(fence);fence=null;}else fence.lines.push(raw);
+        continue;
+      }
+      if(line.startsWith("```")||line==="$$"){
+        flush();list=null;fence={marker:line==="$$"?"$$":"```",lines:[]};continue;
+      }
+      if(!line){flush();list=null;}
+      else if(heading){
+        flush();list=null;const h=element("h"+Math.min(6,heading[1].length+1));inline(h,heading[2]);prose.append(h);
+      }else if(item){
+        flush();if(list?.tag!==tag){list={tag,node:element(tag)};prose.append(list.node);}
+        const li=element("li");inline(li,item[2]);list.node.append(li);
+      }else {list=null;paragraph.push(line);}
+    }
+    if(fence)appendFence(fence);
+    flush();return prose;
+    function appendFence({marker,lines}){
+      const content=lines.join("\n");
+      if(marker==="$$"&&global.katex?.render){
+        const math=element("div","lr-tex-display");
+        try{global.katex.render(content,math,{displayMode:true,throwOnError:true,trust:false,maxExpand:500,maxSize:50});prose.append(math);return;}
+        catch(_){/* Keep a readable copy of the authored notation. */}
+      }
+      prose.append(element("pre",null,content));
+    }
+  }
+
+  function compiledLatex(block,statementIndex,source,onUnit,displayMath=value=>value,interactive=true,renderSymbols=null){
     if(typeof block?.content!=="string"||!Array.isArray(block.statements))throw new Error("Missing compiler LaTeX");
     const content=block.content,positions=bytePositions(content),sourcePositions=bytePositions(source.content||"");
     const start=sourcePositions.get(block.start_byte),end=sourcePositions.get(block.end_byte);
@@ -501,8 +566,13 @@
     function unit(node,a,b){
       const candidates=spans.filter(span=>span.start<=a&&span.end>=b),owner=candidates.at(-1);
       if(!owner)throw new Error("Unmapped compiler content");
-      const control=element(interactive?"button":"span","lr-latex-unit"+(interactive?"":" lr-latex-static"));control.append(node);control.dataset.latexStatement=owner.statement_id;
-      control.dataset.latexStart=String(a);if(interactive){control.type="button";control.setAttribute("aria-expanded","false");onUnit(control,owner.statement);}return control;
+      const control=element(interactive&&!renderSymbols?"button":"span","lr-latex-unit"+(interactive?"":" lr-latex-static"));control.append(node);control.dataset.latexStatement=owner.statement_id;
+      control.dataset.latexStart=String(a);
+      if(interactive){
+        if(renderSymbols){control.setAttribute("role","group");control.tabIndex=0;}else control.type="button";
+        control.setAttribute("aria-expanded","false");onUnit(control,owner.statement);
+      }
+      return control;
     }
     function group(at,opening,closing,limit){
       let depth=1,i=at+1;
@@ -517,8 +587,10 @@
           if(end<0||end>=limit)throw new Error("Unclosed compiler mathematics");
           const math=element("span","lr-latex-math"),tex=displayMath(content.slice(i+opening,end));
           if(!global.katex?.render)throw new Error("Mathematical typesetting is unavailable");
-          global.katex.render(tex,math,{displayMode:display,throwOnError:true,trust:false,strict:"ignore",maxExpand:500,maxSize:50,output:"mathml"});
-          const rendered=unit(math,i,end+closing.length);rendered.setAttribute("aria-label",tex);
+          const rendered=unit(math,i,end+closing.length),settings={displayMode:display,throwOnError:true,trust:false,strict:"ignore",maxExpand:500,maxSize:50,output:"mathml"};
+          const owner=statementIndex.get(rendered.dataset.latexStatement);
+          if(!renderSymbols?.(tex,math,settings,owner))global.katex.render(tex,math,settings);
+          rendered.setAttribute("aria-label",tex);
           if(display){frame().paragraph=null;const row=element("div","lr-tex-display");row.append(rendered);if(!frame().node)throw new Error("Missing list item");frame().node.append(row);}
           else container().append(rendered);
           i=end+closing.length;continue;
@@ -569,6 +641,9 @@
     let allOccurrencesLoaded=!loader;
     let locale=options.locale||bundle.language||"en";
     let readingLayout=options.layout||bundle.reading_layout||"source";
+    const textbook=options.experience==="textbook";
+    let editing=false;
+    let proofDetail="textbook";
     let state={source:null,statement:null,symbol:null,fact:null,wd:null,focusLine:null,explanationOpen:false};
     let history=[];
     let sources,statements,statementsBySource,facts,symbols,rules,occurrences,usedRules,evidenceNodes,inferences,wellDefinedness;
@@ -578,14 +653,35 @@
     let rulebookState={query:"",usedOnly:true,open:false,category:"all"};
     let destroyed=false,tokenHelp=null,inferencePopover=null,proofPopover=null,proofCandidate=null,proofHoverToken=null,proofTimer=null,proofCloseTimer=null,proofFocusSuppression=null;
     let inferenceCandidate=null,inferenceTimer=null,inferenceCloseTimer=null;
-    let factsBySourceLine,factSubjects,quantifiedFacts,existentialFacts,scopes,sourceIssues,issuesByLine;
+    let factsBySourceLine,factSubjects,quantifiedFacts,existentialFacts,scopes,sourceIssues,issuesByLine,citationUsers;
     let logicalActions,logicalActionsByLine,logicalContexts,logicalFactLocations;
     const drafts=new Map(),originals=new Map(),idePositions=new Map(),tokenHelpOpeners=new WeakMap(),tokenHelpRenderers=new WeakMap();
     let restoreIdeFocus=false;
     let revision=0,checkedRevision=0,checking=false,editError="",checkSerial=0;
+    let draftStorageKey=textbook&&bundle.bundle_id?"litex-reading:drafts:"+bundle.bundle_id:null;
     const editText=(zh,en)=>lang()==="zh"?zh:en;
     function pending(){return revision!==checkedRevision;}
     function draftContent(source){return drafts.get(source.path)??source.content??"";}
+    function restoreDrafts(){
+      if(!draftStorageKey||!options.onCheck)return;
+      try{
+        const saved=JSON.parse(global.localStorage?.getItem(draftStorageKey)||"[]");
+        const paths=new Set([...sources.values()].map(source=>source.path));
+        for(const entry of array(saved)){
+          if(!Array.isArray(entry)||!paths.has(entry[0])||typeof entry[1]!=="string")continue;
+          drafts.set(entry[0],entry[1]);
+        }
+        if(drafts.size){revision++;editing=true;}
+      }catch(_){/* Browsers may disable local storage. */}
+    }
+    function rememberDrafts(){
+      if(!draftStorageKey||!options.onCheck)return;
+      try{
+        const changed=[...drafts].filter(([path,value])=>value!==originals.get(path));
+        if(changed.length)global.localStorage?.setItem(draftStorageKey,JSON.stringify(changed));
+        else global.localStorage?.removeItem(draftStorageKey);
+      }catch(_){/* The working draft is still available in memory. */}
+    }
     async function checkDraft(){
       if(destroyed||checking||!options.onCheck)return;
       const request=++checkSerial,epoch=generation,submitted=revision,startedAt=navigationSerial,path=sources.get(state.source)?.path,cursor=idePositions.get(sources.get(state.source)?.path)?.start;checking=true;editError="";
@@ -620,7 +716,7 @@
       const editor=element("div","lr-ide"),canvas=element("div","lr-ide-canvas"),input=element("textarea","lr-editor-input lr-ide-input");
       input.dataset.sourcePath=source.path;input.value=draftContent(source);input.spellcheck=false;input.wrap="off";input.setAttribute("aria-label",editText("Litex 编辑器","Litex editor"));input.setAttribute("autocapitalize","off");input.setAttribute("autocomplete","off");input.setAttribute("autocorrect","off");
       codePane.classList.add("lr-ide-code");codePane.scrollTop=0;codePane.scrollLeft=0;
-      canvas.append(codePane,input);editor.append(canvas);sourcePane.append(editor,element("div","lr-editor-hint",editText("点击词旁或句尾 ▸ 固定说明 · 悬浮查看定义与证明 · ⌘ / Ctrl + Enter 检查","Click ▸ beside a term or sentence to keep its explanation open · Hover for definitions and proof · ⌘ / Ctrl + Enter to check")));
+      canvas.append(codePane,input);editor.append(canvas);sourcePane.append(editor,element("div","lr-editor-hint",textbook?editText("⌘ / Ctrl + Enter 检查","⌘ / Ctrl + Enter to check"):editText("点击词旁或句尾 ▸ 固定说明 · 悬浮查看定义与证明 · ⌘ / Ctrl + Enter 检查","Click ▸ beside a term or sentence to keep its explanation open · Hover for definitions and proof · ⌘ / Ctrl + Enter to check")));
       const drawDraft=()=>{
         codePane.replaceChildren();
         // Unchecked text receives lexical colors only, never old symbol identities.
@@ -635,7 +731,10 @@
       };
       const remember=()=>idePositions.set(source.path,{start:input.selectionStart,end:input.selectionEnd,top:editor.scrollTop,left:editor.scrollLeft});
       editor.addEventListener("scroll",remember);input.addEventListener("select",remember);
-      const changed=()=>{drafts.set(source.path,input.value);revision++;editError="";navigationSerial++;operationStatus="";operationError=false;root.querySelectorAll(".lr-operation-status").forEach(node=>node.remove());hideTokenHelp();drawDraft();remember();restore.hidden=input.value===originals.get(source.path);state.focusLine=input.value.slice(0,input.selectionStart).split("\n").length;invalidateEvidence();if(bookQuery)renderBookResults();if(options.onNavigate)options.onNavigate({...state},{bundle_id:bundle.bundle_id||null});};
+      const changed=()=>{
+        if(textbook&&input.value===originals.get(source.path)&&input.value===source.content)drafts.delete(source.path);
+        else drafts.set(source.path,input.value);
+        rememberDrafts();revision++;editError="";navigationSerial++;operationStatus="";operationError=false;root.querySelectorAll(".lr-operation-status").forEach(node=>node.remove());hideTokenHelp();drawDraft();remember();restore.hidden=input.value===originals.get(source.path);state.focusLine=input.value.slice(0,input.selectionStart).split("\n").length;invalidateEvidence();if(bookQuery)renderBookResults();if(options.onNavigate)options.onNavigate({...state},{bundle_id:bundle.bundle_id||null});};
       input.addEventListener("input",changed);
       // The input owns typing; semantic hover resolves against the real checked
       // tokens underneath it, using their existing help callbacks and FactIds.
@@ -722,6 +821,14 @@
       sources=new Map(array(bundle.sources).map(value=>[value.id,value]));
       statements=new Map(array(bundle.statements).map(value=>[value.id,value]));
       statementsBySource=new Map();for(const value of statements.values()){if(!statementsBySource.has(value.source_id))statementsBySource.set(value.source_id,[]);statementsBySource.get(value.source_id).push(value);}
+      citationUsers=new Map();
+      if(textbook)for(const statement of statements.values()){
+        if(statement.status!=="accepted")continue;
+        for(const id of new Set(array(statement.cited_fact_ids))){
+          if(!citationUsers.has(id))citationUsers.set(id,[]);
+          citationUsers.get(id).push(statement);
+        }
+      }
       facts=new Map(array(bundle.facts).map(value=>[value.id,value]));
       scopes=new Map(array(bundle.scopes).map(value=>[value.id,value]));
       evidenceNodes=new Map(array(bundle.evidence_nodes).map(value=>[value.id,value.node]));
@@ -864,7 +971,10 @@
       if(!sources.has(state.source))state.source=sources.has(bundle.entry_source_id)?bundle.entry_source_id:sources.keys().next().value||null;
       if(!pending()&&!statements.has(state.statement)){state.statement=initialStatement(state.source)?.id||null;state.focusLine=statements.get(state.statement)?.line||null;}
     }
-    function initialStatement(sourceId){const entries=statementsBySource.get(sourceId)||[];return entries.find(value=>value.status==="accepted"&&array(value.cited_fact_ids).length)||entries[0];}
+    function initialStatement(sourceId){
+      const entries=statementsBySource.get(sourceId)||[];
+      return (textbook?entries.find(value=>value.id===(value.source_statement_id||value.id)):entries.find(value=>value.status==="accepted"&&array(value.cited_fact_ids).length))||entries[0];
+    }
     function walkEvidence(value,callback,seen=new Set()){
       const pending=[value];
       while(pending.length){const node=pending.pop();if(!node||typeof node!=="object")continue;callback(node);
@@ -1477,6 +1587,7 @@
     function factLocation(fact){const invocation=logicalActions.get(fact?.proofInvocationId);if(invocation?.kind==="proof-invocation"&&invocation.statementId===fact.producer_statement_id&&invocation.factIds.includes(fact.id))return {sourceId:invocation.sourceId,line:invocation.line};const logical=logicalFactLocations.get(fact?.id);if(logical)return logical;const producer=statements.get(fact?.producer_statement_id);if(factInferences(fact?.id).length&&producer)return {sourceId:producer.source_id,line:producer.line};return {sourceId:fact?.source_id||producer?.source_id,line:fact?.line||producer?.line};}
     async function navigate(next, remember=true){
       if(destroyed)return false;
+      const readingFocus=textbook&&!editing&&root.contains(document.activeElement);
       const serial=++navigationSerial,epoch=generation,candidate=proofPopover?.selection||inferencePopover?.selection;
       const sourceId=statements.get(next.statement)?.source_id||next.source||state.source;
       const origin=candidate&&(candidate.source!==sourceId||["statement","symbol","fact","wd","chainStep","issue","keyword","reference","focusLine"].some(key=>(next[key]??null)!==(candidate[key]??null)))?{reference:null,keyword:null,chainStep:null,issue:null,...candidate}:null;
@@ -1505,10 +1616,11 @@
       if(destroyed||epoch!==generation||serial!==navigationSerial)return false;
       operationStatus="";operationError=false;
       if(remember)history.push({...state,...origin});
-      state={...state,reference:null,keyword:null,chainStep:null,issue:null,explanationOpen:false,...next};
+      state={...state,reference:null,keyword:null,chainStep:null,issue:null,explanationOpen:false,...(textbook?{inferenceIds:null}:{}),...next};
       if(next.statement){const statement=statements.get(next.statement);if(statement)state.source=statement.source_id;}
       render();
       if(state.focusLine)root.querySelector('[data-line="'+state.focusLine+'"]')?.scrollIntoView({block:"nearest",behavior:"smooth"});
+      if(readingFocus&&!root.contains(document.activeElement))codePane?.focus({preventScroll:true});
       if(options.onNavigate)options.onNavigate({...state},{bundle_id:bundle.bundle_id||null});
       return true;
     }
@@ -1544,6 +1656,7 @@
       if(inferencePopover?.transient)inferenceCloseTimer=setTimeout(closeInferences,300);
     }
     function hoverInferences(owner){
+      if(textbook&&!editing)return;
       if(pending()||proofFocusSuppression===owner||proofPopover?.persistent)return;
       clearTimeout(inferenceCloseTimer);if(inferencePopover?.owner===owner||inferenceCandidate===owner)return;
       closeInferences();inferenceCandidate=owner;
@@ -1556,6 +1669,12 @@
       placeAtSource(node,box);
     }
     function openInferences(ids,sourceId,owner,transient=false){
+      if(textbook&&!transient){
+        if(ids.length===1){selectFact(ids[0]);return;}
+        const statement=statements.get(owner.closest("[data-statement]")?.dataset.statement);
+        if(statement)navigate({source:sourceId,statement:statement.id,focusLine:statement.line,fact:null,symbol:null,wd:null,inferenceIds:ids,explanationOpen:true});
+        return;
+      }
       if(inferencePopover?.owner===owner){
         clearTimeout(inferenceCloseTimer);
         if(inferencePopover.transient&&!transient){inferencePopover.transient=false;inferencePopover.node.setAttribute("role","dialog");inferencePopover.node.querySelector("summary")?.focus({preventScroll:true});return;}
@@ -2070,18 +2189,194 @@
       const token=Array.from(codePane.querySelectorAll("[data-keyword]")).find(node=>node.dataset.keyword===state.keyword&&Number(node.closest(".lr-code-row")?.dataset.line)===state.focusLine);
       return referenceCard(token?.dataset.referenceKey||state.keyword);
     }
-    function renderInspectorContents(){if(readingLayout==="latex"&&!state.keyword&&!state.symbol&&!state.wd)appendMathSource(detailPane,statements.get(state.statement)||statements.get(facts.get(state.fact)?.producer_statement_id));if(state.issue)appendSourceIssue(detailPane,sourceIssues.get(state.issue));else if(state.keyword&&selectedReferenceCard())appendReference(detailPane,selectedReferenceCard());else if(state.keyword==="prop")renderPropGuide(detailPane);else if(state.keyword){detailPane.append(element("p","lr-keyword-meaning",syntaxPhrases[state.keyword]?.[lang()==="zh"?0:1]||syntaxHelp[state.keyword]?.[lang()==="zh"?0:1]||t("typeUnavailable")));}else if(state.symbol)renderSymbol();else if(state.wd)renderWellDefinedness();else if(state.fact)renderFact();else if(!state.statement&&state.focusLine)renderSourceLine();else renderStatement();}
+    function renderInspectorContents(){
+      const fact=facts.get(state.fact),statement=statements.get(state.statement||fact?.producer_statement_id);
+      if(textbook&&!state.explanationOpen)return;
+      if(textbook&&state.inferenceIds?.length){
+        detailPane.append(element("h4","lr-proof-section-title",t("inferredFacts")));
+        for(const id of state.inferenceIds)if(facts.has(id))detailPane.append(factButton(id));
+        return;
+      }
+      if(!textbook&&readingLayout==="latex"&&!state.keyword&&!state.symbol&&!state.wd)appendMathSource(detailPane,statement);
+      if(state.issue)appendSourceIssue(detailPane,sourceIssues.get(state.issue));
+      else if(state.keyword&&selectedReferenceCard())appendReference(detailPane,selectedReferenceCard());
+      else if(state.keyword==="prop")renderPropGuide(detailPane);
+      else if(state.keyword)detailPane.append(element("p","lr-keyword-meaning",syntaxPhrases[state.keyword]?.[lang()==="zh"?0:1]||syntaxHelp[state.keyword]?.[lang()==="zh"?0:1]||t("typeUnavailable")));
+      else if(state.symbol)renderSymbol();
+      else if(state.wd)renderWellDefinedness();
+      else if(state.fact)renderFact();
+      else if(!state.statement&&state.focusLine)renderSourceLine();
+      else renderStatement();
+      if(!textbook||state.keyword||state.symbol||state.wd||state.reference)return;
+      const checks=Array.from(detailPane.children).find(child=>child.classList.contains("lr-atomic-wd")),issue=sourceIssues.get(state.issue);
+      const formationFailure=issue&&(issue.phase==="well_defined"||issue.category==="well_defined"||/formation|domain|parameter_type/.test(statement?.failure?.phase||""));
+      if(formationFailure)for(const detail of detailPane.querySelectorAll(".lr-atomic-wd,.lr-failure-details"))detail.open=true;
+      const scopeId=fact?.scope_id||statement?.scope_id;
+      if(scopeId&&logicalContexts.has(scopeId)&&!detailPane.querySelector(".lr-proof-context")){
+        const context=element("section","lr-reading-context");
+        context.append(element("h4","lr-proof-section-title",editText("当前证明语境","Current proof context")));
+        appendProofContext(context,fact||{scope_id:scopeId});detailPane.prepend(context);
+      }
+      if(readingLayout==="latex"&&statement){
+        appendMathSteps(detailPane,mathStatementContext(statement));
+        appendMathSource(detailPane,statement);
+      }
+      appendReadingLinks(detailPane,statement,fact);
+      const evidence=fact?.evidence||statement?.evidence;
+      if(evidence||checks){
+        const verification=element("details","lr-verification-details");
+        verification.append(element("summary",null,editText("验证细节","Verification details")));
+        if(checks&&!formationFailure)verification.append(checks);
+        if(evidence){
+          for(const rule of [...new Set(proofFrames(evidence).map(frame=>frame.rule_id).filter(Boolean))])verification.append(element("code","lr-proof-rule-name",rule));
+          verification.append(evidenceNode(evidence,editText("证明记录","Proof record")));
+        }
+        detailPane.append(verification);
+      }
+    }
+
+    function readingSteps(sourceId=state.source){
+      return (statementsBySource.get(sourceId)||[]).filter(step=>
+        step.id===(step.source_statement_id||step.id)&&["accepted","rejected"].includes(step.status)
+      ).sort((a,b)=>a.start_byte-b.start_byte||a.line-b.line);
+    }
+    function stepPosition(steps){
+      const active=statements.get(state.statement);
+      return steps.findIndex(step=>step.id===(active?.source_statement_id||active?.id));
+    }
+    function moveReadingStep(direction){
+      if(pending()||editing)return false;
+      const steps=readingSteps(),position=stepPosition(steps),next=position<0?(direction>0?steps[0]:null):steps[position+direction];
+      if(!next)return false;
+      const issue=(issuesByLine.get(next.source_id+":"+next.line)||[]).find(issue=>issue.statementId===next.id);
+      if(issue)return navigate(sourceIssueSelection(issue.id),false);
+      return navigate({statement:next.id,symbol:null,fact:null,wd:null,focusLine:next.line,explanationOpen:true},false);
+    }
+    function appendStepControls(header,source){
+      const steps=readingSteps(source.id);if(steps.length<2||pending())return;
+      const position=stepPosition(steps),nav=element("nav","lr-reading-steps");
+      nav.setAttribute("aria-label",editText("逐步阅读","Read step by step"));
+      for(const [direction,caption,className] of [[-1,editText("上一步","Previous step"),"lr-step-prev"],[1,editText("下一步","Next step"),"lr-step-next"]]){
+        if(direction===1){
+          const progress=element("span",null,(position+1)+" / "+steps.length);
+          progress.setAttribute("aria-live","polite");nav.append(progress);
+        }
+        const control=button(direction<0?"←":"→","lr-button "+className,async()=>{
+          if(await moveReadingStep(direction))root.querySelector("."+className)?.focus({preventScroll:true});
+        });
+        control.title=caption;control.setAttribute("aria-label",caption);
+        control.disabled=direction<0?position<=0:position>=steps.length-1;nav.append(control);
+      }
+      header.append(nav);
+    }
+    function readingStepTitle(statement){
+      const name=array(statement.declaration_symbol_ids).map(id=>symbols.get(id)?.name).find(Boolean);
+      return mathematicalText(name||String(statement.source_text||statement.text||"").trim().split("\n")[0]||t("sourceLine")+" "+statement.line,statement.source_id);
+    }
+    function appendReadingTrail(target){
+      const trail=element("details","lr-reading-trail");trail.append(element("summary",null,editText("阅读路径","Reading trail")));
+      const list=element("ol");
+      for(let index=Math.max(0,history.length-8);index<history.length;index++){
+        const past=history[index],statement=statements.get(past.statement),symbol=symbols.get(past.symbol);
+        const label=symbol?.name||(statement?readingStepTitle(statement):sourceTitle(sources.get(past.source)));
+        const item=element("li");item.append(button(label,"lr-text-link",async()=>{
+          const discarded=history.splice(index);
+          if(!await navigate(past,false))history.push(...discarded);
+        }));list.append(item);
+      }
+      trail.append(list);target.append(trail);
+    }
+    function readingFactOutputs(statement){
+      return array(statement?.produced_fact_ids).map(id=>facts.get(id)).filter(fact=>fact?.producer_statement_id===statement.id&&fact.scope_id===statement.scope_id);
+    }
+    function appendReadingLinks(target,statement,selected){
+      const outputs=readingFactOutputs(statement),source=statement?.source_id||state.source;
+      if(!selected&&statement){
+        const citations=array(statement.cited_fact_ids).filter(id=>facts.has(id));
+        if(citations.length&&!target.querySelector(".lr-proof-grounds")&&!target.querySelector(".lr-fact-link")){
+          const premises=element("section","lr-proof-grounds");
+          premises.append(element("h4","lr-proof-section-title",editText("引用的前提","Premises used")));
+          for(const id of citations)premises.append(factButton(id,null,{scope_id:statement.scope_id}));
+          target.prepend(premises);
+        }
+      }
+      const inferred=outputs.filter(fact=>factInferences(fact.id).length&&fact.id!==selected?.id);
+      if(inferred.length){
+        const details=element("details","lr-reading-links");
+        details.append(element("summary",null,editText("同时推出","Also follows")+" · "+inferred.length));
+        for(const fact of inferred)details.append(factButton(fact.id,null,{scope_id:fact.scope_id}));
+        target.append(details);
+      }
+      const usedBy=new Map();
+      for(const fact of selected?[selected]:outputs){
+        for(const user of citationUsers.get(fact.id)||[]){
+          if(user.id===fact.producer_statement_id)continue;
+          usedBy.set(user.id,user);
+        }
+      }
+      if(usedBy.size){
+        const details=element("details","lr-reading-links lr-used-by");
+        details.append(element("summary",null,editText("用到这一步的地方","Used by")+" · "+usedBy.size));
+        for(const user of [...usedBy.values()].sort((a,b)=>Number(a.source_id!==source)-Number(b.source_id!==source)||a.line-b.line)){
+          const label=(user.source_id===source?"":sourceTitle(sources.get(user.source_id))+" · ")+readingStepTitle(user);
+          const link=button(label,"lr-fact-link",()=>selectStatement(user.id,user.line));link.dataset.statement=user.id;details.append(link);
+        }
+        target.append(details);
+      }
+      const definitions=array(statement?.declaration_dependencies).map(id=>statements.get(id)).filter(definition=>definition&&definition.id!==statement.id);
+      if(definitions.length){
+        const details=element("details","lr-reading-links");details.append(element("summary",null,editText("引用的定义","Definitions used")));
+        for(const definition of definitions)details.append(button(readingStepTitle(definition),"lr-fact-link",()=>selectStatement(definition.id,definition.line)));
+        target.append(details);
+      }
+    }
+    function appendChapterNavigation(target,source){
+      const chapters=[...sources.values()].filter(value=>value.role!=="dependency"),position=chapters.findIndex(value=>value.id===source.id);
+      const footer=element("footer","lr-chapter-footer");
+      if(position>=0&&chapters.length>1){
+        const nav=element("nav","lr-chapter-neighbors");
+        nav.setAttribute("aria-label",editText("章节顺序","Chapter order"));
+        for(const direction of [-1,1]){
+          const neighbor=chapters[position+direction];if(!neighbor)continue;
+          const caption=direction<0?editText("← 上一章","← Previous chapter"):editText("下一章 →","Next chapter →");
+          nav.append(button(caption+" · "+sourceTitle(neighbor),"lr-text-link",()=>navigate({source:neighbor.id,statement:initialStatement(neighbor.id)?.id||null,symbol:null,fact:null,wd:null,focusLine:1})));
+        }
+        footer.append(nav);
+      }
+      const overview=element("details","lr-chapter-overview"),summary=element("summary",null,editText("本章依赖","Chapter dependencies"));
+      overview.append(summary);let rendered=false;
+      overview.addEventListener("toggle",()=>{
+        if(!overview.open||rendered)return;rendered=true;
+        const list=element("ul");
+        for(const step of readingSteps(source.id)){
+          if(step.status!=="accepted")continue;
+          const producers=new Set([...array(step.cited_fact_ids).map(id=>facts.get(id)?.producer_statement_id),...array(step.declaration_dependencies)]);
+          producers.delete(step.id);producers.delete(undefined);
+          const related=[...producers].map(id=>statements.get(id)).filter(value=>value?.status==="accepted");
+          if(!related.length)continue;
+          const item=element("li"),premises=element("div","lr-chapter-edges");
+          for(const from of related)premises.append(button(readingStepTitle(from),"lr-chip",()=>selectStatement(from.id,from.line)));
+          item.append(premises,element("span",null," → "),button(readingStepTitle(step),"lr-text-link",()=>selectStatement(step.id,step.line)));list.append(item);
+        }
+        overview.append(list.childElementCount?list:element("p","lr-empty-note",editText("本章暂无记录的引用关系。","No citations are recorded for this chapter.")));
+      });
+      if(!pending())footer.append(overview);
+      target.append(footer);
+    }
 
     function render(){
       if(destroyed)return;
       const previousInput=root.querySelector(".lr-ide-input"),previousEditor=root.querySelector(".lr-ide");
       restoreIdeFocus=previousInput===document.activeElement;
       if(previousInput&&previousEditor)idePositions.set(previousInput.dataset.sourcePath,{start:previousInput.selectionStart,end:previousInput.selectionEnd,top:previousEditor.scrollTop,left:previousEditor.scrollLeft});
+      const sourceScroll=codePane?.dataset.source===state.source?[codePane.scrollTop,codePane.scrollLeft]:null;
       closeInferences();hideTokenHelp();closeProof();root.replaceChildren();root.classList.add("lr-root");
+      root.classList.toggle("lr-textbook",textbook);
       const toolbar=element("div","lr-toolbar");
       const titleBlock=element("div","lr-title-block");const heading=element("div","lr-book-heading");titleBlock.append(heading);toolbar.append(titleBlock);
       const actions=element("div","lr-toolbar-actions");
       const back=button("←","lr-button lr-back",async()=>{const previous=history.pop();if(previous&&!await navigate(previous,false))history.push(previous);});back.setAttribute("aria-label",t("back"));if(history.length)actions.append(back);
+      if(textbook&&history.length>1)appendReadingTrail(actions);
       const source=sources.get(state.source);
       heading.append(element("h1","lr-book-title",sourceTitle(source)));
       if(source?.editor_unchecked){const blocked=bundle.run_result==="failure",pending=element("span","lr-pending",blocked?editText("本章待检查：上文未通过","Chapter not checked: earlier steps failed"):editText("本章待检查","Chapter not checked"));pending.title=blocked?editText("此次检查尚未执行到本章。先处理前面章节未通过的步骤，再检查本章。","This check did not reach this chapter. Resolve the earlier rejected steps, then check this chapter."):editText("此次检查只执行到前面的章节。检查本章以继续。","This check covered the preceding chapters. Check this chapter to continue.");heading.append(pending);}
@@ -2097,7 +2392,9 @@
       records.addEventListener("keydown",event=>{if(event.key==="Escape"&&records.open){records.open=false;recordsSummary.focus();event.stopPropagation();}});
       const advanced=element("details","lr-advanced-help");advanced.append(element("summary",null,t("advancedHelp")),button(t("rulebook"),"lr-math-link",()=>{if(!rulebook?.isConnected)renderRulebook();rulebook.open=true;records.open=false;rulebook.scrollIntoView({block:"nearest",behavior:"smooth"});}));recordPanel.append(advanced);
       const footer=element("footer","lr-reading-footer");footer.append(records);
-      if(sources.size)renderBookNavigation(actions);toolbar.append(actions);root.append(toolbar);
+      const bookSidebar=textbook&&sources.size>1&&!array(options.exampleGroups).length?element("aside","lr-book-sidebar"):null;
+      if(sources.size)renderBookNavigation(bookSidebar||actions);
+      toolbar.append(actions);root.append(toolbar);
       if(operationStatus){const notice=element("p",(operationError?"lr-diagnostics":"lr-loading")+" lr-operation-status",operationStatus);notice.setAttribute("role",operationError?"alert":"status");root.append(notice);}
       const hasLocatedFailure=[...sourceIssues.values()].some(issue=>issue.statementId),serviceDiagnostics=[];
       const unmapped=array(bundle.diagnostics).filter((diagnostic,index)=>{if(sourceIssues.has("diagnostic:"+index))return false;if(diagnostic.kind==="execution"&&hasLocatedFailure){serviceDiagnostics.push(diagnostic);return false;}return true;});
@@ -2105,13 +2402,35 @@
       if(unmapped.length){const diagnostics=element("div","lr-diagnostics");diagnostics.setAttribute("role","status");for(const diagnostic of unmapped)diagnostics.append(element("div",null,diagnostic.summary||diagnostic.message||diagnostic.kind));root.append(diagnostics);}
       if(!sources.size){const empty=element("section","lr-empty");const mark=element("div","lr-empty-mark","∀");mark.setAttribute("aria-hidden","true");empty.append(mark,element("h2",null,t("empty")),element("p",null,t("emptyHint")));root.append(empty,footer);return;}
       const layout=element("div","lr-layout");
-      const sourcePane=element("section","lr-source-pane");const header=element("div","lr-pane-header");header.append(element("span",null,readingLayout==="latex"?editText("数学正文","Mathematics"):options.onCheck?editText("编辑器","Editor"):t("source")));
+      const editor=!!options.onCheck&&(textbook?editing:readingLayout!=="latex");
+      const sourcePane=element("section","lr-source-pane");const header=element("div","lr-pane-header");header.append(element("span",null,editor?editText("编辑器","Editor"):readingLayout==="latex"?editText("数学正文","Mathematics"):t("source")));
       if(bundle.reading_layout==="latex"||array(source?.latex_blocks).length){
         for(const [value,title] of [["latex",editText("数学正文","Mathematics")],["source",editText("Litex 源码","Litex source")]]){
-          const control=button(title,"lr-button lr-layout-choice",()=>{if(value==="latex"&&pending())return;readingLayout=value;render();});control.dataset.layout=value;control.setAttribute("aria-pressed",String(readingLayout===value));control.disabled=value==="latex"&&pending();header.append(control);
+          const control=button(title,"lr-button lr-layout-choice",()=>{if(value==="latex"&&pending())return;readingLayout=value;editing=false;render();});control.dataset.layout=value;control.setAttribute("aria-pressed",String(!editing&&readingLayout===value));control.disabled=value==="latex"&&pending();header.append(control);
         }
       }
-      codePane=element("div","lr-code");sourcePane.append(header,codePane);
+      if(textbook&&options.onCheck)header.append(button(editing?editText("回到阅读","Back to reading"):editText("演练","Try editing"),"lr-button lr-edit-mode",()=>{
+        editing=!editing;closeExplanation();render();
+        if(editing)root.querySelector(".lr-ide-input")?.focus();
+      }));
+      if(textbook&&!editor){
+        if(pending()){
+          header.append(element("span","lr-pending",editText("草稿待检查","Draft awaiting check")));
+          if(options.onCheck){const check=button(editText("检查","Check"),"lr-button lr-check",checkDraft);check.disabled=checking;header.append(check);}
+        }else appendStepControls(header,source);
+        if(!pending()&&readingLayout==="latex"&&array(source.latex_blocks).length){
+          const density=element("select","lr-proof-detail");
+          density.setAttribute("aria-label",editText("证明详略","Proof detail"));
+          for(const [value,label] of [["outline",editText("概览","Outline")],["textbook",editText("教材","Textbook")],["steps",editText("逐步","Step by step")]]){
+            const choice=element("option",null,label);choice.value=value;choice.selected=value===proofDetail;density.append(choice);
+          }
+          density.addEventListener("change",()=>{proofDetail=density.value;render();root.querySelector(".lr-proof-detail")?.focus({preventScroll:true});});
+          header.append(density);
+        }
+      }
+      codePane=element("div","lr-code");codePane.dataset.source=state.source||"";
+      if(textbook&&!editor)codePane.tabIndex=0;
+      sourcePane.append(header,codePane);
       const presentation=statementPresentation(statements.get(state.statement)),selectedFact=facts.get(state.fact);
       const typeTitle=state.keyword?state.keyword:state.symbol?t("concepts"):state.wd?t("wellDefined"):state.fact?t(factInferences(state.fact).length?"inferred":selectedFact?.role==="verified"?"verifiedFact":selectedFact?.role||"fact"):presentation.title;
       const syntax=state.keyword||state.symbol||state.wd||state.fact?typeTitle:presentation.syntax||typeTitle;
@@ -2120,10 +2439,16 @@
       const close=button("×","lr-explanation-close",()=>closeExplanation(true));close.setAttribute("aria-label",editText("关闭说明","Close explanation"));inspectorHeader.append(close);
       details.classList.add("lr-context-explanation");details.setAttribute("role","region");details.setAttribute("aria-label",editText("源码说明","Source explanation"));details.hidden=!state.explanationOpen;
       detailPane=element("div","lr-detail-body");detailPane.setAttribute("aria-live","polite");details.append(detailPane);
-      layout.append(sourcePane,details);root.append(layout,footer);
-      renderCode();renderInspectorContents();
-      if(options.onCheck&&readingLayout!=="latex"){renderEditor(source,sourcePane,header);if(pending())invalidateEvidence();
+      layout.append(sourcePane,details);
+      if(bookSidebar){const spread=element("div","lr-book-spread");spread.append(bookSidebar,layout);root.append(spread,footer);}
+      else root.append(layout,footer);
+      if(textbook&&pending()&&!editor)codePane.append(element("pre","lr-draft-source",draftContent(source)));
+      else renderCode(editor&&textbook);
+      if(sourceScroll){codePane.scrollTop=sourceScroll[0];codePane.scrollLeft=sourceScroll[1];}
+      renderInspectorContents();
+      if(editor){renderEditor(source,sourcePane,header);if(pending())invalidateEvidence();
         if(editError){const error=element("p","lr-editor-error",editText("检查未完成：","Check did not complete: ")+editError);error.setAttribute("role","alert");sourcePane.append(error);}}
+      if(textbook&&!editor)appendChapterNavigation(sourcePane,source);
       showExplanation();
     }
 
@@ -2147,7 +2472,7 @@
     }
 
     function renderBookNavigation(target){
-      const details=element("details","lr-book-nav");details.open=bookOpen??false;details.addEventListener("toggle",()=>{bookOpen=details.open;});details.append(element("summary",null,t("book")));
+      const details=element("details","lr-book-nav");details.open=bookOpen??false;details.addEventListener("toggle",()=>{bookOpen=details.open;});details.append(element("summary",null,target.classList.contains("lr-book-sidebar")?editText("章节目录","Contents"):t("book")));
       const chapters=element("nav","lr-chapters");chapters.setAttribute("aria-label",t("chapters"));
       const dependencies=element("details","lr-book-dependencies");dependencies.open=sources.get(state.source)?.role==="dependency";const dependencyLinks=element("div","lr-chapters");let dependencyCount=0;
       for(const source of sources.values()){
@@ -2897,7 +3222,7 @@
       target.append(element("p","lr-failure-summary",issue.phase==="parse"?editText("本行尚未解析为 Litex 语句。","This line has not been parsed as a Litex statement."):formation?editText("这个表达式所需的条件尚未建立。","A condition required by this expression has not been established."):editText("当前证明尚未建立这个结论。","The current proof has not established this conclusion.")));
       const compoundFormation=nestedFormation||mappedFormation||failed&&factFailureFormation(failed,failureFact);
       if(issue.expression&&!compoundFormation?.complete)target.append(formula(issue.expression,issue.sourceId));
-      if(issue.obligation&&!compoundFormation?.complete)target.append(formula(issue.obligation,issue.sourceId));
+      if(issue.obligation&&(!compoundFormation?.complete||textbook&&formation))target.append(formula(issue.obligation,issue.sourceId));
       else if(issue.subject&&!compoundFormation?.complete){const text=quantifiedText(issue.subject,issue.sourceId);if(text)target.append(formula(text,issue.sourceId));}
       if(issue.message){
         const message=element("p","lr-failure-message",issue.message);
@@ -3037,6 +3362,15 @@
       if(target===proofFocusSuppression)return false;
       if(proofPopover?.persistent)return false;
       const equality=target?.closest(".lr-chain-equality"),row=target?.closest(".lr-code-row"),token=target?.closest(".lr-token,[data-syntax]"),issueIds=equality?null:row?.dataset.issues,ids=equality&&!equality.dataset.chainAction?JSON.stringify([equality.dataset.chainFact]):issueIds||(!equality?row?.dataset.proofFacts:null),actions=equality?.dataset.chainAction?JSON.stringify([equality.dataset.chainAction]):!equality&&!issueIds?row?.dataset.logicalActions:null,owner=equality||row;
+      if(textbook&&!editing){
+        if(owner&&!pending()&&proofCandidate!==owner){
+          proofCandidate=owner;
+          const fact=equality&&(equality.dataset.chainAction?sourceEqualityFact(logicalActions.get(equality.dataset.chainAction)):facts.get(equality.dataset.chainFact));
+          const evidence=fact?[equalityStepEvidence(fact,Number(equality.dataset.chainStep))]:issueIds?[]:array(JSON.parse(ids||"[]")).map(id=>facts.get(id)?.evidence);
+          highlightProofPremises(owner,evidence);
+        }
+        return false;
+      }
       // Sentence evidence and symbol documentation are independent: a token
       // change must not replace the proof or restart the sentence dwell timer.
       if(pending()||state.explanationOpen&&!equality&&!issueIds||!ids&&!actions||target?.closest(".lr-explanation-toggle,.lr-inference-toggle,.lr-reference-count")){
@@ -6453,7 +6787,8 @@
         Constant:["常数积分","Integral of a constant"],Variable:["一次幂积分","Integral of the identity"],NaturalPower:["自然数幂积分","Power rule for integration"],
         Neg:["负号提出积分号","Factor out a negative sign"],Add:["和的积分","Integral of a sum"],Sub:["差的积分","Integral of a difference"],
         Scale:["常数因子提出积分号","Factor out a constant"],Divide:["除以非零常数","Divide by a nonzero constant"],Application:["被积子函数的积分","Integral of a component function"],
-        Polynomial:["多项式展开化简","Polynomial expansion"]
+        Polynomial:["多项式展开化简","Polynomial expansion"],ZeroWidth:["零长度区间积分","Integral over a zero-width interval"],
+        ReciprocalSqrt:["平方根倒数积分","Integral of a reciprocal square root"],ReciprocalNaturalPower:["自然数幂倒数积分","Integral of a reciprocal natural power"]
       };
       const rootExpression=resolveEvidence(detail.fields?.expression),rootRule=resolveEvidence(rootExpression.fields?.constructor);
       const steps=element("details","lr-calculus-steps"),label=labels[rootRule.variant];
@@ -6854,6 +7189,7 @@
     function closeExplanation(restoreFocus=false){
       const panel=root.querySelector(".lr-context-explanation"),focused=panel?.contains(document.activeElement);
       state.explanationOpen=false;peekCitation(null);if(panel)panel.hidden=true;root.querySelectorAll("[data-keyword]").forEach(token=>token.setAttribute("aria-expanded","false"));
+      if(textbook)panel?.parentNode.classList.remove("lr-with-inspector");
       if(restoreFocus&&focused){
         const input=root.querySelector(".lr-ide-input");
         if(input)input.focus({preventScroll:true});
@@ -6863,8 +7199,9 @@
         }
       }
     }
-    function showExplanation(){const panel=root.querySelector(".lr-context-explanation");if(!panel)return;panel.hidden=!state.explanationOpen;root.querySelectorAll("[data-keyword]").forEach(token=>token.setAttribute("aria-expanded",String(!!state.explanationOpen&&token.dataset.keyword===state.keyword&&Number(token.closest(".lr-code-row")?.dataset.line)===state.focusLine)));if(state.explanationOpen)positionExplanation();}
+    function showExplanation(){const panel=root.querySelector(".lr-context-explanation");if(!panel)return;panel.hidden=!state.explanationOpen;if(textbook)panel.parentNode.classList.toggle("lr-with-inspector",state.explanationOpen);root.querySelectorAll("[data-keyword]").forEach(token=>token.setAttribute("aria-expanded",String(!!state.explanationOpen&&token.dataset.keyword===state.keyword&&Number(token.closest(".lr-code-row")?.dataset.line)===state.focusLine)));if(state.explanationOpen)positionExplanation();}
     function positionExplanation(){
+      if(textbook)return;
       const panel=root.querySelector(".lr-context-explanation");if(!panel||panel.hidden||!codePane)return;
       const row=[...codePane.querySelectorAll(".lr-code-row")].find(node=>Number(node.dataset.line)===state.focusLine)||codePane.querySelector(".lr-code-row.lr-selected");
       const keyword=state.keyword&&[...row?.querySelectorAll("[data-keyword]")||[]].find(node=>node.dataset.keyword===state.keyword);
@@ -7020,22 +7357,90 @@
       });
       if(!steps.length)return;const detail=element("details","lr-math-steps");detail.append(element("summary",null,editText("分步等式 · ","Equality steps · ")+steps.length));steps.forEach(step=>detail.append(step));target.append(detail);
     }
+    function mathSymbolRenderer(source){
+      const byStatement=new Map(),spellings=bytePositions(source.content||"");
+      for(const occurrence of occurrences){
+        if(occurrence.source_id!==source.id||!symbols.has(occurrence.symbol_id))continue;
+        const statement=statements.get(occurrence.statement_id);
+        const start=spellings.get(occurrence.start_byte),end=spellings.get(occurrence.end_byte);
+        if(!statement||start===undefined||end===undefined)continue;
+        const original=statement.source_statement_id||statement.id,spelling=source.content.slice(start,end).replace(/^\$/,"");
+        if(!/^[A-Za-z][\w:]*$/.test(spelling))continue;
+        if(!byStatement.has(original))byStatement.set(original,new Map());
+        const entries=byStatement.get(original);
+        for(const alias of new Set([spelling,mathematicalText(spelling,source.id)])){
+          if(!entries.has(alias))entries.set(alias,occurrence.symbol_id);
+          else if(entries.get(alias)!==occurrence.symbol_id)entries.set(alias,null);
+        }
+      }
+      return (tex,node,settings,owner)=>{
+        // A returned theorem conclusion can introduce a freshly named binder
+        // that does not appear in the authored call's symbol occurrences.
+        if(!owner||owner.statement_kind?.endsWith("ReleaseThmStmt"))return false;
+        const names=byStatement.get(owner.id);if(!names)return false;
+        const token="lr"+Math.random().toString(36).slice(2),slots=[];
+        const annotated=tex.replace(/\\mathit\{((?:\\_|[\w:])+)\}|\\(?:text|textrm|operatorname|mathrm|mathbf|mathbb|mathcal|begin|end)\{[^{}]*\}|\\(?:[A-Za-z]+|.)|\b[A-Za-z]\b/g,(chunk,identifier)=>{
+          const spelling=identifier?identifier.replace(/\\_/g,"_"):chunk,id=names.get(spelling);
+          if(!id)return chunk;
+          slots.push({id,spelling});
+          return "\\htmlData{lr-symbol="+token+"-"+(slots.length-1)+"}{"+chunk+"}";
+        });
+        if(!slots.length)return false;
+        try{
+          global.katex.render(annotated,node,{...settings,output:"htmlAndMathml",trust:context=>{
+            const attributes=context.attributes||{},keys=Object.keys(attributes),value=attributes["data-lr-symbol"];
+            const index=typeof value==="string"&&value.startsWith(token+"-")?value.slice(token.length+1):"";
+            return context.command==="\\htmlData"&&keys.length===1&&/^\d+$/.test(index)&&!!slots[Number(index)];
+          }});
+        }catch(_){return false;}
+        const markers=node.querySelectorAll("[data-lr-symbol]");if(!markers.length)return false;
+        node.querySelector(".katex-html")?.setAttribute("aria-hidden","false");
+        node.querySelector(".katex-mathml")?.setAttribute("aria-hidden","true");
+        for(const control of markers){
+          const entry=slots[Number(control.dataset.lrSymbol.slice(token.length+1))];if(!entry)continue;
+          const {id,spelling}=entry;
+          const inspect=()=>selectSymbol(id,mathStatementContext(owner).statement.id,owner.line);
+          control.dataset.symbol=id;control.dataset.statement=owner.id;control.classList.add("lr-math-symbol-token");
+          control.classList.toggle("lr-symbol-selected",id===state.symbol);
+          control.tabIndex=0;control.setAttribute("role","button");
+          attachTokenHelp(control,spelling,symbolHelp(id)||syntaxRoleHelp[symbolRoles.get(id)||"object"]?.[lang()==="zh"?0:1]||spelling,id);
+          control.addEventListener("click",event=>{event.stopPropagation();inspect();});
+          control.addEventListener("keydown",event=>{if(["Enter"," "].includes(event.key)){event.preventDefault();event.stopPropagation();inspect();}});
+        }
+        return true;
+      };
+    }
     function renderManuscript(source){
       const blocks=array(source.latex_blocks),paper=element("div","lr-manuscript");paper.lang=bundle.language||"en";paper.dir=bundle.language==="ar"?"rtl":"ltr";
-      if(!blocks.length||pending()){
+      const passages=textbook?sourceProse(source.content||""):[];
+      if((!blocks.length&&(!passages.length||array(source.tokens).length))||pending()){
         codePane.append(element("p","lr-empty-note",editText("数学正文暂不可用，以下保留完整 Litex 源码。","Mathematical presentation is unavailable; the complete Litex source is retained below.")));return false;
       }
       const lastUnits=new Map(),contexts=new Map(),instances=new Map(),recordedFacts=new Map(array(bundle.facts).map(fact=>[fact.id,fact]));let hoveredStatement=null;
+      const selected=statements.get(state.statement)||statements.get(facts.get(state.fact)?.producer_statement_id);
+      const visible=new Set((state.fact?factCitations(facts.get(state.fact)):array(selected?.cited_fact_ids)).map(id=>facts.get(id)?.producer_statement_id));
+      const renderSymbols=textbook?mathSymbolRenderer(source):null;
       for(const statement of statements.values()){const id=statement.source_statement_id||statement.id;instances.set(id,(instances.get(id)||0)+1);}
       try{
-        for(const block of blocks)paper.append(compiledLatex(block,statements,source,(control,statement)=>{
+        let proseIndex=0;
+        for(const block of blocks){
+          while(passages[proseIndex]?.start<block.start_byte)paper.append(renderSourceProse(passages[proseIndex++].lines));
+          paper.append(compiledLatex(block,statements,source,(control,statement)=>{
           lastUnits.set(statement.id,{control,statement});
           if(!contexts.has(statement.id))contexts.set(statement.id,mathStatementContext(statement));
           const context=contexts.get(statement.id).statement;control.dataset.statement=context.id;control.dataset.line=String(context.line);
           if(statement.status==="rejected")control.classList.add("lr-latex-rejected");
           else if(statement.status==="not_exported")control.classList.add("lr-latex-unchecked");
-          const selected=statements.get(state.statement)||statements.get(facts.get(state.fact)?.producer_statement_id);
           if((selected?.source_statement_id||selected?.id)===statement.id)control.classList.add("lr-selected");
+          if(textbook){
+            const routine=statement.parent_statement_id&&statement.statement_kind==="Fact"&&statement.status==="accepted";
+            control.classList.toggle("lr-outline-hidden",proofDetail==="outline"&&routine&&!control.classList.contains("lr-selected"));
+            if(visible.has(context.id))control.classList.add("lr-proof-premise");
+            const inspect=()=>{const data=contexts.get(statement.id);if(data.issues.length)return selectSourceIssue(data.issues[0].id);return selectStatement(context.id,context.line);};
+            control.addEventListener("click",event=>{event.stopPropagation();if(!pending())inspect();});
+            control.addEventListener("keydown",event=>{if(event.target===control&&["Enter"," "].includes(event.key)){event.preventDefault();if(!pending())inspect();}});
+            return;
+          }
           const preview=()=>{
             if(destroyed||pending()||state.explanationOpen||proofPopover?.persistent||proofFocusSuppression===control)return;
             hoveredStatement=statement.id;clearTimeout(proofCloseTimer);if(proofPopover?.mathStatementId===statement.id||proofCandidate?.dataset.latexStatement===statement.id)return;
@@ -7051,26 +7456,28 @@
             }openMathStatement(control,statement,true);
           });
           control.addEventListener("keydown",event=>{if(event.key==="ArrowRight"&&proofPopover?.owner===control){event.preventDefault();proofPopover.node.querySelector(".lr-proof-pin,.lr-explanation-close")?.focus();}});
-        },tex=>displayLatexIdentifiers(tex,source.id)));
+          },tex=>displayLatexIdentifiers(tex,source.id),true,renderSymbols));
+        }
+        while(proseIndex<passages.length)paper.append(renderSourceProse(passages[proseIndex++].lines));
       }catch(error){
         codePane.append(element("p","lr-empty-note",editText("数学排版或源码对应暂不可用，以下保留原文。","Typesetting or source correspondence is unavailable; the original source is retained below.")));return false;
       }
       for(const {control,statement} of lastUnits.values()){
         const fact=facts.get(statement.mathematics?.subject_fact_id),recorded=recordedFacts.get(fact?.id),data=contexts.get(statement.id),context=data.statement,footer=element("span","lr-math-context");footer.dataset.statement=context.id;footer.dataset.line=String(context.line);
         const eligible=statement.statement_kind==="Fact"&&statement.status==="accepted"&&statement.origin==="checked"&&instances.get(statement.id)===1&&fact?.is_primary&&fact.role==="verified"&&fact.producer_statement_id===statement.id&&fact.source_id===source.id&&fact.scope_id===statement.scope_id&&recorded?.is_primary&&recorded.role==="verified"&&recorded.producer_statement_id===statement.id&&recorded.source_id===source.id&&recorded.scope_id===statement.scope_id&&array(statement.produced_fact_ids).includes(fact.id);
-        if(eligible){
+        if(eligible&&(!textbook||proofDetail==="steps")){
         const disclosure=element("details","lr-math-reason"),summary=element("summary",null,editText("推导","Derivation")),body=element("div","lr-math-reason-body");disclosure.dataset.statement=statement.id;disclosure.dataset.fact=fact.id;
         summary.setAttribute("aria-label",editText("展开或收起推导：","Expand or collapse derivation: ")+mathText(fact.text,source.id));disclosure.append(summary);let rendered=false;
         disclosure.addEventListener("toggle",()=>{
           if(!disclosure.open||rendered||pending()||destroyed||!disclosure.isConnected)return;
           rendered=true;closeProof();appendProofBody(body,fact,fact.evidence,false);
-          const original=button(editText("查看 Litex 源码","View Litex source"),"lr-math-reason-source",()=>openMathStatement(original,statement,true));original.setAttribute("aria-haspopup","dialog");body.append(original);disclosure.append(body);
+          const original=button(editText("查看 Litex 源码","View Litex source"),"lr-math-reason-source",()=>textbook?selectStatement(statement.id,statement.line):openMathStatement(original,statement,true));if(!textbook)original.setAttribute("aria-haspopup","dialog");body.append(original);disclosure.append(body);
         });
         disclosure.addEventListener("click",event=>event.stopPropagation());
         footer.append(disclosure);
         }
         const inferred=[...new Set([...statementInferredFacts(context).filter(id=>factInferences(id).length&&!array(logicalContexts.get(facts.get(id)?.scope_id)?.inferredIds).includes(id)),...data.actions.flatMap(action=>array(action.inferredIds))])].filter(id=>facts.has(id)&&inSourceExecution(facts.get(id),context));
-        if(inferred.length){
+        if(inferred.length&&!(textbook&&proofDetail==="outline")){
           const toggle=button(editText("推论 ","Consequences ")+inferred.length+" ▸","lr-math-consequences lr-inference-toggle",event=>{event.stopPropagation();if(!pending())openInferences(inferred,source.id,toggle);});toggle.dataset.facts=JSON.stringify(inferred);toggle.setAttribute("aria-label",t("inferredFacts")+" · "+inferred.length);toggle.setAttribute("aria-expanded","false");toggle.setAttribute("aria-haspopup","dialog");
           toggle.addEventListener("mouseenter",()=>hoverInferences(toggle));toggle.addEventListener("focus",()=>hoverInferences(toggle));toggle.addEventListener("pointerleave",leaveInferences);footer.append(toggle);
         }
@@ -7085,9 +7492,9 @@
       return true;
     }
 
-    function renderCode(){
+    function renderCode(forceSource=false){
       const source=sources.get(state.source);if(!source)return;
-      if(readingLayout==="latex"&&renderManuscript(source))return;
+      if(!forceSource&&readingLayout==="latex"&&renderManuscript(source))return;
       const content=source.content||"";const offsets=bytePositions(content);
       const sourceStatements=statementsBySource.get(source.id)||[];
       const expressionHints=sourceStatements.flatMap(statement=>array(statement.expression_hints)).filter(hint=>{
@@ -7142,7 +7549,7 @@
           if(token.textContent==="="&&!token.dataset.symbol&&equalityTargets.has(occurrence.start_byte))attachEqualityProof(token,equalityTargets.get(occurrence.start_byte));
           const point=issuePoints.find(point=>point.offset>=occurrence.start&&point.offset<occurrence.end);if(point)attachSourceIssue(token,point.issue);
           const help=tokenHelpRenderers.get(token),heading=token.dataset.helpDisclosure;
-          if(help&&heading){
+          if(help&&heading&&!textbook){
             const anchor=element("span","lr-help-anchor"),toggle=button("▸","lr-help-toggle lr-explanation-toggle",event=>{
               event.stopPropagation();if(pending())return;toggle.focus({preventScroll:true});
               if(proofPopover?.owner===toggle){closeProof();return;}
@@ -7186,7 +7593,7 @@
         }
         appendTrivia(code,content.slice(cursor,lineEnd)||(!line?" ":""));
         lineContent.append(code);code.addEventListener("click",()=>selectLine(owning,lineNumber));
-        if(rowFacts.length||actions.length||lineIssues.length){
+        if(!textbook&&(rowFacts.length||actions.length||lineIssues.length)){
           const toggle=button("▸","lr-proof-toggle lr-explanation-toggle",event=>{
             event.stopPropagation();if(pending())return;
             toggle.focus({preventScroll:true});
@@ -7420,15 +7827,25 @@
     }
     function showRule(id){activeRule=id;rulebookState={query:id,usedOnly:false,open:true,category:"all"};rulebook.open=true;ruleSearch.value=id;usedOnly.checked=false;rulebook.querySelector("select").value="all";rulePage=0;renderRules();rulebook.scrollIntoView({block:"nearest",behavior:"smooth"});}
 
-    const dismissPanels=event=>{if(proofPopover&&!proofPopover.node.contains(event.target)&&!proofPopover.owner.contains(event.target))closeProof();const explanation=root.querySelector(".lr-context-explanation");if(explanation&&!explanation.hidden&&!explanation.contains(event.target)&&!codePane?.contains(event.target)&&!event.target.closest?.(".lr-ide-input"))closeExplanation();if(inferencePopover&&!inferencePopover.node.contains(event.target)&&!inferencePopover.owner.contains(event.target))closeInferences();const records=root.querySelector(".lr-records");if(records?.open&&!records.contains(event.target))records.open=false;const menu=root.querySelector(".lr-book-nav");if(menu?.open&&!menu.contains(event.target))menu.open=false;};
+    const dismissPanels=event=>{if(proofPopover&&!proofPopover.node.contains(event.target)&&!proofPopover.owner.contains(event.target))closeProof();const explanation=root.querySelector(".lr-context-explanation");if(!textbook&&explanation&&!explanation.hidden&&!explanation.contains(event.target)&&!codePane?.contains(event.target)&&!event.target.closest?.(".lr-ide-input"))closeExplanation();if(inferencePopover&&!inferencePopover.node.contains(event.target)&&!inferencePopover.owner.contains(event.target))closeInferences();const records=root.querySelector(".lr-records");if(records?.open&&!records.contains(event.target))records.open=false;const menu=root.querySelector(".lr-book-nav");if(menu?.open&&!menu.contains(event.target))menu.open=false;};
     const dismissInferences=event=>{if(event.key==="Escape"){closeProof(!!proofPopover?.node.contains(document.activeElement));closeExplanation(true);}if(event.key==="Escape"&&inferencePopover){event.preventDefault();event.stopPropagation();closeInferences(true);}};
     document.addEventListener("pointerdown",dismissPanels);
     root.addEventListener("keydown",dismissInferences);
+    const guideKeys=event=>{
+      if(!textbook||editing||event.altKey||event.ctrlKey||event.metaKey||event.shiftKey||event.defaultPrevented||event.target?.closest?.("input,textarea,select,[contenteditable]"))return;
+      if(event.key!=="j"&&event.key!=="k")return;
+      event.preventDefault();moveReadingStep(event.key==="j"?1:-1);
+    };
+    root.addEventListener("keydown",guideKeys);
     window.addEventListener("scroll",positionOverlays,true);
     window.addEventListener("resize",positionOverlays);
-    index();render();
+    index();restoreDrafts();render();
     const api = {
-      update(document,settings={}){if(destroyed)return;checkSerial++;checking=false;if(!settings.preserveDrafts){drafts.clear();originals.clear();revision=0;checkedRevision=0;idePositions.clear();editError="";}if(document.kind==="reading_manifest")throw new Error("Use LitexReading.open for a manifest");if(!settings.preserveDrafts)readingLayout=options.layout||document.reading_layout||"source";generation++;navigationSerial++;bookSerial++;loader=null;allOccurrencesLoaded=true;bookIndex=null;bookQuery="";bookOpen=null;operationStatus="";bundle=document;history=[];state={source:null,statement:null,symbol:null,fact:null,wd:null,focusLine:null};activeRule=null;rulePage=0;rulebookState={query:"",usedOnly:true,open:false,category:"all"};index();render();if(options.onNavigate)options.onNavigate({...state},{bundle_id:bundle.bundle_id||null});},
+      update(document,settings={}){if(destroyed)return;checkSerial++;checking=false;if(!settings.preserveDrafts){drafts.clear();originals.clear();revision=0;checkedRevision=0;idePositions.clear();editError="";}if(document.kind==="reading_manifest")throw new Error("Use LitexReading.open for a manifest");if(!settings.preserveDrafts){
+        readingLayout=options.layout||document.reading_layout||"source";
+        draftStorageKey=textbook&&document.bundle_id?"litex-reading:drafts:"+document.bundle_id:null;
+        editing=false;
+      }generation++;navigationSerial++;bookSerial++;loader=null;allOccurrencesLoaded=true;bookIndex=null;bookQuery="";bookOpen=null;operationStatus="";bundle=document;history=[];state={source:null,statement:null,symbol:null,fact:null,wd:null,focusLine:null};activeRule=null;rulePage=0;rulebookState={query:"",usedOnly:true,open:false,category:"all"};index();if(!settings.preserveDrafts)restoreDrafts();render();if(options.onNavigate)options.onNavigate({...state},{bundle_id:bundle.bundle_id||null});},
       setLanguage(value){if(destroyed)return;locale=value;render();},
       selectStatement(id){return !pending()&&statements.has(id)?selectStatement(id):false;},
       selectFact(id){return facts.has(id)?selectFact(id):false;},
@@ -7453,7 +7870,7 @@
         }
         return {sources:snapshotSources,configurations:configuration,strict,...(bundle.reading_layout?{reading_layout:bundle.reading_layout}:{})};
       },
-      destroy(){checkSerial++;checking=false;closeInferences();hideTokenHelp();closeProof();window.removeEventListener("scroll",positionOverlays,true);window.removeEventListener("resize",positionOverlays);destroyed=true;generation++;navigationSerial++;bookSerial++;document.removeEventListener("pointerdown",dismissPanels);root.removeEventListener("keydown",dismissInferences);root.replaceChildren();}
+      destroy(){checkSerial++;checking=false;closeInferences();hideTokenHelp();closeProof();window.removeEventListener("scroll",positionOverlays,true);window.removeEventListener("resize",positionOverlays);root.removeEventListener("keydown",guideKeys);destroyed=true;generation++;navigationSerial++;bookSerial++;document.removeEventListener("pointerdown",dismissPanels);root.removeEventListener("keydown",dismissInferences);root.replaceChildren();}
     };
     return api;
   }

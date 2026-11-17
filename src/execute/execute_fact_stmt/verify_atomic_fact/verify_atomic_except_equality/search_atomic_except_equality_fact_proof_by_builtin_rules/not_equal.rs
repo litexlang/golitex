@@ -1190,43 +1190,45 @@ impl Runtime {
             return None;
         };
         let key = (AtomicName::Plain { name: EQUAL.into() }, false);
-        let mut candidates = Vec::new();
-        for env in self.execution_environments_stack.iter().rev() {
-            let Some(knowns) = env
-                .facts
-                .known_atomic_except_equality_facts
-                .by_prop
-                .get(&key)
-            else {
-                continue;
-            };
-            candidates.extend(knowns.iter().cloned());
-        }
-        for known in candidates {
-            let AtomicFact::NotEqualFact(known_ne) = &known else {
-                continue;
-            };
-            for (prod, other) in [
-                (&known_ne.left, &known_ne.right),
-                (&known_ne.right, &known_ne.left),
-            ] {
-                if !is_zero_obj(other) {
-                    continue;
-                }
-                let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
-                    left: f1,
-                    right: f2,
-                })) = prod
-                else {
-                    continue;
-                };
-                if f1.as_ref().ir() == target.ir() || f2.as_ref().ir() == target.ir() {
-                    // Cite the checked source without entering WD or another
-                    // truth search. Example: a*b != 0 gives a != 0.
-                    let proof = self.lookup_known_atomic_premise(known.clone())?;
-                    return Some(ProductComponentNonzeroBuiltinRuleProof::new(proof).into());
-                }
-            }
+        let target_key = target.ir();
+        let candidate = self
+            .execution_environments_stack
+            .iter()
+            .rev()
+            .find_map(|env| {
+                env.facts
+                    .known_atomic_except_equality_facts
+                    .by_prop
+                    .get(&key)?
+                    .iter()
+                    .find(|known| {
+                        let AtomicFact::NotEqualFact(known_ne) = known else {
+                            return false;
+                        };
+                        [
+                            (&known_ne.left, &known_ne.right),
+                            (&known_ne.right, &known_ne.left),
+                        ]
+                        .iter()
+                        .any(|(product, other)| {
+                            if !is_zero_obj(other) {
+                                return false;
+                            }
+                            let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
+                                left,
+                                right,
+                            })) = product
+                            else {
+                                return false;
+                            };
+                            left.ir() == target_key || right.ir() == target_key
+                        })
+                    })
+                    .cloned()
+            });
+        if let Some(known) = candidate {
+            let proof = self.lookup_known_atomic_premise(known)?;
+            return Some(ProductComponentNonzeroBuiltinRuleProof::new(proof).into());
         }
         None
     }

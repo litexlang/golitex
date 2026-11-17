@@ -315,9 +315,53 @@ fn guarded_domain_exclusion_retains_checked_forall_sources_in_ten_languages() {
 }
 
 #[test]
+fn anonymous_function_checks_return_before_empty_domain_fallback() {
+    use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
+        AnonymousFnBodyInReturnSetProof, DetailedObjWellDefinedProof,
+        FunctionSpaceObjWellDefinedProofByDef, ObjWellDefinedProofByDef,
+    };
+    use crate::execute::{
+        ExecDefinitionStmtResult, ExecHaveFnEqualStmtResult, ExecHaveFnEqualStmtSuccessResult,
+    };
+
+    for source in [
+        "have fn ordinary(k N) R=0",
+        "have fn empty_with_real_return(k {}) R=0",
+    ] {
+        let mut rt = runtime(OutputLanguage::English);
+        let run = rt.run_litex_code(source).unwrap();
+        assert!(run.success, "{source}");
+        let ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(
+            ExecHaveFnEqualStmtResult::Success(ExecHaveFnEqualStmtSuccessResult {
+                anonymous_fn_well_defined,
+                ..
+            }),
+        )) = &run.statement_results[0]
+        else {
+            panic!("expected a checked function declaration");
+        };
+        let Some(DetailedObjWellDefinedProof::ByDef {
+            proof:
+                ObjWellDefinedProofByDef::FunctionSpace(
+                    FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(proof),
+                ),
+            ..
+        }) = anonymous_fn_well_defined.as_detailed_success().unwrap()
+        else {
+            panic!("expected original anonymous-function evidence");
+        };
+        assert!(matches!(
+            &proof.body_in_ret_set,
+            AnonymousFnBodyInReturnSetProof::CheckedMembership(result) if !result.is_failed()
+        ));
+    }
+}
+
+#[test]
 fn anonymous_empty_complete_domains_check_body_wd_and_vacuous_return_bounds() {
     for code in [
         "have fn empty_value(k {}) {}=0\nempty_value={}\nfn_range(empty_value)={}",
+        "have Empty set={}\nhave fn empty_value(k Empty) {}=0\nempty_value={}\nfn_range(empty_value)={}",
         "have fn empty_value(k closed_range(1,0)) {}=0\nempty_value={}",
         "have fn empty_value(k R:k>0,k<0) {}=0\nempty_value={}\nfn_range(empty_value)={}",
         "have fn empty_value(k R:k>0,k<0) {}=k\nempty_value={}",
@@ -330,7 +374,8 @@ fn anonymous_empty_complete_domains_check_body_wd_and_vacuous_return_bounds() {
             "{code}\n{}",
             emit_run_detailed(&run, &rt, "empty-constructor", None)
         );
-        let detailed = project_stmt_detailed(&run.statement_results[0], &rt).stringify();
+        let declaration_index = usize::from(code.starts_with("have Empty"));
+        let detailed = project_stmt_detailed(&run.statement_results[declaration_index], &rt).stringify();
         assert!(
             detailed.contains("return_bound_vacuous_empty_domain"),
             "missing independent void return evidence: {detailed}"

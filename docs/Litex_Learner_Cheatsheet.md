@@ -454,14 +454,20 @@ See the [finite Riemann integral contracts](Manual.md#finite-real-riemann-integr
 ## Supported syntax and recommended writing
 
 Builtin short forms include `deriv(f,x)`, `$diff_at(f,x)`,
-`$has_deriv_at(f,x,d)`, `$cont_at(f,x)`, `integ(f,a,b)`, `set_sum(S,f)`
+`$has_deriv_at(f,x,d)`, `$cont_at(f,x)`, `integral(f,a,b)`, `set_sum(S,f)`
 and `set_prod(S,f)`. Theorem calls accept names such as `deriv_add` and
 `integ_add`. Short and long forms parse to the same builtin and use the same
 parameters and proof requirements. Stored expressions use the long spelling.
 See the [complete short-name table](Manual.md#builtin-short-names-preview).
 
+Use `integ(x,a,b,E)` for an integral expression with a bound variable. Function
+arguments use `integral(f,a,b)`. Open endpoint expression forms are
+`integ_oc`, `integ_co` and `integ_oo`. Infinite forms are
+`integ_pos_inf(x,a,E)` and `integ_neg_inf(x,b,E)`. They require local
+integrability and finite convergence of every relevant truncation limit.
+
 Integral candidates use `$has_integ(f,a,b,I)`, existence uses
-`$integrable(f,a,b)`, and the selected value is `integ(f,a,b)`. Integral
+`$integrable(f,a,b)`, and the selected value is `integral(f,a,b)`. Integral
 theorems include `integ_pow`, `integ_const`, `integ_split`, `integ_subst`,
 `integ_parts` and `integ_eval`. Certificates use `$darboux_bounds(...)`,
 and antiderivative relations use `$antideriv_on(F,f,S)`.

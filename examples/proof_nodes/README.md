@@ -330,6 +330,7 @@ checked by the focused `forall_exist_instantiation_tests` regressions.
 | A named set builder equals a fresh alpha-equivalent set builder | [Set-builder bridge](equal/by_equivalence_class/via_left_peer_set_builder.lit) |
 | Only the right endpoint has a stored peer; reverse its stored edge | [Right peer](equal/by_equivalence_class/via_right_peer_builtin.lit) |
 | Both endpoint classes contribute a peer, with two stored edges on each side | [Both peers and multi-edge paths](equal/by_equivalence_class/via_both_peers_multi_edge.lit) |
+| Alias candidates share successful endpoint WD within one search and retain the selected bridge's full evidence | [Reused endpoint WD](equal/by_equivalence_class/reused_endpoint_wd.lit) |
 | Compare two function applications by matching their heads and citing known equality of their arguments | [Matching bridge](equal/by_equivalence_class/via_peers_matching_fn_app.lit) |
 | The two sides have the same IR: `x = x` | [SameIr](equal/by_they_are_the_same/by_equal_ir.lit) |
 | Function sets differ only by bound parameter names | [FnSet alpha identity](equal/by_they_are_the_same/by_fn_set_alpha_equal.lit) |

@@ -12,6 +12,9 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match rule {
+            SubsetFactSearchProofByBuiltinRule::ConvexIntervalHull(_) => {
+                Err(LeanCompileError::unsupported("ConvexIntervalHull"))
+            }
             SubsetFactSearchProofByBuiltinRule::IntegerRangeSubsetNumericCarrier(p) => {
                 self.compile_integer_interval_subset(fact, &p.proof_of_requirement_facts, position)
             }

@@ -58,6 +58,21 @@ impl LitexToLeanCompiler {
                     "(Eq.trans {left_path} (Eq.trans {identity} {right_path}))"
                 ))
             }
+            EqualFactSearchedProofByEquivalenceClass::AlphaPath(proof) => {
+                let left_identity =
+                    self.compile_identity(&fact.left, &proof.left, &proof.left_identity, position)?;
+                let path =
+                    self.compile_equality_path(&proof.left, &proof.right, &proof.path, position)?;
+                let right_identity = self.compile_identity(
+                    &proof.right,
+                    &fact.right,
+                    &proof.right_identity,
+                    position,
+                )?;
+                Ok(format!(
+                    "(Eq.trans {left_identity} (Eq.trans {path} {right_identity}))"
+                ))
+            }
             EqualFactSearchedProofByEquivalenceClass::ViaPeers(proof) => {
                 let bindings = self.compile_equal_wd_locals(
                     &proof.bridge.fact,

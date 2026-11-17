@@ -13,6 +13,7 @@ pub(crate) mod function_limit;
 pub(crate) mod function_preimage;
 pub(crate) mod function_signature_selection;
 mod helper;
+pub(crate) mod improper_integral;
 pub(crate) mod known_tuple;
 pub(crate) mod matrix_inverse_predicates;
 pub(crate) mod matrix_operations;

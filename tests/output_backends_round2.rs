@@ -114,6 +114,19 @@ fn c_division_is_the_same_floating_operation_in_constants_and_functions() {
 }
 
 #[test]
+#[ignore = "requires clang with UBSan"]
+fn c_source_name_main_does_not_collide_with_the_host_entrypoint() {
+    let generated = to_c_from_source(
+        "have main R = 1\nhave litex_user_main R = 2\nalgo from_main(x R) R by cases:\n    case x = x: main + litex_user_main",
+    )
+    .unwrap();
+    c_run(
+        &generated,
+        "int main(void) { return from_main(0.0) == 3.0 ? 0 : 1; }",
+    );
+}
+
+#[test]
 #[ignore = "requires Python 3 and clang with UBSan"]
 fn extraction_rejects_duplicate_names_across_exports_without_partial_output() {
     let scratch = Scratch::new("duplicates");

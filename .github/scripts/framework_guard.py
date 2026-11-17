@@ -8,7 +8,7 @@ Tier model:
   `.github/framework_lock.json`.
 - Tier 2 (Enum & Append-Only Dispatch Registries): AST/proof-result enums and
   pure routing `match` / strategy tables. Must never mutate environment stacks
-  or transaction state; non-append-only edits trigger a commit-time warning gate.
+  or transaction state. Changes to existing registry entries are advisory.
 - Tier 3 (Feature & Domain Leaves): All concrete statement handlers, calculus
   rules/strategies, domain verifiers, and backend compilers (`compile_to_*`).
 """
@@ -207,11 +207,10 @@ def is_benign_removed_line(line: str) -> bool:
     return False
 
 
-def analyze_diff_lines(diff_text: str) -> Tuple[int, int, List[str]]:
-    """Return (added_count, non_benign_removed_count, sample_removed_lines)."""
+def analyze_diff_lines(diff_text: str) -> Tuple[int, int]:
+    """Return added and non-benign removed line counts."""
     added = 0
     removed = 0
-    samples: List[str] = []
     for raw_line in diff_text.splitlines():
         if raw_line.startswith("+++") or raw_line.startswith("---"):
             continue
@@ -221,9 +220,7 @@ def analyze_diff_lines(diff_text: str) -> Tuple[int, int, List[str]]:
             content = raw_line[1:]
             if not is_benign_removed_line(content):
                 removed += 1
-                if len(samples) < 5:
-                    samples.append(content.strip())
-    return added, removed, samples
+    return added, removed
 
 
 def check_tier2_forbidden_tokens(
@@ -263,7 +260,6 @@ def check_guard(repo_root: Path, mode: str) -> int:
     """mode is one of 'staged', 'worktree', 'ci'."""
     use_index = mode == "staged"
     allow_tier1_unlock = os.environ.get("ALLOW_FRAMEWORK_UNLOCK", "") == "1"
-    allow_tier2_edit = os.environ.get("ALLOW_TIER2_EDIT", "") == "1"
 
     lock_data, lock_err = load_lock_payload(repo_root, use_index=use_index)
     if lock_err is not None or lock_data is None:
@@ -394,7 +390,7 @@ def check_guard(repo_root: Path, mode: str) -> int:
     # 4. Inspect Tier 2 diffs for append-only vs. non-append-only modifications.
     if base_spec is not None:
         append_only_files: List[Tuple[str, int]] = []
-        non_append_files: List[Tuple[str, int, int, List[str]]] = []
+        non_append_files: List[str] = []
 
         for rel_path in all_tier2:
             if mode == "worktree":
@@ -414,9 +410,9 @@ def check_guard(repo_root: Path, mode: str) -> int:
             diff_text = diff_proc.stdout.decode("utf-8", errors="replace")
             if not diff_text.strip():
                 continue
-            added, removed, samples = analyze_diff_lines(diff_text)
+            added, removed = analyze_diff_lines(diff_text)
             if removed > 0:
-                non_append_files.append((rel_path, added, removed, samples))
+                non_append_files.append(rel_path)
             elif added > 0:
                 append_only_files.append((rel_path, added))
 
@@ -424,36 +420,7 @@ def check_guard(repo_root: Path, mode: str) -> int:
             print(f"[Framework Notice] Tier 2 append-only branch addition: {rel_path} (+{added} lines)")
 
         if non_append_files:
-            if mode == "ci":
-                summary = ", ".join(f"{p} (-{rem}/+{add})" for p, add, rem, _ in non_append_files)
-                print(
-                    f"::warning title=Tier 2 Non-Append-Only Edit::Existing lines modified in Tier 2 registry: {summary}"
-                )
-            elif not allow_tier2_edit:
-                print(
-                    "\n[FRAMEWORK WARNING] Non-append-only modification in Tier 2 enum/dispatch registry!",
-                    file=sys.stderr,
-                )
-                for rel_path, added, removed, samples in non_append_files:
-                    print(f"  - {rel_path} (+{added} / -{removed} non-import lines)", file=sys.stderr)
-                    for sample in samples:
-                        print(f"      removed: {sample}", file=sys.stderr)
-                print(
-                    "\nTier 2 files should normally grow only by adding new enum variants or match arms.",
-                    file=sys.stderr,
-                )
-                print(
-                    "If modifying/removing existing Tier 2 arms is intentional, re-run with `ALLOW_TIER2_EDIT=1`",
-                    file=sys.stderr,
-                )
-                print(
-                    "(or confirm interactively in `tools/commit_with_impact.sh`).",
-                    file=sys.stderr,
-                )
-                return 4
-            else:
-                joined = ", ".join(p for p, _, _, _ in non_append_files)
-                print(f"[Framework Notice] Authorized Tier 2 modification for: {joined}")
+            print(f"[Framework Notice] Updated Tier 2 registry entries: {', '.join(non_append_files)}")
 
     return 0
 

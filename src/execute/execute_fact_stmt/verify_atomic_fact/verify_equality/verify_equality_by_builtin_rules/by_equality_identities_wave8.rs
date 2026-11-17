@@ -109,59 +109,55 @@ impl Runtime {
             return Ok(None);
         };
         let zero = zero_obj();
-        let adjacency = self.visible_equivalence_class_adjacency();
-        for key in self.equivalence_class_keys(&zero) {
-            let Some(neighbors) = adjacency.get(&key) else {
-                continue;
-            };
-            for (_, equal_fact) in neighbors.iter() {
-                for side in [&equal_fact.left, &equal_fact.right] {
-                    let Some((b1, b2)) = square_sum_bases(side) else {
-                        continue;
-                    };
-                    if b1.ir() != target.ir() && b2.ir() != target.ir() {
-                        continue;
-                    }
-                    // Nonnegativity of squares is a real-domain fact. The
-                    // enclosing equality's WD also permits complex bases.
-                    let mut requirements = Vec::new();
-                    for base in [b1, b2] {
-                        let membership: Fact = InFact {
-                            fact_id: self.global_ids.allocate_fact_id(),
-                            element: base.clone(),
-                            set: Obj::StandardSet(StandardSet::R),
-                            line_file: None,
-                        }
-                        .into();
-                        requirements.push(
-                            self.verify_builtin_rule_premise(&membership, verify_state.clone())?,
-                        );
-                        if requirements.last().unwrap().is_failed() {
-                            break;
-                        }
-                    }
-                    if requirements.last().unwrap().is_failed() {
-                        continue;
-                    }
-                    // The graph selects a candidate; the proof must cite an
-                    // actual checked path from that sum to zero.
-                    let sum_zero: Fact = EqualFact {
+        let mut candidates =
+            super::super::equivalence_class_graph::EquivalentObjectCandidates::new(&zero);
+        for scope in (0..self.execution_environments_stack.len()).rev() {
+            while let Some(index) = candidates.next_in_scope(self, scope) {
+                let side = &candidates.objects[index];
+                let Some((b1, b2)) = square_sum_bases(side) else {
+                    continue;
+                };
+                if b1.ir() != target.ir() && b2.ir() != target.ir() {
+                    continue;
+                }
+                // Nonnegativity of squares is a real-domain fact. The
+                // enclosing equality's WD also permits complex bases.
+                let mut requirements = Vec::new();
+                for base in [b1, b2] {
+                    let membership: Fact = InFact {
                         fact_id: self.global_ids.allocate_fact_id(),
-                        left: side.clone(),
-                        right: zero.clone(),
+                        element: base.clone(),
+                        set: Obj::StandardSet(StandardSet::R),
                         line_file: None,
                     }
                     .into();
-                    let sum_zero_proof =
-                        self.verify_builtin_rule_premise(&sum_zero, verify_state.clone())?;
-                    if sum_zero_proof.is_failed() {
-                        continue;
+                    requirements
+                        .push(self.verify_builtin_rule_premise(&membership, verify_state.clone())?);
+                    if requirements.last().unwrap().is_failed() {
+                        break;
                     }
-                    requirements.push(sum_zero_proof);
-                    return Ok(Some(SquareSumComponentZeroBuiltinRuleProof {
-                        proof_of_requirement_facts: requirements,
-                    }));
                 }
+                if requirements.last().unwrap().is_failed() {
+                    continue;
+                }
+                // The graph selects a candidate; the proof must cite an
+                // actual checked path from that sum to zero.
+                let sum_zero: Fact = EqualFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: side.clone(),
+                    right: zero.clone(),
+                    line_file: None,
+                }
+                .into();
+                let sum_zero_proof =
+                    self.verify_builtin_rule_premise(&sum_zero, verify_state.clone())?;
+                if sum_zero_proof.is_failed() {
+                    continue;
+                }
+                requirements.push(sum_zero_proof);
+                return Ok(Some(SquareSumComponentZeroBuiltinRuleProof {
+                    proof_of_requirement_facts: requirements,
+                }));
             }
         }
         Ok(None)

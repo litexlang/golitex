@@ -1,7 +1,7 @@
+use super::super::equivalence_class_graph::EquivalentObjectCandidates;
 use crate::ast::fact::EqualFact;
 use crate::ast::obj::{ArithmeticOperator, Literal, Number, Obj, Sub};
 use crate::execute::execute_fact_stmt::VerifyState;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_path_in_adjacency;
 use crate::prelude::KnownEqualityPathProof;
 use crate::runtime::{FactId, Runtime, RuntimeResult};
 
@@ -32,37 +32,36 @@ impl Runtime {
         let zero = Obj::Literal(Literal::Number(Number {
             normalized_value: "0".into(),
         }));
-        let adjacency = self.visible_equivalence_class_adjacency();
-        for key in self.equivalence_class_keys(&zero) {
-            let Some(neighbors) = adjacency.get(&key) else {
-                continue;
-            };
-            for (_peer, equal_fact) in neighbors.iter() {
-                for (side, peer, difference_on_left) in [
-                    (&equal_fact.left, &equal_fact.right, true),
-                    (&equal_fact.right, &equal_fact.left, false),
-                ] {
-                    let Some((x, y)) = match_sub(side) else {
-                        continue;
-                    };
-                    let xy = x.ir() == a_ir && y.ir() == b_ir;
-                    let yx = x.ir() == b_ir && y.ir() == a_ir;
-                    if xy || yx {
-                        // The selected edge can end at another member of zero's
-                        // class. Retain its remaining path from this same visible
-                        // graph, without nested verification or new stored facts.
-                        let Some(path) =
-                            equivalence_class_path_in_adjacency(&adjacency, peer, &zero)
-                        else {
-                            continue;
-                        };
-                        return Ok(Some(EqualFromKnownDifferenceZeroBuiltinRuleProof {
-                            cite_fact_id: equal_fact.fact_id,
-                            difference_on_left,
-                            zero_path: KnownEqualityPathProof::new(path),
-                        }));
-                    }
+        let mut candidates = EquivalentObjectCandidates::new(&zero);
+        for scope in (0..self.execution_environments_stack.len()).rev() {
+            while let Some(index) = candidates.next_in_scope(self, scope) {
+                let Some((x, y)) = match_sub(&candidates.objects[index]) else {
+                    continue;
+                };
+                let xy = x.ir() == a_ir && y.ir() == b_ir;
+                let yx = x.ir() == b_ir && y.ir() == a_ir;
+                if !xy && !yx {
+                    continue;
                 }
+                let mut path = candidates.path(index);
+                let (_, difference, cite_fact_id) = path.pop().expect("non-original class member");
+                let Some(crate::ast::fact::Fact::AtomicFact(
+                    crate::ast::fact::AtomicFact::EqualFact(source),
+                )) = self.fact_by_id_in_stack(cite_fact_id)
+                else {
+                    continue;
+                };
+                let difference_on_left = source.left.ir() == difference.ir();
+                let zero_path = path
+                    .into_iter()
+                    .rev()
+                    .map(|(from, to, id)| (to, from, id))
+                    .collect();
+                return Ok(Some(EqualFromKnownDifferenceZeroBuiltinRuleProof {
+                    cite_fact_id,
+                    difference_on_left,
+                    zero_path: KnownEqualityPathProof::new(zero_path),
+                }));
             }
         }
         Ok(None)

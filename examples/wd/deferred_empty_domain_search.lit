@@ -1,0 +1,26 @@
+# Function return checking with a deferred empty-domain fallback.
+# Before: every anonymous function searched for an empty input domain before
+# checking its body and return membership, including this ordinary function.
+# have fn ordinary(x N) R = 0
+# Now: its ordinary return membership succeeds before empty-domain search.
+# Empty input domains still admit functions into the empty return carrier.
+# Boundary: positive-domain functions into {} and undefined bodies still fail.
+# Evidence: target/release/litex -strict -f examples/wd/deferred_empty_domain_search.lit
+
+have fn ordinary(x N) R = 0
+ordinary(2) = 0
+
+have fn empty_literal(x {}) {} = 0
+empty_literal = {}
+
+have Empty set = {}
+have fn empty_alias(x Empty) {} = 0
+empty_alias = {}
+
+forall x R:
+    x < 0
+    =>:
+        not x > 0
+
+have fn empty_guard(x R: x > 0, x < 0) {} = 0
+empty_guard = {}

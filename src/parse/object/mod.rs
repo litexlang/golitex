@@ -3,6 +3,7 @@
 //! Precedence (low → high): unicode ∪∩×, +-, */%, ..., unary -, ^, postfix (`!` / `.` / call / `[i]`), primary.
 
 mod expression;
+mod integral;
 mod primary;
 
 pub use expression::parse_obj;

@@ -418,6 +418,16 @@ pub enum EqualFactSearchedProofByEquivalenceClass {
     AlphaEndpoints(KnownEqualityAlphaEndpointsProof),
     AlphaPaths(KnownEqualityAlphaPathsProof),
     ViaPeers(EqualityViaPeersProof),
+    AlphaPath(KnownEqualityAlphaPathProof),
+}
+
+// A stored path with structural identities connecting both goal endpoints.
+pub struct KnownEqualityAlphaPathProof {
+    pub left: Obj,
+    pub right: Obj,
+    pub left_identity: TheyAreTheSameProof,
+    pub path: KnownEqualityPathProof,
+    pub right_identity: TheyAreTheSameProof,
 }
 
 // Stored paths joined only by structural identity/alpha, with no searched bridge.

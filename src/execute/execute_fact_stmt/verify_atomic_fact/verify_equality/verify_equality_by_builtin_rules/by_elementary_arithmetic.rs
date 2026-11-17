@@ -1,7 +1,7 @@
 //! Narrow arithmetic identities; all semantic premises use the builtin entry.
 use crate::prelude::*;
 use crate::ast::obj::ArithmeticOperator as A;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::EquivalentObjectCandidates;
 
 pub enum ElementaryArithmeticProof {
     ZeroToPositiveRealPower {
@@ -194,29 +194,29 @@ impl Runtime {
             // Consume a stored x^n=0, never synthesize a power-zero premise.
             if is_number(right, "0") {
                 let zero = number("0");
-                let members = equivalence_class_members_with_paths_in_adjacency(
-                    &self.visible_equivalence_class_adjacency(),
-                    &zero,
-                );
-                for (power, _) in members {
-                    let Some((base, n)) = pow_args(&power) else {
-                        continue;
-                    };
-                    if !same(base, left) {
-                        continue;
-                    }
-                    let requirements = self.elementary_members(
-                        &[(base, StandardSet::C), (n, StandardSet::NPos)],
-                        state.clone(),
-                    )?;
-                    if requirements.iter().any(VerifyFactResult::is_failed) {
-                        continue;
-                    }
-                    if let Some(premise) = self.lookup_known_obj_equality(&power, &zero) {
-                        return Ok(Some(P::PositivePowerZero {
-                            premise: Box::new(premise),
-                            requirements,
-                        }));
+                let mut members = EquivalentObjectCandidates::new(&zero);
+                for scope in (0..self.execution_environments_stack.len()).rev() {
+                    while let Some(index) = members.next_in_scope(self, scope) {
+                        let power = &members.objects[index];
+                        let Some((base, n)) = pow_args(&power) else {
+                            continue;
+                        };
+                        if !same(base, left) {
+                            continue;
+                        }
+                        let requirements = self.elementary_members(
+                            &[(base, StandardSet::C), (n, StandardSet::NPos)],
+                            state.clone(),
+                        )?;
+                        if requirements.iter().any(VerifyFactResult::is_failed) {
+                            continue;
+                        }
+                        if let Some(premise) = self.lookup_known_obj_equality(&power, &zero) {
+                            return Ok(Some(P::PositivePowerZero {
+                                premise: Box::new(premise),
+                                requirements,
+                            }));
+                        }
                     }
                 }
             }
@@ -243,41 +243,65 @@ impl Runtime {
         }
         // A positive base has an injective nonzero integer power. Inspect only
         // already stored equalities; no global rewrite or exponent search.
-        let adjacency = self.visible_equivalence_class_adjacency();
-        for neighbors in adjacency.values() {
-            for (_, known) in neighbors {
-                for (a, b) in [(&known.left, &known.right), (&known.right, &known.left)] {
-                    let (Some((x, n)), Some((y, k))) = (pow_args(a), pow_args(b)) else {
-                        continue;
-                    };
-                    if !same(x, &fact.left) || !same(y, &fact.right) || !same(n, k) {
-                        continue;
+        let mut candidates = Vec::new();
+        for env in self.execution_environments_stack.iter().rev() {
+            for edges in env
+                .facts
+                .known_equivalence_classes
+                .generating_edges
+                .values()
+            {
+                for (_, known) in edges {
+                    let compatible = [(&known.left, &known.right), (&known.right, &known.left)]
+                        .iter()
+                        .any(|(a, b)| {
+                            let (Some((x, n)), Some((y, k))) = (pow_args(a), pow_args(b)) else {
+                                return false;
+                            };
+                            same(x, &fact.left) && same(y, &fact.right) && same(n, k)
+                        });
+                    if compatible
+                        && !candidates
+                            .iter()
+                            .any(|source: &EqualFact| source.fact_id == known.fact_id)
+                    {
+                        candidates.push(known.clone());
                     }
-                    let mut requirements = self.elementary_members(
-                        &[
-                            (x, StandardSet::RPos),
-                            (y, StandardSet::RPos),
-                            (n, StandardSet::Z),
-                        ],
-                        state,
-                    )?;
-                    let nonzero: Fact = NotEqualFact {
-                        fact_id: self.global_ids.allocate_fact_id(),
-                        left: n.clone(),
-                        right: number("0"),
-                        line_file: None,
-                    }
-                    .into();
-                    requirements.push(self.verify_builtin_rule_premise(&nonzero, state)?);
-                    if requirements.iter().any(VerifyFactResult::is_failed) {
-                        continue;
-                    }
-                    if let Some(premise) = self.lookup_known_obj_equality(a, b) {
-                        return Ok(Some(P::PositivePowerCancellation {
-                            premise: Box::new(premise),
-                            requirements,
-                        }));
-                    }
+                }
+            }
+        }
+        for known in &candidates {
+            for (a, b) in [(&known.left, &known.right), (&known.right, &known.left)] {
+                let (Some((x, n)), Some((y, k))) = (pow_args(a), pow_args(b)) else {
+                    continue;
+                };
+                if !same(x, &fact.left) || !same(y, &fact.right) || !same(n, k) {
+                    continue;
+                }
+                let mut requirements = self.elementary_members(
+                    &[
+                        (x, StandardSet::RPos),
+                        (y, StandardSet::RPos),
+                        (n, StandardSet::Z),
+                    ],
+                    state,
+                )?;
+                let nonzero: Fact = NotEqualFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: n.clone(),
+                    right: number("0"),
+                    line_file: None,
+                }
+                .into();
+                requirements.push(self.verify_builtin_rule_premise(&nonzero, state)?);
+                if requirements.iter().any(VerifyFactResult::is_failed) {
+                    continue;
+                }
+                if let Some(premise) = self.lookup_known_obj_equality(a, b) {
+                    return Ok(Some(P::PositivePowerCancellation {
+                        premise: Box::new(premise),
+                        requirements,
+                    }));
                 }
             }
         }

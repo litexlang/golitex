@@ -204,6 +204,14 @@ fn eval_returns_exact_values_and_publishes_the_checked_equality() {
         ("eval floor(-7/3)", "(-3)"),
         ("eval ceil(-7/3)", "(-2)"),
         ("eval gcd((1/3)*6,8)", "2"),
+        (
+            "eval lcm(10^40,10^40)",
+            "10000000000000000000000000000000000000000",
+        ),
+        (
+            "eval lcm(-170141183460469231731687303715884105728,1)",
+            "170141183460469231731687303715884105728",
+        ),
         ("eval sqrt(1/9)", "(1 / 3)"),
         ("eval sqrt(12)+sqrt(27)", "(5 * sqrt (3))"),
         ("eval re((1+2*i)*(3-i))", "5"),
@@ -246,6 +254,7 @@ fn eval_returns_exact_values_and_publishes_the_checked_equality() {
         "eval factorial(70)",
         "eval 10^99 * 10^99",
         "eval 10^50 * 10^50",
+        "eval lcm(10^99,11)",
         "eval re(1/(i-i))",
     ] {
         check(source, false);

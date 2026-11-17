@@ -3,6 +3,12 @@
 Positive tracers for **already-implemented** Obj / Fact WD.
 Negatives stay in `../wd_negative/`.
 
+[Checked arguments before reverification](checked_argument_before_reverification.lit)
+reuses completed argument WD when deriving a comparison's real domains. Natural
+successors, positive logarithms and guarded quotients retain their original
+domain checks. Missing positivity and nonzero guards remain rejected by the
+focused structural-membership tests.
+
 [Builtin short names](builtin_short_names.lit) mixes canonical and short
 derivative, continuity, finite-aggregate and integral spellings. All forms use
 the same proof-consuming selectors. Parser regressions check exact AST
@@ -109,6 +115,11 @@ enforcement remains a separate gap; ordered `reduce` may use subtraction.
 ```bash
 target/release/litex -f <this-file>
 ```
+
+[Deferred empty-domain search](deferred_empty_domain_search.lit) checks ordinary
+function returns first and retains literal, aliased and guarded empty-domain
+constructors. The function-domain tests also reject invalid bodies and
+nonempty-domain functions with empty return carriers.
 
 ## Status (Obj) — after Wave4 (Sum/Product/Reduce + Index* full type + FieldAccess FnObj)
 

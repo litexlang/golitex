@@ -40,6 +40,7 @@
     return result;
   }
   const options={
+    experience:"textbook",
     locale:language.value,
     onCheck:buildEndpoint?checkSource:undefined,
     exampleGroups:JSON.parse(document.getElementById("reading-example-groups")?.textContent||"[]"),

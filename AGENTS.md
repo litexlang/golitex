@@ -20,6 +20,27 @@ Project identity contract in `golitex-repository-policy`. The
 `assets/litex-agent-pipeline.png` diagram anchors the workflow from mathematical
 input through checked Litex source to multiple downstream outputs.
 
+## Natural mathematical writing
+
+Prefer `$integrable(f,a,b)` for integrability and `integral(f,a,b)=I` or the expression form `integ(x,a,b,E)=I` for an
+integral value in new examples, explanations and mathematical proofs. When
+shared verification can establish integrability from the function expression
+or existing premises, write the integral equation directly. Keep necessary
+integrability assumptions explicit for arbitrary functions.
+
+Prefer ordinary mathematical properties and value equations over `has_...`
+candidate predicates whenever the same statement is supported. For example,
+write `deriv(f,x)=v` for a derivative value. Preserve all required domains and
+existence conditions. Use candidate predicates when their explicit relation
+is needed by the task or by a currently unsupported direct route.
+
+## Calculus reference and updates
+
+For calculus updates, first read the [Calculus chapter](docs/Manual.md#calculus)
+and its [maintenance instructions](docs/Manual.md#calculus-maintenance).
+Update the affected interfaces, domains, proof routes, examples and backend
+coverage in that chapter together with the implementation or source library.
+
 ## Verification artifact lifecycle
 
 For Litex-to-Lean work, keep the mathematical deliverables as canonical `.lit`
@@ -97,8 +118,8 @@ branches across three tiers enforced at Git commit and CI by
   `dispatch_predicate_domain_wd.rs`, `search_equal_fact_by_builtin_strategy.rs`,
   builtin rule/strategy/theorem dispatchers, and KB enum codecs). Tier 2 files
   must never mutate environment stacks or transaction state, and normally grow
-  only by appending new enum variants or match arms; non-append-only edits raise
-  a commit-time warning gate (`ALLOW_TIER2_EDIT=1` or interactive confirmation).
+  only by appending new enum variants or match arms. Changes to existing entries
+  produce an informational notice and proceed without additional confirmation.
 - **Tier 3 — Feature & Domain Leaves:** all concrete statement implementations,
   domain WD modules, calculus/algebra rules and strategies, and read-only
   backend compilers (`src/compile_to_*`, `src/json_output/`, `src/reading/`,

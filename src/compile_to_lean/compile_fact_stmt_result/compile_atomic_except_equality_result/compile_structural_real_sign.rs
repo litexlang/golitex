@@ -80,6 +80,25 @@ impl LitexToLeanCompiler {
             return Err(invalid("Sign"));
         }
         match &proof.reason {
+            StructuralRealSignReason::ResolvedBound { real, source } => {
+                if real.element.ir() != proof.element.ir() || real.set != StandardSet::R {
+                    return Err(invalid("ResolvedBoundSubject"));
+                }
+                let real = self.compile_structural(real, position)?;
+                self.compile_order_known_premise(source, position)?;
+                let goal: AtomicFact = LessFact {
+                    fact_id: FactId::new(0),
+                    left: Obj::Literal(Literal::Number(Number::new("0".into()))),
+                    right: proof.element.clone(),
+                    line_file: None,
+                }
+                .into();
+                let bound =
+                    self.compile_signed_literal_bound(&goal, source.fact.fact_id(), position)?;
+                Ok(format!(
+                    "(by\n  have _sign_real := {real}\n  exact {bound}\n)"
+                ))
+            }
             StructuralRealSignReason::DifferenceFromOrder { .. } => {
                 self.compile_difference_sign(proof, position)
             }

@@ -56,7 +56,8 @@ fn contains_calculus(node: &JsonValue, evidence: &[JsonValue], memo: &mut [Optio
             matches!(
                 fields.get("type"),
                 Some(JsonValue::String(kind)) if matches!(kind.as_str(),
-                    "DerivativeAt" | "RiemannIntegral" | "HasDerivativeAtFact" | "HasRiemannIntegralFact"
+                    "DerivativeAt" | "RiemannIntegral" | "ImproperIntegral"
+                        | "HasDerivativeAtFact" | "HasRiemannIntegralFact"
                 )
             ) || fields
                 .get("fields")
@@ -68,5 +69,18 @@ fn contains_calculus(node: &JsonValue, evidence: &[JsonValue], memo: &mut [Optio
                 })
         }
         _ => false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn improper_integrals_retain_the_calculus_formula() {
+        let mut fields = crate::knowledge_base::JsonObject::new();
+        fields.insert("type".into(), text("ImproperIntegral"));
+        let node = JsonValue::Object(fields);
+        assert!(contains_calculus(&node, &[], &mut []));
     }
 }

@@ -32,6 +32,7 @@ pub(super) fn obj_kind(value: &Obj) -> &'static str {
         },
         Obj::IntegralOperator(value) => match value {
             IntegralOperator::Riemann(_) => "IntegralOperator.Riemann",
+            IntegralOperator::Improper(_) => "IntegralOperator.Improper",
         },
         Obj::DerivativeOperator(value) => match value {
             DerivativeOperator::Partial(_) => "DerivativeOperator.Partial",
@@ -344,6 +345,7 @@ pub(super) const OBJ_KINDS: &[&str] = &[
     "BoundOperator.Supremum",
     "BoundOperator.Infimum",
     "IntegralOperator.Riemann",
+    "IntegralOperator.Improper",
     "DerivativeOperator.Partial",
     "DerivativeOperator.ScalarDifferential",
     "DerivativeOperator.TotalDifferential",

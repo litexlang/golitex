@@ -1,6 +1,6 @@
 {
-  "date": "2026-11-04",
-  "binary_sha256": "27c82d982c6afb7bc6b788050a3dcf7d65ef2b4cdd9c17bb27085f3db79813f3",
+  "litex_version": "Litex 1.2.0",
+  "binary_sha256": "88bed8d3db1182827d5e0465eb9e076502fb647b4cf8ea7623fa05b51ceb7c9e",
   "source": {
     "command": [
       "target/release/litex",
@@ -13,11 +13,11 @@
     "exit_code": 0,
     "kind": "run",
     "run_result": "success",
-    "statements": 266,
+    "statements": 212,
     "session_terminated": false,
     "termination": null,
-    "seconds": 12.987,
-    "sha256": "ba95d4f8796dd2742bad54dc72d889a02575ab05b91933628a0f7f1e509dd4bc"
+    "seconds": 2.4683563340222463,
+    "sha256": "21aa131aee936c97e4ce6104d536ca001ec882b81faa3a4ef68b58bcf7ee3267"
   },
   "independent_import": {
     "command": [
@@ -34,99 +34,265 @@
     "statements": 21,
     "session_terminated": false,
     "termination": null,
-    "seconds": 13.283,
+    "seconds": 2.6982009999919683,
     "sha256": "a28b37094b838aa40d9af839b03769ce580a8ae265fcff08556d07457454af35"
   },
   "negative_controls": [
     {
       "id": "false_does_not_hold",
       "source": "$hol::holds(hol::False)",
+      "phase": "search_proof",
+      "first_error": {
+        "statement_index": 0,
+        "statement": "$m0::f0::holds(m0::f0::False)",
+        "phase": "search_proof",
+        "message": "Could not prove the goal.",
+        "category": "proof_search",
+        "obligation": "$m0::f0::holds(m0::f0::False)",
+        "file": "<repl>",
+        "line": 1,
+        "source": "$hol::holds(hol::False)"
+      },
       "rejected_as_intended": true,
-      "errors": [
-        {
-          "statement_index": 0,
-          "statement": "$m0::f0::holds(m0::f0::False)",
-          "phase": "search_proof",
-          "message": "Could not prove the goal.",
-          "category": "proof_search",
-          "obligation": "$m0::f0::holds(m0::f0::False)"
-        }
-      ],
-      "session_terminated": false,
       "liveness_after_refusal": true
     },
     {
       "id": "two_plus_two_not_three",
       "source": "hol::plus(hol::hol_of_nat(2),hol::hol_of_nat(2))=hol::hol_of_nat(3)",
+      "phase": "search_proof",
+      "first_error": {
+        "statement_index": 0,
+        "statement": "m0::f0::plus(m0::f0::hol_of_nat(2), m0::f0::hol_of_nat(2)) = m0::f0::hol_of_nat(3)",
+        "phase": "search_proof",
+        "message": "Could not prove the goal.",
+        "category": "proof_search",
+        "obligation": "m0::f0::plus(m0::f0::hol_of_nat(2), m0::f0::hol_of_nat(2)) = m0::f0::hol_of_nat(3)",
+        "file": "<repl>",
+        "line": 1,
+        "source": "hol::plus(hol::hol_of_nat(2),hol::hol_of_nat(2))=hol::hol_of_nat(3)"
+      },
       "rejected_as_intended": true,
-      "errors": [
-        {
-          "statement_index": 0,
-          "statement": "m0::f0::plus(m0::f0::hol_of_nat(2), m0::f0::hol_of_nat(2)) = m0::f0::hol_of_nat(3)",
-          "phase": "search_proof",
-          "message": "Could not prove the goal.",
-          "category": "proof_search",
-          "obligation": "m0::f0::plus(m0::f0::hol_of_nat(2), m0::f0::hol_of_nat(2)) = m0::f0::hol_of_nat(3)"
-        }
-      ],
-      "session_terminated": false,
       "liveness_after_refusal": true
     },
     {
       "id": "wrong_beta_result",
       "source": "fn(x N) N {x+1}(3)=5",
+      "phase": "search_proof",
+      "first_error": {
+        "statement_index": 0,
+        "statement": "fn (x N) N{(x + 1)}(3) = 5",
+        "phase": "search_proof",
+        "message": "Could not prove the goal.",
+        "category": "proof_search",
+        "obligation": "fn (x N) N{(x + 1)}(3) = 5",
+        "file": "<repl>",
+        "line": 1,
+        "source": "fn(x N) N {x+1}(3)=5"
+      },
       "rejected_as_intended": true,
-      "errors": [
-        {
-          "statement_index": 0,
-          "statement": "fn (x N) N{(x + 1)}(3) = 5",
-          "phase": "search_proof",
-          "message": "Could not prove the goal.",
-          "category": "proof_search",
-          "obligation": "fn (x N) N{(x + 1)}(3) = 5"
-        }
-      ],
-      "session_terminated": false,
+      "liveness_after_refusal": true
+    },
+    {
+      "id": "sketch_theorem_is_local",
+      "source": "release thm hol::reflexive_everywhere",
+      "phase": "lookup",
+      "first_error": {
+        "statement_index": 0,
+        "statement": "release thm m0::f0::reflexive_everywhere",
+        "phase": "lookup",
+        "message": "theorem `m0::f0::reflexive_everywhere` was not found",
+        "file": "<repl>",
+        "line": 1,
+        "source": "release thm hol::reflexive_everywhere",
+        "location_precision": "statement"
+      },
+      "rejected_as_intended": true,
       "liveness_after_refusal": true
     }
   ],
-  "session_close": {
-    "exit_code": 0,
-    "run_result": "failure",
-    "session_terminated": false,
-    "termination": null,
-    "meaning": "Aggregate failure records the deliberate refusals; per-turn verdicts and successful follow-ups establish the controls."
+  "demonstrations": {
+    "sketches": 6,
+    "accepted_direct_sketch_steps": 64,
+    "published_facts_or_inferences": 0
   },
-  "manifest_sha256": {
-    "litex.config": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
-    "validation/litex.config": "a25a7044e43b33078d02289432c2657c97fb2ad35ecb3931bbf0524f678f7aa8"
+  "paired_timing": {
+    "method": "Five alternating rounds of fresh-process strict checks on one release executable. All three files are checked in standalone mode. The third file ends before the six sketch blocks and measures a smaller workload.",
+    "source_sha256": {
+      "v3_top_level_demos": "b1f378ccaba0af57d8f035fe8ac85d02fef3dc413e1bbfa6c3c0b78d03015621",
+      "v3_sketches": "21aa131aee936c97e4ce6104d536ca001ec882b81faa3a4ef68b58bcf7ee3267",
+      "v3_without_running_sketches": "767189cbde608e11475a7dc16a72fc1c65dd84bddc038e5247e64ae1cc84142d"
+    },
+    "wall_samples_seconds": {
+      "v3_top_level_demos": [
+        2.7633314169943333,
+        2.8732772499788553,
+        2.9535327500198036,
+        1.6678759170463309,
+        1.7230892919469625
+      ],
+      "v3_sketches": [
+        2.4995902919908985,
+        2.5984753330703825,
+        2.753424207912758,
+        1.7862923329230398,
+        2.091221374925226
+      ],
+      "v3_without_running_sketches": [
+        2.1925660419510677,
+        2.3446871670894325,
+        1.6499473749427125,
+        1.6108334169257432,
+        2.09207412507385
+      ]
+    },
+    "median_seconds": {
+      "v3_top_level_demos": 2.7633314169943333,
+      "v3_sketches": 2.4995902919908985,
+      "v3_without_running_sketches": 2.09207412507385
+    },
+    "repeat_wall_samples_seconds": {
+      "v3_top_level_demos": [
+        1.393016083049588,
+        1.379135041963309,
+        1.3653139589587227,
+        1.5934146250365302,
+        1.4823189169401303
+      ],
+      "v3_sketches": [
+        1.3464039579266682,
+        1.3276741249719635,
+        1.3014713340671733,
+        1.3342845001025125,
+        1.4187334580346942
+      ],
+      "v3_without_running_sketches": [
+        1.1960520419524983,
+        1.1833824159111828,
+        1.2105189160211012,
+        1.2128446669084951,
+        1.2402566249947995
+      ]
+    },
+    "repeat_cpu_samples_seconds": {
+      "v3_top_level_demos": [
+        1.381934,
+        1.3706199999999997,
+        1.3595640000000007,
+        1.4357569999999988,
+        1.432915000000003
+      ],
+      "v3_sketches": [
+        1.323049,
+        1.3194910000000002,
+        1.297308000000001,
+        1.326091,
+        1.3816409999999983
+      ],
+      "v3_without_running_sketches": [
+        1.186379,
+        1.1785579999999998,
+        1.204839999999999,
+        1.194407,
+        1.219225999999999
+      ]
+    },
+    "repeat_median_seconds": {
+      "v3_top_level_demos": 1.393016083049588,
+      "v3_sketches": 1.3342845001025125,
+      "v3_without_running_sketches": 1.2105189160211012
+    },
+    "repeat_median_cpu_seconds": {
+      "v3_top_level_demos": 1.381934,
+      "v3_sketches": 1.323049,
+      "v3_without_running_sketches": 1.194407
+    }
   },
-  "relocation": {
-    "mathematical_source_unchanged": true,
-    "mathematical_source_sha256": "b54f48b725be5ab7b55780b1d499fa65aed14aa6d1f11ab890f3285766bcb58f",
-    "caller_unchanged": true,
-    "negative_cases_unchanged": true,
-    "standard_library_copy_removed": true,
-    "import_mode": "Relative [import] from validation/ to ..",
-    "standard_library_search_path": "LITEX_STD_PATH removed from the verification environment"
+  "previous_public_v3": {
+    "original_source": {
+      "command": [
+        "target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-f",
+        "examples/hol_embedding.lit"
+      ],
+      "exit_code": 0,
+      "kind": "run",
+      "run_result": "success",
+      "statements": 266,
+      "session_terminated": false,
+      "termination": null,
+      "seconds": 15.993147125001997,
+      "sha256": "011682825cf4bbaa5285d9a6929b6976a32db7a5de804d5b841f4c8bd3ddc9fd"
+    },
+    "v3_source": {
+      "command": [
+        "target/release/litex",
+        "-strict",
+        "-lang",
+        "en",
+        "-f",
+        "showcases/hol/main.lit"
+      ],
+      "exit_code": 0,
+      "kind": "run",
+      "run_result": "success",
+      "statements": 277,
+      "session_terminated": false,
+      "termination": null,
+      "seconds": 2.449039208004251,
+      "sha256": "b1f378ccaba0af57d8f035fe8ac85d02fef3dc413e1bbfa6c3c0b78d03015621"
+    },
+    "paired_timing": {
+      "method": "Five alternating pairs of fresh-process strict full-file checks, using the same release binary. Normal JSON output is captured.",
+      "original_samples_seconds": [
+        15.993147125001997,
+        18.982544249971397,
+        15.760789250023663,
+        16.29992525000125,
+        15.707141124992631
+      ],
+      "v3_samples_seconds": [
+        2.449039208004251,
+        2.5904784169979393,
+        2.3740645829821005,
+        2.2307503749616444,
+        2.620669625001028
+      ],
+      "original_median_seconds": 15.993147125001997,
+      "v3_median_seconds": 2.449039208004251,
+      "median_runtime_reduction": 0.8468694629729453
+    },
+    "binary_sha256": "2cab4087687418744e5a7ce07103453500dcd873518608ebc95ad162eff07c57",
+    "published_conclusions": {
+      "matched_original_published_conclusion_lists": 266,
+      "v3_additional_proved_theorems": 11,
+      "comparison_method": "Matched corresponding stores after removing the showcase file qualifier f0:: and normalizing the displayed generated binders.",
+      "generated_binder_display_differences": [
+        {
+          "original_item": 78,
+          "v3_item": 59,
+          "original": [
+            "forall A nonempty_set:\n    \\hol_epsilon<A> $in index_cart(fn (x A) Bool, power_set(A), \\hol_candidates<A>)",
+            "forall A nonempty_set:\n    \\hol_epsilon<A> $in fn (__param_216 fn (x A) Bool) family_union(power_set(A))",
+            "forall A nonempty_set:\n    $is_choice_function_for(fn (x A) Bool, power_set(A), \\hol_candidates<A>, \\hol_epsilon<A>)"
+          ],
+          "v3": [
+            "forall A nonempty_set:\n    \\hol_epsilon<A> $in index_cart(fn (x A) Bool, power_set(A), \\hol_candidates<A>)",
+            "forall A nonempty_set:\n    \\hol_epsilon<A> $in fn (__param_193 fn (x A) Bool) family_union(power_set(A))",
+            "forall A nonempty_set:\n    $is_choice_function_for(fn (x A) Bool, power_set(A), \\hol_candidates<A>, \\hol_epsilon<A>)"
+          ]
+        }
+      ]
+    }
   },
-  "scope": "Strict showcase source and independent relative import, final-statement refusals and Session liveness. No Rust, Lean or release-wide claim.",
-  "temporary_artifacts": {
-    "remaining_task_temporary_artifacts": [],
-    "task_ledger_removed": true,
-    "task_verifier_driver_removed": true
+  "source_correspondence": {
+    "preserved_v3_top_level_steps_after_flattening_sketches_and_numeral_helper": 277,
+    "theorems_with_same_goal_and_adjusted_local_proof": [
+      "hol_converted_two_plus_two",
+      "hol_two_plus_two_not_three"
+    ]
   },
-  "attribution": {
-    "author": "chegnxuan huang",
-    "unchanged_original": "examples/hol_embedding.lit",
-    "original_sha256": "011682825cf4bbaa5285d9a6929b6976a32db7a5de804d5b841f4c8bd3ddc9fd"
-  },
-  "completion_audit": {
-    "strict_source_and_relative_import_passed": true,
-    "all_refusals_and_session_follow_ups_passed": true,
-    "mathematical_statements_callers_and_cases_preserved": true,
-    "old_directories_and_obsolete_references_removed": true,
-    "collection_indexes_and_local_documentation_links_checked": true,
-    "source_trust_and_user_axiom_delta": 0
-  }
+  "date": "2026-11-16"
 }

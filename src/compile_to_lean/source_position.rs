@@ -744,7 +744,7 @@ impl<'a> SourcePosition<'a> {
         self.atomic_search_verify_prior(target)
     }
 
-    /// Empty-domain evidence in a literal predates its parameters and guards.
+    /// Literal empty-domain evidence excludes its own parameters and guards.
     /// Space-existence strategies retain their usual atomic-search child order.
     pub fn function_domain_empty_verify_prior(
         &self,
@@ -12893,6 +12893,27 @@ fn riemann_expression_search_stages<'a>(
         RiemannConstructorProof as C, RiemannLeafProof,
     };
     match &proof.constructor {
+        C::ZeroWidth { endpoints_equal } => stages.push(AtomicSearchStage::Verify(endpoints_equal)),
+        C::ReciprocalSqrt {
+            lower_positive,
+            upper_positive,
+        } => {
+            stages.push(AtomicSearchStage::Verify(lower_positive));
+            stages.push(AtomicSearchStage::Verify(upper_positive));
+        }
+        C::ReciprocalNaturalPower {
+            exponent_natural,
+            exponent_nonzero,
+            endpoint_signs,
+            ..
+        } => {
+            for proof in [exponent_natural.as_ref(), exponent_nonzero.as_ref()]
+                .into_iter()
+                .chain(endpoint_signs)
+            {
+                stages.push(AtomicSearchStage::Verify(proof));
+            }
+        }
         C::Polynomial {
             equality,
             normalized,

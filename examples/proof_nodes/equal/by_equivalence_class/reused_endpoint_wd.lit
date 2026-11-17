@@ -1,0 +1,9 @@
+# Equality peers retain their checked endpoint WD within one search.
+# Previously each candidate repeated the unchanged opposite endpoint's WD.
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_equivalence_class/reused_endpoint_wd.lit
+have x R
+let factored_value = (x + 1) * (x - 1)
+let first_alias = factored_value
+let second_alias = first_alias
+second_alias = x^2 - 1
+x^2 - 1 = second_alias

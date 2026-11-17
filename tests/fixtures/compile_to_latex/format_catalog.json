@@ -389,6 +389,11 @@
       "format": "\\int_a^b f(\\xi)\\,\\mathrm d\\xi"
     },
     {
+      "kind": "IntegralOperator.Improper",
+      "source": "let specimen = integral_open_closed(f,a,b)",
+      "format": "\\int_{{a}^{\\circ}}^b f(\\xi)\\,\\mathrm d\\xi"
+    },
+    {
       "kind": "DerivativeOperator.Partial",
       "source": "let specimen = partial_derivative(f,a,n,j)",
       "format": "(\\frac{\\partial f}{\\partial x_j}(a))_{[n]}"

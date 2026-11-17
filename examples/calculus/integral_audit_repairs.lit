@@ -1,0 +1,42 @@
+# Before: both zero-function infinite integrals failed well-definedness.
+# integ_pos_inf(x,1,0)=0
+# integ_neg_inf(x,1,0)=0
+# Now: a checked zero factor makes the truncation limit zero.
+integ_pos_inf(x,1,0)=0
+integ_neg_inf(x,1,0)=0
+lim_pos_inf(fn(t R) R {0*(t-1)})=0
+
+# Before: the third equality failed after both values were accepted.
+# integ_oc(t,0,1,t)=1/2
+# integ_co(z,0,1,z)=1/2
+# integ_oc(t,0,1,t)=integ_co(z,0,1,z)
+# Now: fresh bound names retain access to the stored equality path.
+integ_oc(t,0,1,t)=1/2
+integ_co(z,0,1,z)=1/2
+integ_oc(t,0,1,t)=integ_co(z,0,1,z)
+
+# Before: LaTeX emitted 2^{2}^{\circ}, causing Double superscript.
+# Now: the entire open endpoint is grouped before its marker.
+have fn identity(x R) R=x
+let powered_endpoint=integral_open_closed(identity,2^2,5)
+
+# Boundary: included singularities, divergent tails, changed integrands and
+# wrong values remain rejected by the matching Rust regressions.
+# Check: target/release/litex -strict -lang en -f examples/calculus/integral_audit_repairs.lit
+
+# Before: removing the zero anchor prevented segment membership checking.
+# integ_oc(x,0,pi,1)=pi
+# Now: truncations retain their checked endpoints and domain evidence.
+integ_oc(x,0,pi,1)=pi
+integ_co(x,pi,0,1)=-pi
+0!=pi
+integ_oo(x,0,pi,1)=pi
+forall b R:
+    b>0
+    0!=b
+    =>:
+        integ_oc(x,0,b,1)=b
+
+# The declared signature and the function body may name their binder differently.
+have integral_tail fn(s '(0,1)) R=fn(t '(0,1)) R {integral(fn(x R) R {x},t,1)}
+lim_right(integral_tail,0)=1/2

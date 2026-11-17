@@ -26,6 +26,28 @@ pub(super) fn project(p: &StructuralLimitProof, rt: &Runtime) -> JsonValue {
         }
     };
     let geometry = match &p.geometry {
+        StructuralLimitGeometryProof::RealInterval {
+            requirement_facts,
+            proof_of_requirement_facts,
+        } => object_for(
+            rt,
+            vec![
+                ("rule", string("RealIntervalAccumulation")),
+                (
+                    "requirements",
+                    JsonValue::Array(
+                        requirement_facts
+                            .iter()
+                            .map(|f| string(f.readable_string()))
+                            .collect(),
+                    ),
+                ),
+                (
+                    "proofs",
+                    super::store::project_verify_facts(proof_of_requirement_facts, rt),
+                ),
+            ],
+        ),
         StructuralLimitGeometryProof::PositiveNaturalSequence => {
             object_for(rt, vec![("rule", string("PositiveNaturalSequence"))])
         }
@@ -128,7 +150,50 @@ fn expression(p: &StructuralLimitExpressionProof, rt: &Runtime) -> JsonValue {
         ("limit", string(p.limit.readable_string())),
     ];
     let rule = match &p.constructor {
+        C::Elementary {
+            kind,
+            argument,
+            domain,
+        } => {
+            fields.push(("function", string(kind.name())));
+            fields.push(("argument", expression(argument, rt)));
+            fields.push(("domain", project_verify_fact(domain, rt)));
+            "ElementaryContinuity"
+        }
+        C::ReciprocalAffinePower {
+            numerator,
+            slope,
+            offset,
+            exponent,
+            requirements,
+        } => {
+            fields.push(("numerator", expression(numerator, rt)));
+            fields.push(("slope", string(slope.readable_string())));
+            fields.push(("offset", string(offset.readable_string())));
+            fields.push(("exponent", string(exponent.readable_string())));
+            fields.push((
+                "requirements",
+                super::store::project_verify_facts(requirements, rt),
+            ));
+            "ReciprocalAffinePower"
+        }
+        C::RiemannIntegral {
+            integral,
+            formula_limit,
+            ..
+        } => {
+            fields.push((
+                "integral",
+                super::riemann_integral::structural(integral, rt),
+            ));
+            fields.push(("formula_limit", expression(formula_limit, rt)));
+            "RiemannIntegral"
+        }
         C::Constant => "Constant",
+        C::ZeroProduct { zero_factor } => {
+            fields.push(("zero_factor", project_verify_fact(zero_factor, rt)));
+            "ZeroProduct"
+        }
         C::FiniteIdentity => "FiniteIdentity",
         C::Candidate {
             function_domain,

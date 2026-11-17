@@ -289,51 +289,47 @@ impl Runtime {
             return Ok(None);
         };
         let zero = zero_obj();
-        let adjacency = self.visible_equivalence_class_adjacency();
-        for key in self.equivalence_class_keys(&zero) {
-            let Some(neighbors) = adjacency.get(&key) else {
-                continue;
-            };
-            for (_, equal_fact) in neighbors.iter() {
-                for side in [&equal_fact.left, &equal_fact.right] {
-                    let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
-                        left: f1,
-                        right: f2,
-                    })) = side
-                    else {
+        let mut candidates =
+            super::super::equivalence_class_graph::EquivalentObjectCandidates::new(&zero);
+        for scope in (0..self.execution_environments_stack.len()).rev() {
+            while let Some(index) = candidates.next_in_scope(self, scope) {
+                let side = &candidates.objects[index];
+                let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
+                    left: f1,
+                    right: f2,
+                })) = side
+                else {
+                    continue;
+                };
+                for (factor, other) in [(f1.as_ref(), f2.as_ref()), (f2.as_ref(), f1.as_ref())] {
+                    if factor.ir() != target.ir() {
                         continue;
-                    };
-                    for (factor, other) in [(f1.as_ref(), f2.as_ref()), (f2.as_ref(), f1.as_ref())]
-                    {
-                        if factor.ir() != target.ir() {
-                            continue;
-                        }
-                        let nonzero = Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
-                            fact_id: self.global_ids.allocate_fact_id(),
-                            left: other.clone(),
-                            right: zero.clone(),
-                            line_file: None,
-                        }));
-                        let nz_proof =
-                            self.verify_builtin_rule_premise(&nonzero, verify_state.clone())?;
-                        if nz_proof.is_failed() {
-                            continue;
-                        }
-                        let product_zero = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-                            fact_id: self.global_ids.allocate_fact_id(),
-                            left: side.clone(),
-                            right: zero.clone(),
-                            line_file: None,
-                        }));
-                        let pz_proof =
-                            self.verify_builtin_rule_premise(&product_zero, verify_state.clone())?;
-                        if pz_proof.is_failed() {
-                            continue;
-                        }
-                        return Ok(Some(ZeroProductCancelBuiltinRuleProof {
-                            proof_of_requirement_facts: vec![pz_proof, nz_proof],
-                        }));
                     }
+                    let nonzero = Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        left: other.clone(),
+                        right: zero.clone(),
+                        line_file: None,
+                    }));
+                    let nz_proof =
+                        self.verify_builtin_rule_premise(&nonzero, verify_state.clone())?;
+                    if nz_proof.is_failed() {
+                        continue;
+                    }
+                    let product_zero = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        left: side.clone(),
+                        right: zero.clone(),
+                        line_file: None,
+                    }));
+                    let pz_proof =
+                        self.verify_builtin_rule_premise(&product_zero, verify_state.clone())?;
+                    if pz_proof.is_failed() {
+                        continue;
+                    }
+                    return Ok(Some(ZeroProductCancelBuiltinRuleProof {
+                        proof_of_requirement_facts: vec![pz_proof, nz_proof],
+                    }));
                 }
             }
         }

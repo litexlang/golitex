@@ -38,12 +38,12 @@ async function run(){
   assert(!view.root.querySelector('.lr-tex-description'));assert(!view.root.querySelector('.lr-tex-quote'));
   const proofParagraphs=view.root.querySelectorAll('.lr-tex-paragraph').filter(node=>node.textContent.includes(locale==='zh'?'证明.':'Proof.'));
   assert.equal(proofParagraphs.length,1,'one proof paragraph');
-  for(const retained of locale==='zh'?['情形 1.','情形 2.','反证法.','反设','又有','综上']:['Case 1.','Case 2.','Proof by contradiction.','For contradiction','We also have','In all cases'])assert(proofParagraphs[0].textContent.includes(retained),retained+' stays in the same paragraph');
+  for(const retained of locale==='zh'?['情形 1.','情形 2.','反证法.','反设','不可能成立','综上']:['Case 1.','Case 2.','Proof by contradiction.','For contradiction','is impossible','In all cases'])assert(proofParagraphs[0].textContent.includes(retained),retained+' stays in the same paragraph');
   assert(!view.root.querySelector('.lr-ide-input'),'mathematical mode initially shows the manuscript');
   const joined=view.root.querySelectorAll('.lr-tex-paragraph').some(node=>node.textContent.replace(/\s+/g,'').includes(locale==='zh'?'假设n=1，则n=1\\lorn>1。':'Supposen=1.Thenn=1\\lorn>1.'));
   assert(joined,'the case assumption and its first conclusion form one readable paragraph');
   const prose=view.root.querySelector('.lr-manuscript').textContent;
-  assert(prose.includes(locale==='zh'?'综上':'In all cases'));assert(prose.includes(locale==='zh'?'因此':'so n > 1'));
+  assert(prose.includes(locale==='zh'?'综上':'In all cases'));assert(prose.includes(locale==='zh'?'故':'Hence n > 1'));
   const transitionStatement=bundle.statements.find(record=>record.statement_kind==='Fact'&&record.source_text.trim()==='n = 1 or n > 1');
   const then=view.root.querySelectorAll('[data-latex-statement]').find(node=>node.dataset.latexStatement===transitionStatement.id&&node.textContent.trim()===(locale==='zh'?'则':'Then'));
   assert(then,'the transition word has compiler-owned statement identity');

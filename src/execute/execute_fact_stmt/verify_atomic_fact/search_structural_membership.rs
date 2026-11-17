@@ -222,58 +222,18 @@ impl Runtime {
         if sources.is_empty() {
             return None;
         }
-        let key = (goal.prop_name(), true);
-        let candidates: Vec<_> = self
-            .execution_environments_stack
-            .iter()
-            .rev()
-            .filter_map(|env| {
-                env.facts
-                    .known_atomic_except_equality_facts
-                    .by_prop
-                    .get(&key)
-            })
-            .flat_map(|knowns| knowns.iter())
-            .filter_map(|fact| match fact {
-                AtomicFact::InFact(member) => Some(member.clone()),
-                _ => None,
-            })
-            .collect();
-        let mut best = None;
-        let mut source_limit = sources.len();
-        let mut adjacency = None;
-        for known in candidates {
-            let Some(element_equal) =
-                self.lookup_known_obj_equality_with_graph(&known.element, element, &mut adjacency)
-            else {
-                continue;
+        for source in sources {
+            let mut candidate = goal.clone();
+            let AtomicFact::InFact(membership) = &mut candidate else {
+                return None;
             };
-            for (index, source) in sources.iter().enumerate().take(source_limit) {
-                let Some(set_equal) = self.lookup_known_obj_equality_with_graph(
-                    &known.set,
-                    &Obj::StandardSet(source.clone()),
-                    &mut adjacency,
-                ) else {
-                    continue;
-                };
-                best = Some((
-                    source.clone(),
-                    AtomicExceptEqualityFactSearchProofByKnownAtomicFact {
-                        cite_fact_id: known.fact_id,
-                        why_parameters_of_known_fact_are_equal_to_givens: vec![
-                            element_equal,
-                            set_equal,
-                        ],
-                    },
-                ));
-                source_limit = index;
-                break;
-            }
-            if source_limit == 0 {
-                break;
+            membership.element = element.clone();
+            membership.set = Obj::StandardSet(source.clone());
+            if let Some(proof) = self.lookup_known_atomic_fact(&candidate) {
+                return Some((source, proof));
             }
         }
-        best
+        None
     }
 }
 
@@ -307,7 +267,8 @@ fn intrinsic_codomain(element: &Obj) -> Option<(StandardSet, IntrinsicCodomain)>
     }
     use StandardSet::*;
     Some(match element {
-        Obj::IntegralOperator(_) => (R, K::RiemannIntegral),
+        Obj::IntegralOperator(IntegralOperator::Riemann(_)) => (R, K::RiemannIntegral),
+        Obj::IntegralOperator(IntegralOperator::Improper(_)) => (R, K::ImproperIntegral),
         Obj::DerivativeOperator(DerivativeOperator::AtPoint(_)) => (R, K::DerivativeAt),
         Obj::DerivativeOperator(DerivativeOperator::Partial(_)) => (R, K::PartialDerivative),
         Obj::DerivativeOperator(DerivativeOperator::Divergence(_)) => {

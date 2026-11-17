@@ -495,7 +495,8 @@ class ReleasePreflightTest(unittest.TestCase):
                     else:
                         tag_check.assert_not_called()
                 self.assertIn(f"version={version}\n", output.read_text())
-                self.assertIn("prerelease=true\n", output.read_text())
+                expected_prerelease = str("-" in version.split("+", 1)[0]).lower()
+                self.assertIn(f"prerelease={expected_prerelease}\n", output.read_text())
                 output.unlink()
 
     def test_workflow_archive_smokes_use_shared_preflight(self) -> None:

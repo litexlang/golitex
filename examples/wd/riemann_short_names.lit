@@ -12,11 +12,11 @@ release thm integ_pow(square,0,1,2)
 $has_integ(square,0,1,1/3)
 $is_riemann_integrable(square,0,1)
 $integrable(square,0,1)
-integ(square,0,1)=1/3
+integral(square,0,1)=1/3
 release thm integ_exists(square,0,1,1/3)
 release thm integ_integrable(square,0,1,1/3)
 release thm integ_select(square,0,1)
-release thm integ_unique(square,0,1,1/3,integ(square,0,1))
+release thm integ_unique(square,0,1,1/3,integral(square,0,1))
 
 have fn two(x R) R=2
 have fn partition(k Z:0<=k,k<=1) R=k

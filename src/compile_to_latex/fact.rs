@@ -10,7 +10,7 @@ use crate::launch_command::OutputLanguage;
 use crate::module_manager::GlobalModuleManager;
 use crate::runtime::{RuntimeError, RuntimeResult};
 
-pub(super) fn fact(
+pub(crate) fn fact(
     value: &Fact,
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
@@ -75,8 +75,21 @@ pub(super) fn atomic(
         AtomicFact::SupersetFact(_) => Some(r"\supseteq"),
         AtomicFact::ProperSubsetFact(_) => Some(r"\subsetneq"),
         AtomicFact::ProperSupersetFact(_) => Some(r"\supsetneq"),
-        AtomicFact::DvdFact(_) => Some(r"\mid"),
-        AtomicFact::NotDvdFact(_) => Some(r"\nmid"),
+        // Litex stores the dividend first; standard divisibility notation
+        // places the divisor first.
+        AtomicFact::DvdFact(_) => return Ok(format!(r"{} \mid {}", args[1], args[0])),
+        AtomicFact::NotDvdFact(_) => return Ok(format!(r"{} \nmid {}", args[1], args[0])),
+        AtomicFact::SurjectiveFact(_) | AtomicFact::NotSurjectiveFact(_) => {
+            let arrow = format!(
+                r"{}\colon {} \twoheadrightarrow {}",
+                args[2], args[0], args[1]
+            );
+            return Ok(if positive {
+                arrow
+            } else {
+                format!(r"\neg\left({arrow}\right)")
+            });
+        }
         _ => None,
     };
     if let Some(rel) = relation {

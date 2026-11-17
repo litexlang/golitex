@@ -26,12 +26,27 @@ pub(super) fn project_atomic_builtin_rule(
         AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::StructuralRealSign(p)) => super::structural_real_sign::project_sign(p, runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::StructuralRealSign(p)) => super::structural_real_sign::project_sign(p, runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::StructuralRealSign(p)) => super::structural_real_sign::project_sign(p, runtime),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::RealSegmentMembership(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("RealSegmentMembership")),
+            ("requirements", JsonValue::Array(p.requirements.iter().map(|f| string(f.readable_string())).collect())),
+            ("proofs", super::store::project_verify_facts(&p.proofs,runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::IntervalInclusion(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("IntervalInclusion")),
+            ("membership", super::searched::project_known_premise(&p.membership, runtime)),
+            ("bounds", super::store::project_verify_facts(&p.bounds,runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::SignedNumericMembership(p)) => super::structural_real_sign::project_membership(p, runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::HomogeneousCartesianSequenceMembership(p)) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("rule", string("HomogeneousCartesianSequenceMembership")),
             ("membership_fact", string(p.membership.fact.readable_string())),
             ("membership", super::searched::project_atomic_except_searched(&p.membership.searched_proof, runtime)),
             ("carrier_equal", super::searched::project_equal_searched(&p.carrier_equal, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(br::subset::SubsetFactSearchProofByBuiltinRule::ConvexIntervalHull(p)) => object_for(runtime, vec![
+            ("type", string("builtin_rule")), ("rule", string("ConvexIntervalHull")),
+            ("first_endpoint", super::verify::project_verify_fact(&p.first_endpoint, runtime)),
+            ("second_endpoint", super::verify::project_verify_fact(&p.second_endpoint, runtime)),
         ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(br::subset::SubsetFactSearchProofByBuiltinRule::HomogeneousCartesianSequenceSubset(p)) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("rule", string("HomogeneousCartesianSequenceSubset")),

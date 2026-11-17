@@ -179,24 +179,22 @@ impl Runtime {
         &mut self,
         goal: &ForallFact,
     ) -> Option<(crate::runtime::FactId, Vec<ForallParameterRenaming>)> {
-        let mut sources = Vec::new();
-        for env in self.execution_environments_stack.iter().rev() {
-            let start = sources.len();
-            sources.extend(
-                env.facts
-                    .facts_by_id
-                    .iter()
-                    .filter_map(|(id, fact)| match fact {
-                        Fact::ForallFact(source) => Some((*id, source.clone())),
-                        _ => None,
-                    }),
-            );
-            // Keep the innermost scope first, then try its sources in creation
-            // order. Instantiating candidates allocates IDs, so HashMap order
-            // would otherwise change both citations and later proof names.
-            sources[start..].sort_by_key(|(id, _)| id.value());
+        let mut locations = Vec::new();
+        for (env_index, env) in self.execution_environments_stack.iter().enumerate().rev() {
+            let start = locations.len();
+            locations.extend(env.facts.facts_by_id.iter().filter_map(|(id, fact)| {
+                matches!(fact, Fact::ForallFact(_)).then_some((env_index, *id))
+            }));
+            locations[start..].sort_by_key(|(_, id)| id.value());
         }
-        for (id, source) in sources {
+        for (env_index, id) in locations {
+            let Fact::ForallFact(source) = &self.execution_environments_stack[env_index]
+                .facts
+                .facts_by_id[&id]
+            else {
+                continue;
+            };
+            let source = source.clone();
             let source_bindings: Vec<_> = source
                 .typed_parameters
                 .groups

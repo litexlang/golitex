@@ -4,6 +4,170 @@ use crate::exec_env::known_fact_memory::ObjIR;
 use crate::runtime::FactId;
 use std::collections::{HashMap, HashSet, VecDeque};
 
+use super::by_they_are_the_same::helper::compound_objs_alpha_equal;
+use crate::prelude::Runtime;
+
+// Query-local traversal. Exposing a parent reopens the already reached nodes,
+// since a new parent edge can connect back into an inner scope's graph.
+pub(crate) struct EquivalentObjectCandidates {
+    pub(crate) objects: Vec<Obj>,
+    parents: Vec<Option<(usize, (Obj, Obj, FactId))>>,
+    visited: HashSet<ObjIR>,
+    exposed_from: usize,
+    member_cursor: usize,
+    env_cursor: usize,
+    edge_cursor: usize,
+}
+
+impl EquivalentObjectCandidates {
+    pub(crate) fn new(object: &Obj) -> Self {
+        Self {
+            objects: vec![object.clone()],
+            parents: vec![None],
+            visited: HashSet::from([object.ir()]),
+            exposed_from: usize::MAX,
+            member_cursor: 0,
+            env_cursor: 0,
+            edge_cursor: 0,
+        }
+    }
+
+    pub(crate) fn next_in_scope(
+        &mut self,
+        runtime: &Runtime,
+        exposed_from: usize,
+    ) -> Option<usize> {
+        let env_count = runtime.execution_environments_stack.len();
+        if self.exposed_from != exposed_from {
+            self.exposed_from = exposed_from;
+            self.member_cursor = 0;
+            self.env_cursor = env_count;
+            self.edge_cursor = 0;
+        }
+        while self.member_cursor < self.objects.len() {
+            let key = self.objects[self.member_cursor].ir();
+            while self.env_cursor > exposed_from {
+                let env = &runtime.execution_environments_stack[self.env_cursor - 1];
+                if let Some(edges) = env
+                    .facts
+                    .known_equivalence_classes
+                    .generating_edges
+                    .get(&key)
+                {
+                    while self.edge_cursor < edges.len() {
+                        let (peer_key, equality) = &edges[self.edge_cursor];
+                        self.edge_cursor += 1;
+                        if self.visited.contains(peer_key) {
+                            continue;
+                        }
+                        let Some(step) = orient_equality_step(&key, peer_key, equality) else {
+                            continue;
+                        };
+                        self.visited.insert(peer_key.clone());
+                        self.objects.push(step.1.clone());
+                        self.parents.push(Some((self.member_cursor, step)));
+                        return Some(self.objects.len() - 1);
+                    }
+                }
+                self.env_cursor -= 1;
+                self.edge_cursor = 0;
+            }
+            self.member_cursor += 1;
+            self.env_cursor = env_count;
+        }
+        None
+    }
+
+    pub(crate) fn path(&self, mut index: usize) -> Vec<(Obj, Obj, FactId)> {
+        let mut path = Vec::new();
+        while let Some((parent, step)) = &self.parents[index] {
+            path.push(step.clone());
+            index = *parent;
+        }
+        path.reverse();
+        path
+    }
+}
+
+// A source becomes eligible as soon as all its arguments have been reached.
+// This covers every argument combination without materializing a Cartesian
+// product or cloning the stored facts. Final matching still owns the proof.
+pub(crate) struct EquivalentArguments {
+    arguments: Vec<EquivalentObjectCandidates>,
+    exposed_from: usize,
+    argument_cursor: usize,
+}
+
+impl EquivalentArguments {
+    pub(crate) fn new(arguments: &[&Obj], env_count: usize) -> Self {
+        Self {
+            arguments: arguments
+                .iter()
+                .map(|arg| EquivalentObjectCandidates::new(arg))
+                .collect(),
+            exposed_from: env_count,
+            argument_cursor: 0,
+        }
+    }
+
+    pub(crate) fn matches(&self, arguments: &[&Obj]) -> bool {
+        self.arguments.len() == arguments.len()
+            && self
+                .arguments
+                .iter()
+                .zip(arguments)
+                .all(|(reached, argument)| {
+                    objects_match_directly(&reached.objects[0], argument)
+                        || reached
+                            .objects
+                            .iter()
+                            .skip(1)
+                            .any(|object| object.ir() == argument.ir())
+                })
+    }
+
+    pub(crate) fn advance(&mut self, runtime: &Runtime) -> bool {
+        loop {
+            if self.exposed_from == runtime.execution_environments_stack.len() {
+                if self.exposed_from == 0 {
+                    return false;
+                }
+                self.exposed_from -= 1;
+            }
+            while self.argument_cursor < self.arguments.len() {
+                if self.arguments[self.argument_cursor]
+                    .next_in_scope(runtime, self.exposed_from)
+                    .is_some()
+                {
+                    return true;
+                }
+                self.argument_cursor += 1;
+            }
+            if self.exposed_from == 0 {
+                return false;
+            }
+            self.exposed_from -= 1;
+            self.argument_cursor = 0;
+        }
+    }
+}
+
+pub(crate) fn objects_match_directly(left: &Obj, right: &Obj) -> bool {
+    match (left, right) {
+        (Obj::Identifier(left), Obj::Identifier(right)) => {
+            use crate::prelude::IdentifierObj;
+            match (left, right) {
+                (IdentifierObj::Plain { id: left, .. }, IdentifierObj::Plain { id: right, .. }) => {
+                    left == right
+                }
+                _ => left == right,
+            }
+        }
+        (Obj::StandardSet(left), Obj::StandardSet(right)) => left == right,
+        _ => compound_objs_alpha_equal(left, right) || left.ir() == right.ir(),
+    }
+}
+
 pub type EquivalenceClassAdjacency = HashMap<ObjIR, Vec<(ObjIR, EqualFact)>>;
 
 // BFS path from left to right. Empty Vec means same key (reflexive).

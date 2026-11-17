@@ -1,9 +1,9 @@
 use crate::ast::obj::{
     Abs, Add, Arccos, Arccot, Arcsin, Arctan, ArithmeticOperator, Ceil, ComplexOperator, Cos, Cot,
     Div, Exp, ExpLogOperator, Factorial, FiniteSetStat, Floor, FnObj, FnObjHead, FunctionSpace,
-    Gcd, IntegerOperator, IntervalObj, IteratedOperator, Lcm, Ln, Max, Min, Mod, Mul, Neg, Obj,
-    OneSideInfinityIntervalObj, Pow, ProductShape, Quot, SetFormer, SetOperator, Sign, Sin, Sqrt,
-    StructAndFieldAccessObj, Sub, Tan, TrigOperator,
+    Gcd, IntegerOperator, IntegralOperator, IntervalObj, IteratedOperator, Lcm, Ln, Max, Min, Mod,
+    Mul, Neg, Obj, OneSideInfinityIntervalObj, Pow, ProductShape, Quot, SetFormer, SetOperator,
+    Sign, Sin, Sqrt, StructAndFieldAccessObj, Sub, Tan, TrigOperator,
 };
 use crate::ast::obj::{
     Conjugate, Cosh, Coth, Csc, Csch, HyperbolicOperator, Sec, Sech, Sinh, Tanh,
@@ -19,6 +19,22 @@ use crate::exec_env::known_fact_memory::ObjIR;
 // Not covered (intentional): Identifier/Number/StandardSet leaves; SetBuilder /
 // AnonymousFn / FnSet (binders); InstantiatedTemplateObj (legacy also skips).
 pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Obj, Obj)>> {
+    if let (
+        Obj::IntegralOperator(IntegralOperator::Improper(left)),
+        Obj::IntegralOperator(IntegralOperator::Improper(right)),
+    ) = (left, right)
+    {
+        if left.bounds.name() != right.bounds.name() {
+            return None;
+        }
+        return Some(
+            left.operand_refs()
+                .into_iter()
+                .zip(right.operand_refs())
+                .map(|(a, b)| (a.clone(), b.clone()))
+                .collect(),
+        );
+    }
     if let Some(name) = left.multivariable_selector_name() {
         if right.multivariable_selector_name() != Some(name) {
             return None;

@@ -20,6 +20,25 @@ fn lean_cli_emits_the_complete_canonical_source_without_json_wrapping() {
 }
 
 #[test]
+fn lean_cli_compiles_resolved_positive_bounds_without_a_prior_zero() {
+    let output = Command::new(env!("CARGO_BIN_EXE_litex"))
+        .args([
+            "-strict",
+            "-lean",
+            "-f",
+            "tests/fixtures/compile_to_lean/resolved_positive_bound.lit",
+        ])
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    assert!(output.stderr.is_empty(), "{output:?}");
+    assert_eq!(
+        output.stdout,
+        std::fs::read("tests/fixtures/compile_to_lean/resolved_positive_bound.lean").unwrap()
+    );
+}
+
+#[test]
 fn lean_cli_failures_emit_only_phase_diagnostics() {
     for (path, message) in [
         (

@@ -1,5 +1,44 @@
 use super::*;
 
+#[test]
+fn alpha_renamed_endpoints_reuse_multiple_stored_equalities() {
+    let mut rt = runtime();
+    exec_ok(&mut rt, "integ_oc(t,0,1,t)=1/2");
+    exec_ok(&mut rt, "integ_co(z,0,1,z)=1/2");
+    for source in [
+        "integ_oc(t,0,1,t)=integ_co(z,0,1,z)",
+        "integ_co(z,0,1,z)=integ_oc(t,0,1,t)",
+    ] {
+        let goal = equal(&mut rt, source);
+        let before = store_sizes(&rt);
+        let proof = rt
+            .search_equal_fact_proof_by_equivalence_class(&goal, VerifyState::top_level())
+            .unwrap()
+            .expect("alpha-renamed stored path");
+        let EqualFactSearchedProofByEquivalenceClass::AlphaPath(proof) = proof else {
+            panic!("stored path with alpha identities");
+        };
+        assert_eq!(proof.path.path.len(), 2);
+        check_path(&rt, &proof.path, &proof.left, &proof.right);
+        assert_eq!(store_sizes(&rt), before);
+    }
+    for source in [
+        "integ_oc(t,0,1,t+1)=integ_co(z,0,1,z)",
+        "integ_oc(t,0,2,t)=integ_co(z,0,1,z)",
+    ] {
+        let goal = equal(&mut rt, source);
+        assert!(rt
+            .search_equal_fact_proof_by_equivalence_class(&goal, VerifyState::top_level(),)
+            .unwrap()
+            .is_none());
+    }
+    exec_ok(&mut rt, "have a,b R");
+    exec_ok(&mut rt, "let f=fn(t R) R {t+a}");
+    exec_ok(&mut rt, "let g=f");
+    exec_ok(&mut rt, "fn(t R) R {t+a}=g");
+    assert!(!rt.run_litex_code("fn(t R) R {t+b}=g").unwrap().success);
+}
+
 const TRACER: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/examples/proof_nodes/equal/by_equivalence_class/stored_aggregate_alpha.lit"

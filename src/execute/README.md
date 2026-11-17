@@ -709,7 +709,15 @@ retained as evidence; no guard is published to the parent. Empty graph, image,
 function-space and nonemptiness consumers read the same success certificate.
 Imported definitions retain the existing `release obj def` publication boundary.
 
-Anonymous-function construction checks complete-domain absence before introducing its own binders or assuming its guards. Header, guard, return-carrier and body WD still run. The return-bound stage retains either CheckedMembership or EmptyCompleteDomain evidence; an empty domain never publishes a standalone false body membership. The guarded-empty tracer covers named empty-return constructors and the negative manifest preserves nonempty return and undefined-body failures.
+Anonymous-function construction first checks header, guard, return-carrier and
+body WD, then verifies body membership in the return carrier. A membership
+miss triggers complete-domain absence verification after the binder scope has
+closed, using only the outer context. The return-bound stage retains either
+CheckedMembership or EmptyCompleteDomain evidence. An empty domain never
+publishes a standalone false body membership. The
+[deferred-search tracer](../../examples/wd/deferred_empty_domain_search.lit)
+covers ordinary returns and literal, aliased and guarded empty domains. The
+negative manifest preserves nonempty return and undefined-body failures.
 
 Retired product operators fail at the object-WD entry before known WD memory is consulted. Their legacy by-definition WD producers have been removed. Legacy shape fact payloads fail at the predicate-signature stage before stored-fact/domain reuse; this keeps internal or stale payloads from bypassing parser retirement while their AST deletion awaits concrete approval. Ordinary coordinate beta, reconstruction and homogeneous carrier readers consume the actual member/equality/domain source and retain generic-call fallthrough.
 
@@ -988,3 +996,23 @@ needs its exact conditional zero-entry fact; source examples retain these bridge
 This is a bounded-search boundary, not a false mathematical formula. The
 compiler shares the original explicit-schema validators and proved Lean term
 builders, retaining the selected proof, original quantified guard and callback.
+
+## Lazy known-fact retrieval
+
+Known atomic and disjunction lookup first tries the submitted argument tuple
+against visible sources, from the innermost scope outward. After a miss,
+query-local equality traversal exposes the current scope's edges, followed by
+its ancestors. Each new equivalent argument is tried immediately. Reaching an
+outer edge can reopen an inner edge, and multi-argument sources remain eligible
+when all their arguments are reached. Sources and oriented equality paths
+remain the proof evidence.
+
+Equality peer search uses the same lazy object traversal and checks each newly
+reached left/right combination at its existing builtin ceiling. Whole-forall
+reuse and domain completion clone one selected source at a time. Existing
+closed calculation, alpha matching, predicate alias resolution and theorem
+application retain their own matchers and permissions.
+
+The existing subject index supplies direct membership hits. Other predicates
+still scan their predicate bucket. Retrieval creates no persistent index or
+cross-query cache. See [the direct-first tracer](../../examples/proof_nodes/atomic/by_known_atomic_fact/original_before_equivalent.lit).

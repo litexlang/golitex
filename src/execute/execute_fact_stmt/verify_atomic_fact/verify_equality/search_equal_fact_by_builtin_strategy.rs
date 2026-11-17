@@ -12,6 +12,11 @@ impl Runtime {
         fact: &EqualFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinStrategy>> {
+        if let Some(proof) = self.search_improper_integral_equality(fact, ctx)? {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinStrategy::ImproperIntegralValue(proof),
+            ));
+        }
         if let Some(proof) = self.search_riemann_integral_value_strategy(fact, ctx)? {
             return Ok(Some(
                 EqualitySearchProofByBuiltinStrategy::RiemannIntegralValue(proof),

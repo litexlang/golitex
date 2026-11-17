@@ -65,10 +65,11 @@ impl LitexToLeanCompiler {
             ));
         }
         let value_ref = self.compile_object_reference(value, position)?;
-        let zero_ref = self.compile_object_reference(zero, position)?;
+        // Zero is fixed by this rule's schema and has its own total constructor.
+        let zero_ref = "(Litex.number (M := M) (0 : ℂ))";
         let bound_ref = self.compile_object_reference(bound, position)?;
         let scalar = exact_rational_literal(scalar, "ℝ")?;
-        let zero_denote = self.compile_numeric_observation(zero, position)?.1;
+        let zero_denote = "(Litex.NativeBridge.denoteNumber (M := M) (0 : ℂ))";
         let bound_denote = format!("(({}).trans (congrArg M.number (by norm_num)))", observed.1);
         // A strict cited comparison permits a weak comparison to zero;
         // a weak citation requires a strictly signed bound.
@@ -84,29 +85,29 @@ impl LitexToLeanCompiler {
         };
         let (a, b, sign) = match (positive, strict) {
             (true, true) => (
-                &zero_ref,
-                &value_ref,
+                zero_ref,
+                value_ref.as_str(),
                 format!(
                     "(Litex.leLtTrans {zero_ref} {bound_ref} {value_ref} {bound_sign} {citation})"
                 ),
             ),
             (true, false) => (
-                &zero_ref,
-                &value_ref,
+                zero_ref,
+                value_ref.as_str(),
                 format!(
                     "(Litex.ltLeTrans {zero_ref} {bound_ref} {value_ref} {bound_sign} {citation})"
                 ),
             ),
             (false, true) => (
-                &value_ref,
-                &zero_ref,
+                value_ref.as_str(),
+                zero_ref,
                 format!(
                     "(Litex.ltLeTrans {value_ref} {bound_ref} {zero_ref} {citation} {bound_sign})"
                 ),
             ),
             (false, false) => (
-                &value_ref,
-                &zero_ref,
+                value_ref.as_str(),
+                zero_ref,
                 format!(
                     "(Litex.leLtTrans {value_ref} {bound_ref} {zero_ref} {citation} {bound_sign})"
                 ),

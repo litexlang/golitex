@@ -152,6 +152,7 @@ fn intrinsic_name(rule: &IntrinsicCodomain) -> &'static str {
         SequenceLimit => "lim",
         SequenceLimsup => "limsup",
         RiemannIntegral => "riemann_integral",
+        ImproperIntegral => "improper_integral",
         DerivativeAt => "derivative",
         Supremum => "sup",
         Infimum => "inf",

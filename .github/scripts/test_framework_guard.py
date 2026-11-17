@@ -27,7 +27,6 @@ class FrameworkGuardTest(unittest.TestCase):
             "GIT_CONFIG_GLOBAL": os.devnull,
         }
         self.env.pop("ALLOW_FRAMEWORK_UNLOCK", None)
-        self.env.pop("ALLOW_TIER2_EDIT", None)
 
         self.git("init", "-q")
         self.git("config", "user.name", "Guard Test")
@@ -122,17 +121,20 @@ class FrameworkGuardTest(unittest.TestCase):
         self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
         self.assertIn("Tier 2 append-only branch addition: src/execute/dispatch_stmt.rs", res.stdout)
 
-    def test_tier2_modification_warns_unless_authorized(self) -> None:
+    def test_tier2_modification_is_advisory_in_all_modes(self) -> None:
         target = self.repo / "src/execute/dispatch_stmt.rs"
         target.write_text("// Tier 2 registry\npub enum Branch {\n    RenamedArm,\n}\n", encoding="utf-8")
         self.git("add", "src/execute/dispatch_stmt.rs")
 
-        res_warn = self.run_guard("--staged")
-        self.assertEqual(res_warn.returncode, 4)
-        self.assertIn("ALLOW_TIER2_EDIT=1", res_warn.stderr)
-
-        res_ok = self.run_guard("--staged", extra_env={"ALLOW_TIER2_EDIT": "1"})
-        self.assertEqual(res_ok.returncode, 0, res_ok.stdout + res_ok.stderr)
+        for mode in ("--staged", "--worktree"):
+            result = self.run_guard(mode)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("Updated Tier 2 registry entries", result.stdout)
+            self.assertEqual(result.stderr, "")
+        self.git("commit", "-qm", "update registry")
+        result = self.run_guard("--ci")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Updated Tier 2 registry entries", result.stdout)
 
     def test_tier2_forbidden_state_token_always_rejected(self) -> None:
         target = self.repo / "src/execute/dispatch_stmt.rs"
@@ -140,7 +142,7 @@ class FrameworkGuardTest(unittest.TestCase):
         target.write_text(original + "// bad: env.merge_from(other);\n", encoding="utf-8")
         self.git("add", "src/execute/dispatch_stmt.rs")
 
-        res = self.run_guard("--staged", extra_env={"ALLOW_TIER2_EDIT": "1"})
+        res = self.run_guard("--staged")
         self.assertEqual(res.returncode, 2)
         self.assertIn("merge_from(", res.stderr)
 

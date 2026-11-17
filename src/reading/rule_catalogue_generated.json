@@ -13325,6 +13325,54 @@
     }
   },
   {
+    "id": "builtin.InFactSearchProofByBuiltinRule::IntervalInclusion",
+    "category": "builtin",
+    "family": "InFactSearchProofByBuiltinRule",
+    "variant": "IntervalInclusion",
+    "labels": {
+      "en": {
+        "name": "Interval inclusion",
+        "message": "A known interval member belongs to an enclosing interval with compatible endpoint inclusion."
+      },
+      "zh": {
+        "name": "Interval inclusion",
+        "message": "A known interval member belongs to an enclosing interval with compatible endpoint inclusion."
+      },
+      "zh-hant": {
+        "name": "Interval inclusion",
+        "message": "A known interval member belongs to an enclosing interval with compatible endpoint inclusion."
+      },
+      "fr": {
+        "name": "Interval inclusion",
+        "message": "A known interval member belongs to an enclosing interval with compatible endpoint inclusion."
+      },
+      "ru": {
+        "name": "Interval inclusion",
+        "message": "A known interval member belongs to an enclosing interval with compatible endpoint inclusion."
+      },
+      "es": {
+        "name": "Interval inclusion",
+        "message": "A known interval member belongs to an enclosing interval with compatible endpoint inclusion."
+      },
+      "ar": {
+        "name": "Interval inclusion",
+        "message": "A known interval member belongs to an enclosing interval with compatible endpoint inclusion."
+      },
+      "ja": {
+        "name": "Interval inclusion",
+        "message": "A known interval member belongs to an enclosing interval with compatible endpoint inclusion."
+      },
+      "ko": {
+        "name": "Interval inclusion",
+        "message": "A known interval member belongs to an enclosing interval with compatible endpoint inclusion."
+      },
+      "vi": {
+        "name": "Interval inclusion",
+        "message": "A known interval member belongs to an enclosing interval with compatible endpoint inclusion."
+      }
+    }
+  },
+  {
     "id": "builtin.InFactSearchProofByBuiltinRule::IntervalMembership",
     "category": "builtin",
     "family": "InFactSearchProofByBuiltinRule",
@@ -14213,6 +14261,54 @@
       "vi": {
         "name": "L\u0169y th\u1eeba th\u1ef1c",
         "message": "C\u01a1 s\u1ed1 \u0111\u01b0\u1ee3c ki\u1ec3m tra l\u00e0 th\u1ef1c v\u00e0 ch\u1ee9ng nh\u1eadn x\u00e1c \u0111\u1ecbnh t\u1ed1t ch\u1ee9ng minh mi\u1ec1n l\u0169y th\u1eeba th\u1ef1c \u0111\u01b0\u1ee3c h\u1ed7 tr\u1ee3"
+      }
+    }
+  },
+  {
+    "id": "builtin.InFactSearchProofByBuiltinRule::RealSegmentMembership",
+    "category": "builtin",
+    "family": "InFactSearchProofByBuiltinRule",
+    "variant": "RealSegmentMembership",
+    "labels": {
+      "en": {
+        "name": "Real segment membership",
+        "message": "The checked convex parameter places this point inside the real segment and outside its excluded endpoints."
+      },
+      "zh": {
+        "name": "Real segment membership",
+        "message": "The checked convex parameter places this point inside the real segment and outside its excluded endpoints."
+      },
+      "zh-hant": {
+        "name": "Real segment membership",
+        "message": "The checked convex parameter places this point inside the real segment and outside its excluded endpoints."
+      },
+      "fr": {
+        "name": "Real segment membership",
+        "message": "The checked convex parameter places this point inside the real segment and outside its excluded endpoints."
+      },
+      "ru": {
+        "name": "Real segment membership",
+        "message": "The checked convex parameter places this point inside the real segment and outside its excluded endpoints."
+      },
+      "es": {
+        "name": "Real segment membership",
+        "message": "The checked convex parameter places this point inside the real segment and outside its excluded endpoints."
+      },
+      "ar": {
+        "name": "Real segment membership",
+        "message": "The checked convex parameter places this point inside the real segment and outside its excluded endpoints."
+      },
+      "ja": {
+        "name": "Real segment membership",
+        "message": "The checked convex parameter places this point inside the real segment and outside its excluded endpoints."
+      },
+      "ko": {
+        "name": "Real segment membership",
+        "message": "The checked convex parameter places this point inside the real segment and outside its excluded endpoints."
+      },
+      "vi": {
+        "name": "Real segment membership",
+        "message": "The checked convex parameter places this point inside the real segment and outside its excluded endpoints."
       }
     }
   },
@@ -27468,6 +27564,54 @@
     }
   },
   {
+    "id": "builtin.SubsetFactSearchProofByBuiltinRule::ConvexIntervalHull",
+    "category": "builtin",
+    "family": "SubsetFactSearchProofByBuiltinRule",
+    "variant": "ConvexIntervalHull",
+    "labels": {
+      "en": {
+        "name": "ConvexIntervalHull",
+        "message": "The closed segment joining two points of a real interval lies in that interval."
+      },
+      "zh": {
+        "name": "ConvexIntervalHull",
+        "message": "\u5b9e\u533a\u95f4\u4e2d\u4e24\u70b9\u4e4b\u95f4\u7684\u95ed\u7ebf\u6bb5\u5305\u542b\u4e8e\u8be5\u533a\u95f4\u3002"
+      },
+      "zh-hant": {
+        "name": "ConvexIntervalHull",
+        "message": "\u5b9e\u533a\u95f4\u4e2d\u4e24\u70b9\u4e4b\u95f4\u7684\u95ed\u7ebf\u6bb5\u5305\u542b\u4e8e\u8be5\u533a\u95f4\u3002"
+      },
+      "fr": {
+        "name": "ConvexIntervalHull",
+        "message": "\u5b9e\u533a\u95f4\u4e2d\u4e24\u70b9\u4e4b\u95f4\u7684\u95ed\u7ebf\u6bb5\u5305\u542b\u4e8e\u8be5\u533a\u95f4\u3002"
+      },
+      "ru": {
+        "name": "ConvexIntervalHull",
+        "message": "\u5b9e\u533a\u95f4\u4e2d\u4e24\u70b9\u4e4b\u95f4\u7684\u95ed\u7ebf\u6bb5\u5305\u542b\u4e8e\u8be5\u533a\u95f4\u3002"
+      },
+      "es": {
+        "name": "ConvexIntervalHull",
+        "message": "\u5b9e\u533a\u95f4\u4e2d\u4e24\u70b9\u4e4b\u95f4\u7684\u95ed\u7ebf\u6bb5\u5305\u542b\u4e8e\u8be5\u533a\u95f4\u3002"
+      },
+      "ar": {
+        "name": "ConvexIntervalHull",
+        "message": "\u5b9e\u533a\u95f4\u4e2d\u4e24\u70b9\u4e4b\u95f4\u7684\u95ed\u7ebf\u6bb5\u5305\u542b\u4e8e\u8be5\u533a\u95f4\u3002"
+      },
+      "ja": {
+        "name": "ConvexIntervalHull",
+        "message": "\u5b9e\u533a\u95f4\u4e2d\u4e24\u70b9\u4e4b\u95f4\u7684\u95ed\u7ebf\u6bb5\u5305\u542b\u4e8e\u8be5\u533a\u95f4\u3002"
+      },
+      "ko": {
+        "name": "ConvexIntervalHull",
+        "message": "\u5b9e\u533a\u95f4\u4e2d\u4e24\u70b9\u4e4b\u95f4\u7684\u95ed\u7ebf\u6bb5\u5305\u542b\u4e8e\u8be5\u533a\u95f4\u3002"
+      },
+      "vi": {
+        "name": "ConvexIntervalHull",
+        "message": "\u5b9e\u533a\u95f4\u4e2d\u4e24\u70b9\u4e4b\u95f4\u7684\u95ed\u7ebf\u6bb5\u5305\u542b\u4e8e\u8be5\u533a\u95f4\u3002"
+      }
+    }
+  },
+  {
     "id": "builtin.SubsetFactSearchProofByBuiltinRule::FunctionPreimageSubsetOfInputCarrier",
     "category": "builtin",
     "family": "SubsetFactSearchProofByBuiltinRule",
@@ -30498,6 +30642,13 @@
     "category": "builtin_theorem",
     "family": "BuiltinTheoremId",
     "variant": "HessianAtUnique",
+    "labels": {}
+  },
+  {
+    "id": "builtin_theorem.BuiltinTheoremId::ImproperIntegral",
+    "category": "builtin_theorem",
+    "family": "BuiltinTheoremId",
+    "variant": "ImproperIntegral",
     "labels": {}
   },
   {

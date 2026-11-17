@@ -54,6 +54,51 @@ pub(super) fn structural(p: &StructuralRiemannIntegralProof, rt: &Runtime) -> Js
 fn expression(p: &RiemannExpressionProof, rt: &Runtime) -> JsonValue {
     use RiemannConstructorProof as C;
     let constructor = match &p.constructor {
+        C::ZeroWidth { endpoints_equal } => object_for(
+            rt,
+            vec![
+                ("rule", string("ZeroWidth")),
+                (
+                    "endpoints_equal",
+                    super::verify::project_verify_fact(endpoints_equal, rt),
+                ),
+            ],
+        ),
+        C::ReciprocalSqrt {
+            lower_positive,
+            upper_positive,
+        } => object_for(
+            rt,
+            vec![
+                ("rule", string("ReciprocalSqrt")),
+                ("lower_positive", project_verify_fact(lower_positive, rt)),
+                ("upper_positive", project_verify_fact(upper_positive, rt)),
+            ],
+        ),
+        C::ReciprocalNaturalPower {
+            exponent,
+            exponent_natural,
+            exponent_nonzero,
+            endpoint_signs,
+        } => object_for(
+            rt,
+            vec![
+                ("rule", string("ReciprocalNaturalPower")),
+                ("primitive_exponent", string(exponent.readable_string())),
+                (
+                    "exponent_positive",
+                    project_verify_fact(exponent_natural, rt),
+                ),
+                (
+                    "exponent_nonzero",
+                    project_verify_fact(exponent_nonzero, rt),
+                ),
+                (
+                    "endpoint_signs",
+                    super::store::project_verify_facts(endpoint_signs, rt),
+                ),
+            ],
+        ),
         C::Polynomial {
             equality,
             normalized,

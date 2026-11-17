@@ -77,6 +77,15 @@ impl Runtime {
         else {
             return Ok(None);
         };
+        if let Some(calculation) = self.search_equal_fact_by_calculation(&fact, state)? {
+            return Ok(Some(equal_fact_result_from_success(
+                &fact,
+                well_defined_proof,
+                EqualFactSearchedProof::ByBuiltinRule(
+                    EqualitySearchProofByBuiltinRule::Calculation(calculation),
+                ),
+            )));
+        }
         let Some(normalization) =
             self.search_equal_fact_by_rational_with_nonzero_premises(&fact, state)?
         else {

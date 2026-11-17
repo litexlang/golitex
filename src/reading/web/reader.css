@@ -514,6 +514,53 @@
 .lr-explanation-close { margin-left:auto; padding:2px 7px; border:0; background:transparent; color:var(--reading-muted); font:22px/1 sans-serif; cursor:pointer; }
 .lr-context-explanation .lr-type-label { font:11px/1.6 var(--reading-code); color:var(--reading-muted); }
 
+.lr-textbook .lr-layout.lr-with-inspector { grid-template-columns:minmax(0,1fr) minmax(280px,35%); }
+.lr-textbook .lr-details.lr-context-explanation {
+  position:sticky; top:1rem; z-index:2; width:auto; min-width:0;
+  max-height:calc(100vh - 2rem); box-shadow:none;
+}
+.lr-textbook .lr-context-explanation .lr-detail-body { max-height:calc(100vh - 6rem); }
+.lr-textbook .lr-inspector-title::before { content:none; }
+.lr-textbook .lr-source-code { cursor:pointer; }
+.lr-textbook .lr-latex-unit { cursor:pointer; }
+.lr-textbook .lr-manuscript .lr-latex-unit.lr-outline-hidden,.lr-tex-display:has(>.lr-outline-hidden) { display:none; }
+.lr-textbook .lr-proof-rule-name { display:none; }
+.lr-textbook .lr-verification-details .lr-proof-rule-name { display:inline-block; }
+.lr-reading-steps,.lr-chapter-neighbors { display:flex; align-items:center; gap:.5rem; }
+.lr-reading-steps { color:var(--reading-muted); font-variant-numeric:tabular-nums; }
+.lr-reading-steps .lr-button { padding:2px 7px; }
+.lr-reading-trail { position:relative; font-size:12px; color:var(--reading-muted); }
+.lr-reading-trail>summary,.lr-chapter-overview>summary,.lr-reading-links>summary,.lr-verification-details>summary { cursor:pointer; }
+.lr-reading-trail>ol { position:absolute; right:0; z-index:10; margin:8px 0 0; padding:12px 12px 12px 32px; width:min(300px,75vw); background:var(--reading-paper); border:1px solid var(--reading-line); }
+.lr-reading-links,.lr-verification-details { margin:.75rem 0; }
+.lr-reading-links>summary,.lr-verification-details>summary { color:var(--reading-muted); font-size:12px; }
+.lr-reading-links>.lr-fact-link { margin-top:.4rem; }
+.lr-chapter-footer { padding:.8rem 1rem; border-top:1px solid var(--reading-line); font-size:12px; }
+.lr-chapter-neighbors { justify-content:space-between; gap:1rem; margin-bottom:.6rem; }
+.lr-chapter-overview li { margin:.5rem 0; overflow-wrap:anywhere; }
+.lr-chapter-edges { display:inline-flex; flex-wrap:wrap; gap:.3rem; }
+.lr-book-spread { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:start; gap:1rem; }
+.lr-book-sidebar { position:sticky; top:1rem; min-width:0; }
+.lr-book-sidebar .lr-book-panel { position:static; width:min(14rem,24vw); max-height:calc(100vh - 5rem); overflow:auto; box-shadow:none; margin-top:.5rem; }
+.lr-reading-prose { margin:1rem 0 1.35rem; line-height:1.8; overflow-wrap:anywhere; }
+.lr-reading-prose:first-child { margin-top:0; }
+.lr-reading-prose h2,.lr-reading-prose h3,.lr-reading-prose h4 { margin:.8rem 0 .4rem; line-height:1.35; }
+.lr-reading-prose p { margin:.5rem 0; }
+.lr-reading-prose code { font:0.85em var(--reading-code); }
+.lr-reading-prose pre { overflow:auto; background:var(--reading-hover); padding:.75rem; font:0.8em var(--reading-code); }
+.lr-textbook .lr-math-symbol-token { cursor:pointer; border-radius:2px; }
+.lr-textbook .lr-math-symbol-token:hover,.lr-textbook .lr-math-symbol-token:focus-visible { outline:1px solid var(--reading-blue); background:var(--reading-soft); }
+.lr-textbook .lr-math-symbol-token.lr-symbol-selected { background:var(--reading-select); }
+@media(max-width:850px) {
+  .lr-book-spread { grid-template-columns:minmax(0,1fr); gap:.5rem; }
+  .lr-book-sidebar { position:static; }
+  .lr-book-sidebar .lr-book-panel { width:100%; max-height:38dvh; }
+  .lr-textbook .lr-layout.lr-with-inspector { grid-template-columns:minmax(0,1fr); }
+  .lr-textbook .lr-details.lr-context-explanation { position:fixed; inset:auto 0 0; z-index:35; width:auto; max-height:52dvh; border-radius:12px 12px 0 0; box-shadow:0 -3px 20px #20331c26; }
+  .lr-textbook .lr-detail-body { max-height:calc(52dvh - 3rem); }
+  .lr-textbook .lr-layout.lr-with-inspector { padding-bottom:52dvh; }
+}
+
 .lr-chain-equality { cursor:help; border-radius:2px; text-decoration:underline dotted; text-underline-offset:3px; text-decoration-color:var(--reading-muted); }
 .lr-chain-equality:hover,.lr-chain-equality:focus-visible,.lr-equality-selected { background:var(--reading-soft); color:var(--reading-blue); }
 .lr-chain-equality:focus-visible { outline:1px solid var(--reading-blue); outline-offset:1px; }

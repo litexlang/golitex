@@ -11,6 +11,11 @@ pub(super) fn project_sign(proof: &StructuralRealSignProof, rt: &Runtime) -> Jso
         ("sign", string(format!("{:?}", proof.sign))),
     ];
     let kind = match &proof.reason {
+        ResolvedBound { real, source } => {
+            fields.push(("real", project_structural_membership(real, rt)));
+            fields.push(("source", project_known_premise(source, rt)));
+            "resolved_bound"
+        }
         DifferenceFromOrder {
             left_real,
             right_real,
@@ -113,6 +118,17 @@ pub(super) fn project_sign(proof: &StructuralRealSignProof, rt: &Runtime) -> Jso
                 project_structural_membership(exponent_real, rt),
             ));
             "positive_power"
+        }
+        NonzeroIntegerPower {
+            base,
+            exponent_integer,
+        } => {
+            fields.push(("base", project_sign(base, rt)));
+            fields.push((
+                "exponent_integer",
+                project_structural_membership(exponent_integer, rt),
+            ));
+            "nonzero_integer_power"
         }
         PositiveEvenPower { base, exponent } => {
             fields.push(("base", project_sign(base, rt)));

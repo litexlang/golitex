@@ -547,6 +547,7 @@ impl LitexToLeanCompiler {
         let expression =
             |object: &Obj| self.compile_function_raw_expression_bound(object, position, bindings);
         match object {
+            Obj::IntegralOperator(IntegralOperator::Improper(_)) => Err(LeanCompileError::unsupported("ImproperIntegral/Template")),
             Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access)) =>
                 self.compile_struct_field_raw_value(access, position, bindings),
             Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(carrier)) => {

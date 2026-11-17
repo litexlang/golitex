@@ -205,6 +205,20 @@ fn project_equivalence_class(
                 project_known_equality_path(&p.right_path, runtime),
             ));
         }
+        EqualFactSearchedProofByEquivalenceClass::AlphaPath(p) => {
+            fields.push(("kind", string("alpha_path")));
+            fields.push(("left", string(p.left.readable_string())));
+            fields.push(("right", string(p.right.readable_string())));
+            fields.push((
+                "left_identity",
+                project_they_are_the_same(&p.left_identity, runtime),
+            ));
+            fields.push(("path", project_known_equality_path(&p.path, runtime)));
+            fields.push((
+                "right_identity",
+                project_they_are_the_same(&p.right_identity, runtime),
+            ));
+        }
         EqualFactSearchedProofByEquivalenceClass::ViaPeers(p) => {
             let searched = project_equal_searched(&p.bridge.searched_proof, runtime);
             fields.push(("kind", string("via_peers")));
@@ -526,6 +540,20 @@ fn project_equality_builtin_strategy(
     runtime: &Runtime,
 ) -> JsonValue {
     let (name, requirements, proofs) = match proof {
+        EqualitySearchProofByBuiltinStrategy::ImproperIntegralValue(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("builtin_strategy")),
+                    ("strategy", string("ImproperIntegralValue")),
+                    ("requirement", string(p.requirement.readable_string())),
+                    (
+                        "proof",
+                        super::verify::project_verify_fact(&p.proof, runtime),
+                    ),
+                ],
+            )
+        }
         EqualitySearchProofByBuiltinStrategy::RiemannIntegralValue(p) => {
             return object_for(
                 runtime,
@@ -1180,6 +1208,11 @@ fn project_user_prop_def(proof: &UserDefinedPropDefinitionProof, runtime: &Runti
 
 fn project_builtin_prop_def(proof: &BuiltinPropDefinitionProof, runtime: &Runtime) -> JsonValue {
     let (kind, requirements, proofs) = match proof {
+        BuiltinPropDefinitionProof::ImproperIntegral(p) => (
+            "ImproperIntegral",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
         BuiltinPropDefinitionProof::IsMatrixInv(p) => (
             "IsMatrixInv",
             &p.requirement_facts,

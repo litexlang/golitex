@@ -1,0 +1,12 @@
+# Reuse already checked operands when forming a comparison's real domains.
+# Previously these valid statements repeated object WD through full membership
+# verification before trying the existing checked-argument certificate.
+# Run: target/release/litex -strict -f examples/wd/checked_argument_before_reverification.lit
+forall n N:
+    n + 1 >= 1
+
+forall x R+:
+    ln(x) <= ln(x)
+
+forall x R*:
+    x / x <= x / x

@@ -3,7 +3,7 @@
 This directory collects **30 textbook-style calculus examples** checked natively in strict mode without user axioms or `trust`:
 
 - [textbook_derivatives_and_chain_rule.lit](textbook_derivatives_and_chain_rule.lit): **20 derivative & chain-rule examples** covering elementary and multi-layer chain rules, guarded quotients/logarithms/radicals, variable exponents via $\exp(v(x)\ln u(x))$, inverse-function and even-function derivative theorems, stationary/critical/tangent/ODE propositions, the antiderivative chain rule, and multivariable gradients and Jacobians (Part I also available standalone in [textbook_chain_rule_examples.lit](../real_analysis/textbook_chain_rule_examples.lit)).
-- [textbook_riemann_integrals.lit](textbook_riemann_integrals.lit): **10 definite Riemann integral (`integ`) examples** covering polynomial integration with signed reversal and zero-width intervals, exactness of Simpson's $1/3$ rule on cubics, linearity and automatic integrability closure (products, `abs`, Gaussians, nowhere-zero continuous denominators), Newton–Leibniz with automatic `deriv`, piecewise `abs(x)` splitting, integration by parts (`integ_parts`), $u$-substitution (`riemann_integral_substitution`) with odd cancellation, custom integral-average and $L^2$-orthogonality `prop`s (Legendre polynomials $P_1, P_2$), and integral comparison bounds on $\int_0^1 \frac{dx}{1+x^2}$ (complementing the 10 foundational examples in [textbook_integral_examples.lit](../real_analysis/textbook_integral_examples.lit)).
+- [textbook_riemann_integrals.lit](textbook_riemann_integrals.lit): **10 definite Riemann integral (`integral`) examples** covering polynomial integration with signed reversal and zero-width intervals, exactness of Simpson's $1/3$ rule on cubics, linearity and automatic integrability closure (products, `abs`, Gaussians, nowhere-zero continuous denominators), Newton–Leibniz with automatic `deriv`, piecewise `abs(x)` splitting, integration by parts (`integ_parts`), $u$-substitution (`riemann_integral_substitution`) with odd cancellation, custom integral-average and $L^2$-orthogonality `prop`s (Legendre polynomials $P_1, P_2$), and integral comparison bounds on $\int_0^1 \frac{dx}{1+x^2}$ (complementing the 10 foundational examples in [textbook_integral_examples.lit](../real_analysis/textbook_integral_examples.lit)).
 
 ## I. Derivatives and Chain Rules (`textbook_derivatives_and_chain_rule.lit`)
 
@@ -41,7 +41,7 @@ This directory collects **30 textbook-style calculus examples** checked natively
 | 5 | Piecewise / corner splitting (`abs`) | $\int_{-1}^2 |x|\,dx = \int_{-1}^0 (-x)\,dx + \int_0^2 x\,dx = \frac{5}{2}$ |
 | 6 | Integration by parts (`integ_parts`) | $\int_0^{\pi/2} x\cos(x)\,dx = [x\sin(x)]_0^{\pi/2} - \int_0^{\pi/2} \sin(x)\,dx = \frac{\pi}{2} - 1$ |
 | 7 | $u$-substitution & odd cancellation | $\int_0^1 2x e^{x^2}\,dx = e - 1$ and $\int_{-1}^1 2x e^{x^2}\,dx = 0$ |
-| 8 | Integral average `prop` & Archimedes' `thm` | `$has_integral_average` with $\forall L \in \mathbb{R}^+,\ \frac{1}{L}\int_0^L x^2\,dx = \frac{L^2}{3}$ |
+| 8 | Integral average `prop` & Archimedes' `thm` | `$integral_average` with $\forall L \in \mathbb{R}^+,\ \frac{1}{L}\int_0^L x^2\,dx = \frac{L^2}{3}$ |
 | 9 | $L^2$ orthogonality `prop` (Legendre $P_1, P_2$) | `$are_l2_orthogonal_on(leg_p1, leg_p2, -1, 1)` for $P_1(x)=x,\ P_2(x)=\frac{3}{2}x^2 - \frac{1}{2}$ |
 | 10 | Integral comparison / squeeze bounds | $1 - x^2 \le \frac{1}{1+x^2} \le 1$ on $[0, 1] \implies \frac{2}{3} \le \int_0^1 \frac{dx}{1+x^2} \le 1$ |
 
@@ -54,6 +54,31 @@ target/release/litex -strict -lang en -f examples/calculus/textbook_riemann_inte
 
 ## Authoring Pattern and Current Boundaries
 
-- **Establish existence before selecting `deriv(f, a)` or `integ(f, a, b)`**: well-definedness of `deriv(f, a)` consumes `$diff_at(f, a)` or `$has_deriv_at(f, a, L)`, and well-definedness of `integ(f, a, b)` consumes `$is_riemann_integrable(f, a, b)` or `$has_riemann_integral(f, a, b, I)`.
-- **Automatic integrability vs. automatic integral value**: `RiemannIntegrability` automatically discharges `$is_riemann_integrable` across arithmetic, products, `abs`, natural powers, continuous elementary compositions (`exp`, `ln`, `sin`, `cos`, `sqrt`), and nowhere-zero continuous denominators. `RiemannIntegralValue` automatically evaluates constants, natural powers $x^n$, linear combinations, scalar divisions, and known leaf integrals; nonlinear antiderivatives, piecewise corner splits, integration by parts, and change of variables invoke the explicit calculus theorems (`riemann_integral_newton_leibniz`, `riemann_integral_split`, `integ_parts`, `riemann_integral_substitution`).
-- **Scope boundaries**: direct `abs(x)` differentiation away from zero, unexpanded variable-exponent `x^x` syntax (expressed via $\exp(x\ln x)$ in Example I.14), general transcendental antiderivative search, improper/measure integrals, and independent Lean replay of the new native derivative/integral value strategies remain outside this native example gate.
+- **Write values as equations**. Prefer `deriv(f, a) = v` and `integral(f, a, b) = I`. Shared verification checks their mathematical domains and establishes differentiability or integrability from supported function expressions and existing premises. For arbitrary functions, state the required `$diff_at(f, a)` or `$integrable(f, a, b)` assumptions.
+- **Automatic integrability vs. automatic integral value**: `RiemannIntegrability` automatically discharges `$integrable` across arithmetic, products, `abs`, natural powers, continuous elementary compositions (`exp`, `ln`, `sin`, `cos`, `sqrt`), and nowhere-zero continuous denominators. `RiemannIntegralValue` automatically evaluates constants, natural powers $x^n$, linear combinations, scalar divisions, and known leaf integrals; nonlinear antiderivatives, piecewise corner splits, integration by parts, and change of variables invoke the explicit calculus theorems (`riemann_integral_newton_leibniz`, `riemann_integral_split`, `integ_parts`, `riemann_integral_substitution`).
+- **Scope boundaries**: direct `abs(x)` differentiation away from zero, unexpanded variable-exponent `x^x` syntax (expressed via $\exp(x\ln x)$ in Example I.14), general transcendental antiderivative search and measure integrals, and independent Lean replay of the new native derivative/integral value strategies remain outside this native example gate.
+
+## Improper integrals
+
+[integral_audit_repairs.lit](integral_audit_repairs.lit) covers zero-function
+infinite integrals, stored equality paths across fresh bound names, and
+LaTeX grouping for powered open endpoints.
+
+[improper_integrals.lit](improper_integrals.lit) checks finite open endpoints,
+endpoint reversal, independent two-sided convergence, and both infinite
+intervals. `integ(x,a,b,E)` binds the variable only in the expression.
+`integ_oc`, `integ_co` and `integ_oo` preserve which endpoint is omitted.
+Function arguments use `integral` and the canonical `integral_open_closed`,
+`integral_closed_open`, `integral_open`, `integral_pos_inf` and
+`integral_neg_inf` interfaces.
+
+The finite open-endpoint operations require distinct endpoints. All operations
+require the complete integration region to lie in the function domain.
+Improper values additionally require local Riemann integrability and finite
+convergence of each relevant truncation limit. The native examples run with
+`-strict`. Their improper certificates currently have explicit unsupported
+Lean compiler branches.
+
+```bash
+target/release/litex -strict -lang en -f examples/calculus/improper_integrals.lit
+```

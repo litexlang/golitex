@@ -22,6 +22,54 @@ impl Runtime {
         predicate_signature: PredicateSignatureWellDefinedProof,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyAtomicFactWellDefinedResult> {
+        if let Some((integral, value)) =
+            crate::execute::execute_fact_stmt::improper_integral::predicate_integral(fact)
+        {
+            let Some(requirements) =
+                self.improper_signature_requirements(&integral, value, verify_state)?
+            else {
+                return Ok(VerifyAtomicFactWellDefinedResult::Failed(
+                    FailToVerifyAtomicFactWellDefinedResult::RealAnalysisDomain {
+                        fact: fact.clone(),
+                        well_defined_of_each_parameter: succeeded_args,
+                    },
+                ));
+            };
+            let mut completed = Vec::new();
+            for requirement in requirements {
+                let result = self.verify_fact(&requirement, verify_state)?;
+                if result.is_failed() {
+                    return Ok(VerifyAtomicFactWellDefinedResult::Failed(
+                        FailToVerifyAtomicFactWellDefinedResult::Domain {
+                            fact: fact.clone(),
+                            well_defined_of_each_parameter: succeeded_args,
+                            predicate_signature,
+                            completed,
+                            requirement,
+                            result: Box::new(result),
+                        },
+                    ));
+                }
+                completed.push(
+                    super::well_defined_result::PredicateDomainWellDefinedProof {
+                        requirement,
+                        result:
+                            super::well_defined_result::PredicateDomainRequirementProof::Verified(
+                                Box::new(result),
+                            ),
+                    },
+                );
+            }
+            return Ok(VerifyAtomicFactWellDefinedResult::Success(
+                AtomicFactWellDefinedProof::new(self.result_detail(), || {
+                    DetailedAtomicFactWellDefinedProof {
+                        well_defined_of_each_parameter: succeeded_args,
+                        predicate_signature,
+                        predicate_domain: PredicateDomainProof::ByRequirements(completed),
+                    }
+                })?,
+            ));
+        }
         let multi_relation = match fact {
             AtomicFact::MultivariableAnalysisFact(f) => Some(&f.relation),
             AtomicFact::NotMultivariableAnalysisFact(f) => Some(&f.relation),
@@ -438,7 +486,7 @@ impl Runtime {
             let mut predicate_domain = Vec::new();
             let mut failed = None;
             for (index, requirement) in requirements.iter().enumerate() {
-                match self.verify_requirement_with_checked_arguments(
+                match self.verify_requirement_with_checked_arguments_first(
                     requirement,
                     args,
                     index,

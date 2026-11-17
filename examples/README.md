@@ -177,7 +177,9 @@ Left/right function limit tracers:
 
 Standalone regression examples:
 
-- [A shallow embedding of higher-order logic](hol_embedding.lit), provided by chegnxuan huang: Boolean-valued predicates and quantifiers, interpretations of the HOL Light axioms, and constructed natural numbers with addition.
+- A shallow embedding of higher-order logic, provided by chegnxuan huang.
+  Run the [original example](hol_embedding.lit) or the [v3 showcase](../showcases/hol/README.md).
+  Both develop Boolean-valued predicates, higher-order quantification, and addition on the constructed naturals.
 - [Claim/obtain scope](claim_obtain_scope.lit).
 - [Nonempty-set property arguments](nonempty_set_property_arguments.lit).
 - [Function construction by unique existence](have_fn_by_unique_existence.lit).

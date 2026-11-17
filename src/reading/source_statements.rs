@@ -7,6 +7,10 @@
 
 use super::*;
 use crate::ast::stmt::{ByStmt, DefinitionStmt, ProofBlockStmt, ReleaseAndExpandStmt, WitnessStmt};
+use crate::compile_to_latex::{fact_to_inline_latex, to_latex_for_reading, ReadingLatexHint};
+use crate::execute::execute_by_stmt::{ExecByContraStmtResult, ExecReleaseThmStmtResult};
+use crate::execute::ExecReleaseAndExpandStmtResult;
+use crate::store_fact_and_infer::StoreFactResult;
 
 #[derive(Default)]
 pub(super) struct SourceStatements {
@@ -19,6 +23,7 @@ pub(super) struct SourceStatements {
     named_bindings: BTreeMap<(String, String), String>,
     declarations: BTreeSet<String>,
     hints: source_hints::SourceHints,
+    latex_hints: BTreeMap<String, ReadingLatexHint>,
 }
 
 impl Capture {
@@ -27,6 +32,7 @@ impl Capture {
         self.source_statements.spans.clear();
         self.source_statements.current = None;
         self.source_statements.gaps.clear();
+        self.source_statements.latex_hints.clear();
         self.source_statements.scopes = vec![format!("file:{}", self.current_source)];
         collect_spans(block, &mut self.source_statements.spans);
     }
@@ -98,8 +104,8 @@ impl Capture {
         Some(saved)
     }
 
-    /// Render the exact original source AST, before execution-instance records
-    /// are joined. The compiler supplies boundaries; no rendered text is searched.
+    /// Render the original AST with presentation hints from its actual execution.
+    /// A repeated source statement keeps its generic math instead of choosing an instance.
     pub fn capture_latex_block(
         &mut self,
         first: usize,
@@ -107,6 +113,40 @@ impl Capture {
         block: &TokenBlock,
         runtime: &Runtime,
     ) {
+        let mut hints = std::mem::take(&mut self.source_statements.latex_hints);
+        let mut repeated = BTreeSet::new();
+        let mut previous = BTreeMap::new();
+        for record in &self.statements[first..] {
+            let id = field_text(record, "id");
+            let original = field_text(record, "source_statement_id");
+            if id != original {
+                repeated.insert(original);
+            }
+        }
+        for record in &self.statements[first..] {
+            let id = field_text(record, "id");
+            if id != field_text(record, "source_statement_id") {
+                continue;
+            }
+            if repeated.contains(&id) {
+                hints.remove(&id);
+            }
+            let key = (
+                field_text(record, "parent_statement_id"),
+                field_text(record, "scope_id"),
+            );
+            let preceding = previous.insert(key, record);
+            let follows = preceding.is_some_and(|preceding| {
+                field_text(record, "status") == "accepted"
+                    && field_text(preceding, "status") == "accepted"
+                    && !repeated.contains(&id)
+                    && !repeated.contains(&field_text(preceding, "id"))
+                    && id_list(record, "cited_fact_ids")
+                        .iter()
+                        .any(|citation| id_list(preceding, "produced_fact_ids").contains(citation))
+            });
+            hints.entry(id).or_default().follows_previous = follows;
+        }
         let mut resolve = |value: &Stmt| {
             let mut matches = self
                 .source_statements
@@ -119,11 +159,12 @@ impl Capture {
             }
             Some(field_text(&self.statements[*index], "id"))
         };
-        let result = crate::compile_to_latex::to_latex_with_statement_ids(
+        let result = to_latex_for_reading(
             std::slice::from_ref(statement),
             &runtime.global_module_manager,
             self.language,
             &mut resolve,
+            &hints,
         );
         let rendered = match result {
             Ok(rendered) => rendered,
@@ -144,6 +185,7 @@ impl Capture {
             .collect::<BTreeSet<_>>();
         let expected = self.statements[first..]
             .iter()
+            .filter(|record| field_text(record, "id") == field_text(record, "source_statement_id"))
             .map(|record| field_text(record, "id"))
             .collect::<BTreeSet<_>>();
         if mapped.len() != expected.len() || !expected.iter().all(|id| mapped.contains(id.as_str()))
@@ -528,6 +570,31 @@ impl Capture {
         let previous_wd = std::mem::take(&mut self.wd_uses);
 
         let evidence = capture_execute__exec_stmt_result__ExecStmtResult(result, self, runtime);
+        if self.layout == crate::reading::ReadingLayout::Latex && record_index == source_index {
+            let render = |fact: &Fact| {
+                fact_to_inline_latex(fact, &runtime.global_module_manager, self.language)
+            };
+            let mut hint = ReadingLatexHint::default();
+            match result {
+                ExecStmtResult::By(ExecByStmtResult::Contra(ExecByContraStmtResult::Success(
+                    proof,
+                ))) => {
+                    hint.assumption = render(&proof.reverse_assumption).ok();
+                }
+                ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(
+                    ExecReleaseThmStmtResult::Success(proof),
+                )) => {
+                    hint.release = proof
+                        .stored
+                        .iter()
+                        .map(|stored| render(&released_fact(&stored.store)))
+                        .collect::<RuntimeResult<Vec<_>>>()
+                        .unwrap_or_default();
+                }
+                _ => {}
+            }
+            self.source_statements.latex_hints.insert(id.clone(), hint);
+        }
         let mut failure = crate::json_output::statement_failure_summary(result, runtime);
         if let Some(JsonValue::Object(summary)) = &mut failure {
             if let Some(JsonValue::Object(mut location)) = summary.get("source_location").cloned() {
@@ -971,6 +1038,33 @@ fn string_list(value: &JsonValue, key: &str) -> BTreeSet<String> {
         .flatten()
         .filter_map(|value| value.as_str().ok().map(str::to_owned))
         .collect()
+}
+
+fn id_list<'a>(value: &'a JsonValue, key: &str) -> &'a [JsonValue] {
+    value
+        .as_object()
+        .ok()
+        .and_then(|fields| fields.get(key))
+        .and_then(|value| value.as_array().ok())
+        .unwrap_or_default()
+}
+
+fn released_fact(store: &StoreFactResult) -> Fact {
+    use crate::ast::fact::ExistShapedFact;
+    match store {
+        StoreFactResult::AtomicFact(value) => Fact::AtomicFact(value.fact.clone()),
+        StoreFactResult::AndFact(value) => Fact::AndFact(value.fact.clone()),
+        StoreFactResult::ChainFact(value) => Fact::ChainFact(value.fact.clone()),
+        StoreFactResult::OrFact(value) => Fact::OrFact(value.fact.clone()),
+        StoreFactResult::ExistShapedFact(value) => match &value.fact {
+            ExistShapedFact::Exist(fact) => Fact::ExistFact(fact.clone()),
+            ExistShapedFact::ExistUnique(fact) => Fact::ExistUniqueFact(fact.clone()),
+            ExistShapedFact::NotExist(fact) => Fact::NotExistFact(fact.clone()),
+        },
+        StoreFactResult::NotForallFact(value) => Fact::NotForall(value.fact.clone()),
+        StoreFactResult::ForallFact(value) => Fact::ForallFact(value.fact.clone()),
+        StoreFactResult::ForallFactWithIff(value) => Fact::ForallFactWithIff(value.fact.clone()),
+    }
 }
 
 fn number_field(value: &JsonValue, key: &str) -> usize {

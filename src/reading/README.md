@@ -1028,22 +1028,29 @@ Standalone `litex -latex` remains the separate parse-only compilation command.
 `-document` belongs to that standalone command, not reading mode.
 
 The manuscript uses the official compiler's paragraphs, proof methods and
-mathematical notation. Proofs flow as continuous paragraphs with run-in case
-and contradiction labels, wrapping naturally to the available width. Hover or
-focus a fragment to open the same complete proof, logical-action or failure
-renderer used by source reading. The exact original source starts collapsed.
-Click to keep the popup open; click again to close it. Moving between fragments
-of one compiler-owned statement preserves the dwell timer and open proof.
-Follow the same scoped native fact references or open statement details.
-Escape and the close button dismiss the explanation. The
-source button returns to the usual source reader/editor. Editing invalidates
-old proof data and disables mathematical presentation until checking completes.
+mathematical notation. Top-level hash comments and triple-quoted passages are
+joined to their source positions as prose. The supported Markdown subset
+includes headings, lists, code, emphasis, and KaTeX math. The compiler shows
+the retained reverse assumption of a contradiction and the instantiated
+conclusions of a unique successful theorem release. A proof step begins with
+“Hence” when it actually cites a fact produced by its preceding step.
 
-On-demand controls in the preview expose the statement's resolved source
-symbols, retained adjacent equality proofs and actual execution contexts.
-Symbol choices use the existing definition/domain formatter in a separate
-scrolling compartment; changing them does not rebuild the proof. They refer
-to Native source occurrences, not guessed positions or names in rendered TeX.
+Both CLI layouts and their static exports open in reading mode. Click a
+statement to open the inspector alongside the text on desktop or at the
+bottom on a narrow screen. Use its close button or Escape to collapse it.
+Scrolling preserves the selection. The arrow controls and `j` / `k` step
+through the checked source, and the reading trail preserves jumps to citations.
+The inspector lists later statements that cite a selected fact by identity.
+Verification details are collapsed. A failure of expression formation
+brings the missing condition forward. Projects with multiple chapters offer a
+collapsible contents list and adjoining chapter links.
+
+In the mathematical view, unambiguous names in a statement's original symbol
+occurrences are clickable inside the rendered formula. The statement and its
+proof remain available where a symbol cannot be matched uniquely. The
+inspector can show retained adjacent equalities and the exact Litex source.
+Switch proof detail between an outline, the textbook text, and optional
+step-by-step derivations.
 The equality list uses only the recorded argument pairs and their own proof
 certificates, including a retained failed step; navigation and Back preserve
 the exact equality index and execution scope. Consequences are available
@@ -1059,8 +1066,8 @@ Qualified compiler identifiers use the same resolved display-name table as
 source explanations. A local `newton_error::r` can therefore display as `r`;
 ambiguous names or missing export correspondences stay qualified. The original
 compiler bytes, source spans and symbol identities remain unchanged.
-Checked primary facts with a unique matching source execution also have an
-initially collapsed **Derivation** beside the sentence. Opening it lazily uses
+In **Step by step**, checked primary facts with a unique matching source
+execution have an initially collapsed **Derivation** beside the sentence. Opening it lazily uses
 the same native proof renderer as fact details; reopening preserves its body.
 Premises remain expandable and native fact references remain navigable. The
 positive-natural lower-bound rule reads as a premise-to-conclusion sentence
@@ -1070,6 +1077,14 @@ unavailable explanation. Inferred facts, assumptions, rejected steps and
 ambiguous executions do not borrow a primary fact's inline derivation.
 Uploads and rechecks retain the selected document layout. Compiled prose keeps
 the compilation language; changing the interface language does not rewrite TeX.
+With a checking host, **Try editing** opens the source editor. Drafts are
+saved in the browser for the original bundle when storage is available.
+Changing a draft invalidates its proof controls until the next check.
+
+The CLI preview and export use this interface by default. Direct
+`LitexReading.mount(root, { document, experience: "textbook" })` and
+`LitexReading.open(root, bundleUrl, { experience: "textbook" })` opt into the
+same interface in an existing host.
 
 Mathematical bundles add `reading_layout: "latex"`. Each source can contain
 `latex_blocks` with compiler `content`, the exact `source_text` snapshot and its
@@ -1135,10 +1150,10 @@ and typed parameter evidence to show the exact binding line and declared domain,
 including quantified parameters and shadowed names. Later inferred memberships
 do not replace that domain; missing evidence does not trigger a text guess.
 
-The detail pane omits duplicate source, engine versions, file/line metadata,
-proof trees and a default rule catalogue. Source concepts and real fact
-citations remain clickable. Preview, static export and embedding share this
-viewer without a Node runtime or frontend build. Bundled KaTeX and embedded
+The detail pane starts with mathematical explanations and fact references.
+The typed proof record and rule identifiers are available under **Verification
+details**. Preview, static export and embedding share this viewer without a
+Node runtime or frontend build. Bundled KaTeX and embedded
 WOFF2 fonts work offline; see web/vendor/katex/README.md for version/license
 and deterministic regeneration. Rendering disables trusted HTML/URL commands.
 

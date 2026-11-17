@@ -6,6 +6,10 @@ use crate::launch_command::OutputLanguage;
 use crate::module_manager::GlobalModuleManager;
 use crate::runtime::RuntimeResult;
 
+// These operators print their bodies without a closing delimiter. Group the
+// complete expression before placing it next to another arithmetic operand.
+const BINDING_OPERATOR_PRECEDENCE: u8 = 0;
+
 pub(super) fn obj(
     value: &Obj,
     modules: &GlobalModuleManager,
@@ -118,8 +122,32 @@ pub(super) fn expression(
 
         Obj::IntegralOperator(IntegralOperator::Riemann(x)) => (
             riemann_integral(&x.function, &x.lower, &x.upper, modules, lang)?,
-            30,
+            BINDING_OPERATOR_PRECEDENCE,
         ),
+        Obj::IntegralOperator(IntegralOperator::Improper(value)) => {
+            let (lower, upper) = match &value.bounds {
+                ImproperIntegralBounds::OpenClosed { start, end } => {
+                    (format!("{{{}}}^{{\\circ}}", o(start)?), o(end)?)
+                }
+                ImproperIntegralBounds::ClosedOpen { start, end } => {
+                    (o(start)?, format!("{{{}}}^{{\\circ}}", o(end)?))
+                }
+                ImproperIntegralBounds::Open { start, end } => (
+                    format!("{{{}}}^{{\\circ}}", o(start)?),
+                    format!("{{{}}}^{{\\circ}}", o(end)?),
+                ),
+                ImproperIntegralBounds::PositiveInfinity { start } => {
+                    (o(start)?, r"+\infty".into())
+                }
+                ImproperIntegralBounds::NegativeInfinity { end } => (r"-\infty".into(), o(end)?),
+            };
+            let function = function_operand(&value.function, modules, lang)?;
+            let bound = fresh_rendered_index(r"\xi", &[&function, &lower, &upper]);
+            (
+                format!(r"\int_{{{lower}}}^{{{upper}}} {function}({bound})\,\mathrm{{d}}{bound}"),
+                BINDING_OPERATOR_PRECEDENCE,
+            )
+        }
         Obj::DerivativeOperator(DerivativeOperator::AtPoint(x)) => {
             (derivative_at(&x.function, &x.point, modules, lang)?, 50)
         }
@@ -156,7 +184,15 @@ pub(super) fn expression(
                 (format!(r"\frac{{{}}}{{{}}}", o(&x.left)?, o(&x.right)?), 50)
             }
             ArithmeticOperator::Pow(x) => {
-                (format!("{}^{{{}}}", e(&x.base, 41)?, o(&x.exponent)?), 40)
+                let base = if matches!(
+                    x.base.as_ref(),
+                    Obj::ArithmeticOperator(ArithmeticOperator::Div(_))
+                ) {
+                    parens(&o(&x.base)?)
+                } else {
+                    e(&x.base, 41)?
+                };
+                (format!("{base}^{{{}}}", o(&x.exponent)?), 40)
             }
             ArithmeticOperator::Abs(x) => (format!(r"\left|{}\right|", o(&x.arg)?), 50),
             ArithmeticOperator::Floor(x) => {
@@ -236,7 +272,7 @@ pub(super) fn expression(
                     function,
                     application
                 ),
-                30,
+                BINDING_OPERATOR_PRECEDENCE,
             )
         }
         Obj::LimitOperator(LimitOperator::Sequence(x)) => {
@@ -247,7 +283,10 @@ pub(super) fn expression(
             }
             let bound = ident(&bound);
             let application = format!("{}{}", h(&x.sequence)?, call_parens(&bound));
-            (format!(r"\lim_{{{}\to\infty}} {}", bound, application), 30)
+            (
+                format!(r"\lim_{{{}\to\infty}} {}", bound, application),
+                BINDING_OPERATOR_PRECEDENCE,
+            )
         }
         Obj::LimitOperator(LimitOperator::SequenceLiminf(x)) => {
             let source = x.sequence.readable_string();
@@ -259,7 +298,7 @@ pub(super) fn expression(
             let application = format!("{}{}", h(&x.sequence)?, call_parens(&bound));
             (
                 format!(r"\liminf_{{{}\to\infty}} {}", bound, application),
-                30,
+                BINDING_OPERATOR_PRECEDENCE,
             )
         }
         Obj::LimitOperator(LimitOperator::SequenceLimsup(x)) => {
@@ -272,7 +311,7 @@ pub(super) fn expression(
             let application = format!("{}{}", h(&x.sequence)?, call_parens(&bound));
             (
                 format!(r"\limsup_{{{}\to\infty}} {}", bound, application),
-                30,
+                BINDING_OPERATOR_PRECEDENCE,
             )
         }
         Obj::HyperbolicOperator(x) => (
@@ -545,7 +584,14 @@ pub(super) fn expression(
                     &[o(&x.set)?, o(&x.func)?, o(&x.op)?, o(&x.seed)?],
                 ),
             },
-            30,
+            if matches!(
+                x,
+                IteratedOperator::Reduce(_) | IteratedOperator::FiniteSetReduce(_)
+            ) {
+                50
+            } else {
+                BINDING_OPERATOR_PRECEDENCE
+            },
         ),
         Obj::FiniteSetStat(x) => (
             match x {
@@ -731,7 +777,10 @@ fn template(
 }
 fn integer_range(start: &str, end: &str, closed: bool) -> String {
     let relation = if closed { r"\leq" } else { "<" };
-    format!(r"\left\{{\iota\in\mathbb{{Z}}\;\middle|\;{start}\leq\iota {relation} {end}\right\}}")
+    let bound = fresh_rendered_index(r"\iota", &[start, end]);
+    format!(
+        r"\left\{{{bound}\in\mathbb{{Z}}\;\middle|\;{start}\leq{bound} {relation} {end}\right\}}"
+    )
 }
 fn standard_set(value: &StandardSet) -> String {
     let (letter, suffix) = match value {

@@ -8,14 +8,8 @@ use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
-    // Cite a known non-equality atomic by proving each known_arg = goal_arg.
-    //
-    // Candidates: same prop name, polarity, and arity (no equality-class filter).
-    // Argument obligations use KnownFact: pairwise identity/alpha and exact stored paths.
-    // Nested MatchingOneArgByOne is still available there (scheduled before rewrite).
-    //
-    // Example: known `a > 0`, `a = b`, goal `b > 0`.
-    // Example: known `a + 1 > 0`, `a = b`, goal `b + 1 > 0` (peel Add, then a = b).
+    // Try the original argument tuple first, then stored equivalent objects
+    // from each visible scope. Direct matching retains closed calculation.
     pub fn search_atomic_except_equality_fact_proof_by_known_atomic_fact(
         &mut self,
         fact: &AtomicFact,
@@ -32,37 +26,103 @@ impl Runtime {
         let lookup_key = (fact.prop_name(), atomic_fact_has_positive_polarity(fact));
         let goal_args = atomic_fact_args_ref(fact);
 
-        // Clone candidates first so nested equality search can borrow &mut self.
-        let mut candidates: Vec<AtomicFact> = Vec::new();
-        for env in self.execution_environments_stack.iter().rev() {
-            let memory = &env.facts.known_atomic_except_equality_facts;
-            // Keep the existing exact-name winner before declaration aliases.
-            let matched = memory.by_prop.get(&lookup_key).into_iter().chain(
-                memory
-                    .by_prop
-                    .iter()
-                    .filter_map(|((predicate, polarity), knowns)| {
-                        (*polarity == lookup_key.1
-                            && predicate != &lookup_key.0
-                            && self.predicates_share_visible_definition(predicate, &lookup_key.0))
-                        .then_some(knowns)
-                    }),
+        let mut equivalents =
+            super::super::verify_equality::equivalence_class_graph::EquivalentArguments::new(
+                &goal_args,
+                self.execution_environments_stack.len(),
             );
-            for knowns in matched {
-                for known in knowns {
-                    if atomic_fact_args_ref(known).len() != goal_args.len() {
-                        continue;
+        let mut attempted = std::collections::HashSet::new();
+        loop {
+            let mut candidate = None;
+            for env in self.execution_environments_stack.iter().rev() {
+                let memory = &env.facts.known_atomic_except_equality_facts;
+                let matched = memory.by_prop.get(&lookup_key).into_iter().chain(
+                    memory
+                        .by_prop
+                        .iter()
+                        .filter_map(|((predicate, polarity), knowns)| {
+                            (*polarity == lookup_key.1
+                                && predicate != &lookup_key.0
+                                && self
+                                    .predicates_share_visible_definition(predicate, &lookup_key.0))
+                            .then_some(knowns)
+                        }),
+                );
+                for knowns in matched {
+                    if let Some(known) = knowns.iter().find(|known| {
+                        !attempted.contains(&known.fact_id())
+                            && equivalents.matches(&atomic_fact_args_ref(known))
+                    }) {
+                        candidate = Some(known.clone());
+                        break;
                     }
-                    candidates.push(known.clone());
+                }
+                if candidate.is_some() {
+                    break;
                 }
             }
+            if let Some(known) = candidate {
+                attempted.insert(known.fact_id());
+                if let Some(proof) =
+                    self.build_known_atomic_proof_with_equality(fact, &known, &equality_state)?
+                {
+                    return Ok(Some(proof));
+                }
+                continue;
+            }
+            if !equivalents.advance(self) {
+                break;
+            }
         }
-
-        for known in candidates {
-            if let Some(proof) =
-                self.build_known_atomic_proof_with_equality(fact, &known, &equality_state)?
-            {
-                return Ok(Some(proof));
+        // Direct equality also admits closed calculation. Preserve that
+        // residual matching coverage after original and stored-path matches.
+        for env_index in (0..self.execution_environments_stack.len()).rev() {
+            let memory = &self.execution_environments_stack[env_index]
+                .facts
+                .known_atomic_except_equality_facts;
+            let mut keys = vec![lookup_key.clone()];
+            keys.extend(
+                memory
+                    .by_prop
+                    .keys()
+                    .filter(|(predicate, polarity)| {
+                        *polarity == lookup_key.1
+                            && predicate != &lookup_key.0
+                            && self.predicates_share_visible_definition(predicate, &lookup_key.0)
+                    })
+                    .cloned(),
+            );
+            for key in keys {
+                let count = self.execution_environments_stack[env_index]
+                    .facts
+                    .known_atomic_except_equality_facts
+                    .by_prop
+                    .get(&key)
+                    .map_or(0, Vec::len);
+                for index in 0..count {
+                    let known = &self.execution_environments_stack[env_index]
+                        .facts
+                        .known_atomic_except_equality_facts
+                        .by_prop[&key][index];
+                    if attempted.contains(&known.fact_id())
+                        || atomic_fact_args_ref(known).len() != goal_args.len()
+                    {
+                        continue;
+                    }
+                    let args = atomic_fact_args_ref(known);
+                    if !args.iter().zip(&goal_args).any(|(left, right)| {
+                        !super::super::verify_equality::equivalence_class_graph::objects_match_directly(left, right)
+                            && crate::prelude::calculate_value_pair(left, right).is_some_and(|(_, equal)| equal)
+                    }) {
+                        continue;
+                    }
+                    let known = known.clone();
+                    if let Some(proof) =
+                        self.build_known_atomic_proof_with_equality(fact, &known, &equality_state)?
+                    {
+                        return Ok(Some(proof));
+                    }
+                }
             }
         }
 

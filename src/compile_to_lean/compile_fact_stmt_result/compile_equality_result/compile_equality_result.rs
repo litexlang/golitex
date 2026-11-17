@@ -578,6 +578,9 @@ impl LitexToLeanCompiler {
                 self.compile_function_definition(fact, proof, parent_wd, position)?
             }
             EqualFactSearchedProof::ByBuiltinStrategy(
+                EqualitySearchProofByBuiltinStrategy::ImproperIntegralValue(_),
+            ) => return Err(LeanCompileError::unsupported("ImproperIntegral/Value")),
+            EqualFactSearchedProof::ByBuiltinStrategy(
                 EqualitySearchProofByBuiltinStrategy::DerivativeValue(proof),
             ) => self.compile_derivative_value_strategy(fact, proof, position)?,
             EqualFactSearchedProof::ByBuiltinStrategy(

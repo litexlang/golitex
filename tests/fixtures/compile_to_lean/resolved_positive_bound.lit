@@ -1,0 +1,10 @@
+# A positive lower bound puts a real number in the positive reals.
+# Before, the same source failed Lean compilation unless 0=0 preceded it.
+# Former error: WD/Producer: No preceding original constructor or certified parameter supplies `0`.
+# Now, the signed-bound schema constructs its fixed zero directly.
+# Boundary: a weak lower bound of zero does not imply strict positivity.
+# Run: target/release/litex -strict -lean -f tests/fixtures/compile_to_lean/resolved_positive_bound.lit
+forall x R:
+    x>=1
+    =>:
+        x $in R+

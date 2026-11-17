@@ -1,6 +1,49 @@
 use super::*;
 
 #[test]
+fn powered_open_endpoints_group_the_complete_bound() {
+    let latex = to_latex_from_source(
+        "have fn f(x R) R=x\nlet a=integral_open_closed(f,2^2,5)\nlet b=integral_closed_open(f,0,2^2)\nlet c=integral_open(f,2^2,3^2)",
+        OutputLanguage::English,
+    ).unwrap();
+    assert!(latex.contains(r"\int_{{2^{2}}^{\circ}}^{5}"), "{latex}");
+    assert!(latex.contains(r"\int_{0}^{{2^{2}}^{\circ}}"), "{latex}");
+    assert!(
+        latex.contains(r"\int_{{2^{2}}^{\circ}}^{{3^{2}}^{\circ}}"),
+        "{latex}"
+    );
+}
+
+#[test]
+fn divisibility_places_the_divisor_on_the_left() {
+    let latex =
+        to_latex_from_source("$dvd(6, 2)\nnot $dvd(7, 2)", OutputLanguage::English).unwrap();
+    assert!(latex.contains(r"$2 \mid 6$"), "{latex}");
+    assert!(latex.contains(r"$2 \nmid 7$"), "{latex}");
+}
+
+#[test]
+fn nested_math_keeps_binding_operators_scoped() {
+    let latex = to_latex_from_source(
+        "have f fn(k N+) R\nproduct(1,3,f)*2 = 2\nrange(1,sum(1,3,f)) = {}\nforall y R:\n    not exist x R st {x != x}\n    y = y",
+        OutputLanguage::English,
+    )
+    .unwrap();
+    assert!(
+        latex.contains(r"\left(\prod_{\iota=1}^{3} f(\iota)\right) \cdot 2"),
+        "{latex}"
+    );
+    assert!(
+        latex.contains(r"\iota_{1} < \sum_{\iota=1}^{3} f(\iota)"),
+        "{latex}"
+    );
+    assert!(
+        latex.contains(r"\left(\nexists x\in \mathbb{R}:\ x \ne x\right)"),
+        "{latex}"
+    );
+}
+
+#[test]
 fn negative_atomic_relations_keep_the_entire_relation_inside_negation() {
     let latex =
         to_latex_from_source("have a,b R\nnot a < b\nnot a <= b", OutputLanguage::English).unwrap();
@@ -422,14 +465,14 @@ fn proof_prose_connects_assumptions_steps_and_structural_conclusions() {
         r"假设 $n \ne 1$。",
         r"则 $n \leq 1$。",
         r"又有 $n = 1$。",
-        r"这与 $n \ne 1$ 矛盾，因此 $n > 1$。",
+        r"但 $n \ne 1$ 不可能成立，故 $n > 1$。",
         r"综上，$n = 1 \lor n > 1$。",
     ] {
         assert!(chinese.contains(prose), "missing {prose}: {chinese}");
     }
     let english = to_latex_from_source(source, OutputLanguage::English).unwrap();
     assert!(english.contains(r"Suppose $n = 1$. Then $n = 1 \lor n > 1$."));
-    assert!(english.contains(r"This contradicts $n \ne 1$, so $n > 1$."));
+    assert!(english.contains(r"But $n \ne 1$ is impossible. Hence $n > 1$."));
     assert!(english.contains(r"In all cases, $n = 1 \lor n > 1$."));
     // Prose transitions belong to proof steps, never to a top-level assertion.
     assert_eq!(

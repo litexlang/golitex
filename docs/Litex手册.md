@@ -8695,6 +8695,8 @@ claim:
         ? from n = 1:
             a^n = a^1 = a
         ? induc:
+            n $in N+
+            0 <= a^n
             a^(n+1) = a^n*a^1 = a^n*a <= a^n*1 = a^n <= a
 ```
 

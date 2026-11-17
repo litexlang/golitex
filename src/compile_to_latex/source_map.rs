@@ -34,15 +34,35 @@ impl MappedLatex {
 
 pub(super) struct StatementAnnotations<'a> {
     resolve: &'a mut dyn FnMut(&Stmt) -> Option<String>,
+    hints: &'a std::collections::BTreeMap<String, ReadingLatexHint>,
     ids: Vec<String>,
 }
 
+/// Presentation of a single, recorded execution, supplied only by Reading.
+#[derive(Default)]
+pub(crate) struct ReadingLatexHint {
+    pub assumption: Option<String>,
+    pub release: Vec<String>,
+    pub follows_previous: bool,
+}
+
 impl<'a> StatementAnnotations<'a> {
-    pub fn new(resolve: &'a mut dyn FnMut(&Stmt) -> Option<String>) -> Self {
+    fn new(
+        resolve: &'a mut dyn FnMut(&Stmt) -> Option<String>,
+        hints: &'a std::collections::BTreeMap<String, ReadingLatexHint>,
+    ) -> Self {
         Self {
             resolve,
+            hints,
             ids: Vec::new(),
         }
+    }
+
+    pub(super) fn hint(&self, index: usize) -> Option<&ReadingLatexHint> {
+        self.hints.get(&self.ids[index])
+    }
+    pub(super) fn has_reading_hints(&self) -> bool {
+        !self.hints.is_empty()
     }
 
     pub fn record(&mut self, statement: &Stmt) -> Option<usize> {
@@ -104,13 +124,24 @@ impl<'a> StatementAnnotations<'a> {
     }
 }
 
+#[cfg(test)]
 pub(crate) fn to_latex_with_statement_ids(
     statements: &[Stmt],
     modules: &crate::module_manager::GlobalModuleManager,
     language: OutputLanguage,
     resolve: &mut dyn FnMut(&Stmt) -> Option<String>,
 ) -> RuntimeResult<MappedLatex> {
-    let mut annotations = Some(StatementAnnotations::new(resolve));
+    to_latex_for_reading(statements, modules, language, resolve, &Default::default())
+}
+
+pub(crate) fn to_latex_for_reading(
+    statements: &[Stmt],
+    modules: &crate::module_manager::GlobalModuleManager,
+    language: OutputLanguage,
+    resolve: &mut dyn FnMut(&Stmt) -> Option<String>,
+    hints: &std::collections::BTreeMap<String, ReadingLatexHint>,
+) -> RuntimeResult<MappedLatex> {
+    let mut annotations = Some(StatementAnnotations::new(resolve, hints));
     let marked = super::stmt::render_statements(statements, modules, language, &mut annotations)?;
     annotations
         .expect("annotation owner is retained")

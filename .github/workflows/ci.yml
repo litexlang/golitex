@@ -8,7 +8,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  RUST_MIN_STACK: 8388608
   # Includes rust-clippy b84f31e: memoize every visited type in the
   # needless_collect analysis of recursive proof-result types.
   LITEX_CLIPPY_TOOLCHAIN: nightly-2026-10-25

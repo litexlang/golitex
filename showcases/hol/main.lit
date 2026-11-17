@@ -26,6 +26,8 @@
 # Source attribution: examples/hol_embedding.lit, provided by chegnxuan huang.
 # Run: target/release/litex -strict -lang en -f showcases/hol/main.lit
 
+# V3 keeps the mathematical declarations and uses local facts to shorten proof search.
+
 # Boolean implementation and public proof interface.
 # The carrier representation appears only in this initial block.
 # Clients use holds, logical operators, and their checked introduction/elimination rules.
@@ -374,6 +376,12 @@ thm hol_equal_reflexive:
     ? forall A set, x A:
         $holds(\hol_equal<A>(x, x))
 
+
+thm hol_host_successor_index:
+    ? forall n N:
+        n + 1 >= 1
+        (n + 1) - 1 = n
+
 # HOL and natural-number theory through the public Boolean interface.
 
 # Lambda laws use the same complete domain on each side.
@@ -393,68 +401,6 @@ thm hol_extensionality:
         =>:
             f = g
     by fn_extension f = g
-
-# Reification of n = n gives a Boolean-valued predicate on the infinite set N.
-have fn reflexive(n N) Bool = \hol_equal<N>(n, n)
-
-thm reflexive_everywhere:
-    ? $all_true(N, reflexive)
-    by def $all_true(N, reflexive)
-
-release thm hol_all_intro(N, reflexive)
-
-$holds(\hol_all<N>(reflexive))
-
-# Function spaces can themselves be quantifier domains and function arguments.
-\hol_all<fn(x N) Bool> $in fn(p fn(x fn(x N) Bool) Bool) Bool
-
-forall p fn(x N) Bool, q fn(f fn(x N) Bool) Bool:
-    q(p) $in Bool
-
-# Closed HOL formula: forall P : N -> Bool, (forall n : N, P(n)) implies P(0).
-# The outer quantifier ranges over predicate values.
-have fn instantiate_zero(p fn(n N) Bool) Bool = hol_implies(\hol_all<N>(p), p(0))
-
-thm all_predicates_instantiate_at_zero:
-    ? $all_true(fn(n N) Bool, instantiate_zero)
-    claim:
-        ? forall p fn(n N) Bool:
-            $holds(instantiate_zero(p))
-        claim:
-            ? forall:
-                $holds(\hol_all<N>(p))
-                =>:
-                    $holds(p(0))
-            release thm hol_universal_instantiation(N, p, 0)
-        release thm hol_implies_intro(\hol_all<N>(p), p(0))
-        instantiate_zero(p) = hol_implies(\hol_all<N>(p), p(0))
-        $holds(instantiate_zero(p))
-    by def $all_true(fn(n N) Bool, instantiate_zero)
-
-release thm hol_all_intro(fn(n N) Bool, instantiate_zero)
-
-$holds(\hol_all<fn(n N) Bool>(instantiate_zero))
-
-# An existential example supplies an explicit witness; it does not assert universality.
-have fn zero_predicate(n N) Bool = \hol_equal<N>(n, 0)
-
-zero_predicate(0) = \hol_equal<N>(0, 0)
-
-release thm hol_equal_intro(N, 0, 0)
-
-$holds(zero_predicate(0))
-
-witness $some_true(N, zero_predicate) from 0
-
-release thm hol_exists_intro(N, zero_predicate)
-
-$holds(\hol_exists<N>(zero_predicate))
-
-release thm hol_not_intro(False)
-
-release thm hol_and_intro(True, True)
-
-release thm hol_or_intro_right(False, True)
 
 # HOL Light axiom interpretations use the same Bool, holds, and quantifiers.
 # Every candidate set is inhabited: satisfying elements when available, A otherwise.
@@ -556,6 +502,9 @@ thm hol_select_at_valid:
     claim:
         ? forall a A:
             $holds(\hol_select_at<A>(p)(a))
+        p(a) $in Bool
+        \hol_hilbert<A>(p) $in A
+        p(\hol_hilbert<A>(p)) $in Bool
         claim:
             ? forall:
                 $holds(p(a))
@@ -572,6 +521,8 @@ thm hol_select_axiom_valid:
     claim:
         ? forall p fn(x A) Bool:
             $holds(\hol_select_body<A>(p))
+        \hol_select_at<A>(p) $in fn(a A) Bool
+        \hol_all<A>(\hol_select_at<A>(p)) $in Bool
         release thm hol_select_at_valid(A, p)
         release thm hol_all_intro(A, \hol_select_at<A>(p))
         \hol_select_body<A>(p) = \hol_all<A>(\hol_select_at<A>(p))
@@ -656,6 +607,9 @@ have hol_infinity_axiom Bool = \hol_exists<fn(n N) N>(hol_infinity_body)
 
 thm hol_infinity_axiom_valid:
     ? $holds(hol_infinity_axiom)
+    \hol_injective<N, N>(hol_successor) $in Bool
+    \hol_surjective<N, N>(hol_successor) $in Bool
+    hol_not(\hol_surjective<N, N>(hol_successor)) $in Bool
     release thm hol_injective_intro(N, N, hol_successor)
     by contra:
         ? not $holds(\hol_surjective<N, N>(hol_successor))
@@ -666,60 +620,9 @@ thm hol_infinity_axiom_valid:
     witness $some_true(fn(n N) N, hol_infinity_body) from hol_successor
     release thm hol_exists_intro(fn(n N) N, hol_infinity_body)
 
-$holds(\hol_eta_axiom<N, N>)
-
-$holds(\hol_select_axiom<N>)
-
-$holds(hol_infinity_axiom)
-
-# Singleton predicates constrain the result; an unsatisfiable predicate only has a type guarantee.
-release thm hol_select(N, zero_predicate, 0)
-
-zero_predicate(\hol_hilbert<N>(zero_predicate)) = \hol_equal<N>(\hol_hilbert<N>(zero_predicate), 0)
-
-$holds(\hol_equal<N>(\hol_hilbert<N>(zero_predicate), 0))
-
-release thm hol_equal_elim(N, \hol_hilbert<N>(zero_predicate), 0)
-
-\hol_hilbert<N>(zero_predicate) = 0
-
-have fn one_predicate(n N) Bool = \hol_equal<N>(n, 1)
-
-one_predicate(1) = \hol_equal<N>(1, 1)
-
-release thm hol_equal_intro(N, 1, 1)
-
-$holds(one_predicate(1))
-
-release thm hol_select(N, one_predicate, 1)
-
-one_predicate(\hol_hilbert<N>(one_predicate)) = \hol_equal<N>(\hol_hilbert<N>(one_predicate), 1)
-
-$holds(\hol_equal<N>(\hol_hilbert<N>(one_predicate), 1))
-
-release thm hol_equal_elim(N, \hol_hilbert<N>(one_predicate), 1)
-
-\hol_hilbert<N>(one_predicate) = 1
-
-have fn hol_false_predicate(n N) Bool = False
-
-\hol_hilbert<N>(hol_false_predicate) $in N
-
-hol_false_predicate(\hol_hilbert<N>(hol_false_predicate)) = False
-
-not $holds(hol_false_predicate(\hol_hilbert<N>(hol_false_predicate)))
-
 witness $is_nonempty_set(Bool) from True
 
-release thm hol_select_axiom_valid(Bool)
-
-$holds(\hol_select_axiom<Bool>)
-
 release thm hol_predicate_space_nonempty(N)
-
-release thm hol_select_axiom_valid(fn(n N) Bool)
-
-$holds(\hol_select_axiom<fn(n N) Bool>)
 
 # Natural numbers from the interpreted HOL Light infinity and choice axioms.
 # N supplies the ambient individual carrier; the selected map and point determine HolNat.
@@ -811,6 +714,12 @@ thm hol_missing_intro:
             $holds(\hol_missing<I, s>(z))
     by def $holds(\hol_missing<I, s>(z))
 
+thm hol_missing_false_eval:
+    ? forall I set, s fn(x I) I, z I:
+        not $hol_omits(I, s, z)
+        =>:
+            \hol_missing<I, s>(z) = False
+
 thm hol_missing_elim:
     ? forall I set, s fn(x I) I, z I:
         $holds(\hol_missing<I, s>(z))
@@ -818,7 +727,7 @@ thm hol_missing_elim:
             $hol_omits(I, s, z)
     by contra:
         ? $hol_omits(I, s, z)
-        \hol_missing<I, s>(z) = False
+        by thm hol_missing_false_eval(I, s, z) => \hol_missing<I, s>(z) = False
         impossible $holds(False)
 
 release thm hol_non_surjective_omits(N, hol_ind_suc)
@@ -930,15 +839,24 @@ have fn hol_nat_lift_at(q fn(n HolNat) Bool, x N) Bool by cases:
 
 have fn hol_nat_lift(q fn(n HolNat) Bool) fn(x N) Bool = fn(x N) Bool {hol_nat_lift_at(q, x)}
 
+thm hol_nat_lift_on_carrier:
+    ? forall q fn(n HolNat) Bool, n HolNat:
+        hol_nat_lift(q)(n) = q(n)
+    hol_nat_lift(q)(n) = hol_nat_lift_at(q, n) = q(n)
+
+thm hol_nat_lift_off_carrier:
+    ? forall q fn(n HolNat) Bool, x N:
+        not x $in HolNat
+        =>:
+            hol_nat_lift(q)(x) = False
+    hol_nat_lift(q)(x) = hol_nat_lift_at(q, x) = False
+
 thm hol_nat_lift_intro:
     ? forall q fn(n HolNat) Bool, n HolNat:
         $holds(q(n))
         =>:
             $holds(hol_nat_lift(q)(n))
-    hol_nat_lift(q)(n) = hol_nat_lift_at(q, n)
-    hol_nat_lift_at(q, n) = q(n)
-    hol_nat_lift(q)(n) = q(n)
-    $holds(hol_nat_lift(q)(n))
+    by thm hol_nat_lift_on_carrier(q, n) => hol_nat_lift(q)(n) = q(n)
 
 thm hol_nat_lift_member:
     ? forall q fn(n HolNat) Bool, x N:
@@ -947,7 +865,7 @@ thm hol_nat_lift_member:
             x $in HolNat
     by contra:
         ? x $in HolNat
-        hol_nat_lift(q)(x) = hol_nat_lift_at(q, x) = False
+        by thm hol_nat_lift_off_carrier(q, x) => hol_nat_lift(q)(x) = False
         impossible $holds(False)
 
 thm hol_nat_lift_elim:
@@ -955,7 +873,7 @@ thm hol_nat_lift_elim:
         $holds(hol_nat_lift(q)(n))
         =>:
             $holds(q(n))
-    hol_nat_lift(q)(n) = hol_nat_lift_at(q, n) = q(n)
+    by thm hol_nat_lift_on_carrier(q, n) => hol_nat_lift(q)(n) = q(n)
 
 thm hol_nat_induction:
     ? forall q fn(n HolNat) Bool, n HolNat:
@@ -966,6 +884,8 @@ thm hol_nat_induction:
                 $holds(q(hol_suc(k)))
         =>:
             $holds(q(n))
+    hol_zero $in N
+    hol_nat_lift(q) $in fn(x N) Bool
     release thm hol_nat_lift_intro(q, hol_zero)
     hol_zero = hol_ind_zero
     hol_nat_lift(q)(hol_ind_zero) = hol_nat_lift(q)(hol_zero)
@@ -975,7 +895,9 @@ thm hol_nat_induction:
             $holds(hol_nat_lift(q)(x))
             =>:
                 $holds(hol_nat_lift(q)(hol_ind_suc(x)))
+        hol_ind_suc(x) $in N
         release thm hol_nat_lift_member(q, x)
+        hol_suc(x) $in HolNat
         release thm hol_nat_lift_elim(q, x)
         $holds(q(hol_suc(x)))
         release thm hol_nat_lift_intro(q, hol_suc(x))
@@ -1035,6 +957,10 @@ thm hol_nat_induction_all:
         $hol_nat_step(q)
         =>:
             $all_true(HolNat, q)
+    claim:
+        ? forall n HolNat:
+            $holds(q(n))
+        by thm hol_nat_induction(q, n) => $holds(q(n))
     by def $all_true(HolNat, q)
 
 have fn hol_nat_step_value(q fn(n HolNat) Bool) Bool by cases:
@@ -1046,7 +972,14 @@ thm hol_nat_step_value_intro:
         $hol_nat_step(q)
         =>:
             $holds(hol_nat_step_value(q))
-    by def $holds(hol_nat_step_value(q))
+    hol_nat_step_value(q) = True
+    release thm hol_true_intro(hol_nat_step_value(q))
+
+thm hol_nat_step_false_eval:
+    ? forall q fn(n HolNat) Bool:
+        not $hol_nat_step(q)
+        =>:
+            hol_nat_step_value(q) = False
 
 thm hol_nat_step_value_elim:
     ? forall q fn(n HolNat) Bool:
@@ -1055,18 +988,30 @@ thm hol_nat_step_value_elim:
             $hol_nat_step(q)
     by contra:
         ? $hol_nat_step(q)
-        hol_nat_step_value(q) = False
+        by thm hol_nat_step_false_eval(q) => hol_nat_step_value(q) = False
         impossible $holds(False)
 
 have fn hol_nat_induction_body(q fn(n HolNat) Bool) Bool = hol_implies(hol_and(q(hol_zero), hol_nat_step_value(q)), \hol_all<HolNat>(q))
 
 have hol_nat_induction_principle Bool = \hol_all<fn(n HolNat) Bool>(hol_nat_induction_body)
 
+thm hol_nat_induction_body_eval:
+    ? forall q fn(n HolNat) Bool:
+        hol_nat_induction_body(q) = hol_implies(hol_and(q(hol_zero), hol_nat_step_value(q)), \hol_all<HolNat>(q))
+    q(hol_zero) $in Bool
+    hol_nat_step_value(q) $in Bool
+    \hol_all<HolNat>(q) $in Bool
+    hol_and(q(hol_zero), hol_nat_step_value(q)) $in Bool
+
 thm hol_nat_induction_valid:
     ? $holds(hol_nat_induction_principle)
     claim:
         ? forall q fn(n HolNat) Bool:
             $holds(hol_nat_induction_body(q))
+        q(hol_zero) $in Bool
+        hol_nat_step_value(q) $in Bool
+        \hol_all<HolNat>(q) $in Bool
+        hol_and(q(hol_zero), hol_nat_step_value(q)) $in Bool
         claim:
             ? forall:
                 $holds(hol_and(q(hol_zero), hol_nat_step_value(q)))
@@ -1077,8 +1022,7 @@ thm hol_nat_induction_valid:
             release thm hol_nat_induction_all(q)
             release thm hol_all_intro(HolNat, q)
         release thm hol_implies_intro(hol_and(q(hol_zero), hol_nat_step_value(q)), \hol_all<HolNat>(q))
-        hol_nat_induction_body(q) = hol_implies(hol_and(q(hol_zero), hol_nat_step_value(q)), \hol_all<HolNat>(q))
-        $holds(hol_nat_induction_body(q))
+        by thm hol_nat_induction_body_eval(q) => hol_nat_induction_body(q) = hol_implies(hol_and(q(hol_zero), hol_nat_step_value(q)), \hol_all<HolNat>(q))
     by def $all_true(fn(n HolNat) Bool, hol_nat_induction_body)
     release thm hol_all_intro(fn(n HolNat) Bool, hol_nat_induction_body)
     hol_nat_induction_principle = \hol_all<fn(n HolNat) Bool>(hol_nat_induction_body)
@@ -1104,6 +1048,12 @@ thm hol_nat_case_value_intro:
             $holds(hol_nat_case_value(n))
     by def $holds(hol_nat_case_value(n))
 
+thm hol_nat_case_false_eval:
+    ? forall n HolNat:
+        not $hol_nat_case(n)
+        =>:
+            hol_nat_case_value(n) = False
+
 thm hol_nat_case_value_elim:
     ? forall n HolNat:
         $holds(hol_nat_case_value(n))
@@ -1111,7 +1061,7 @@ thm hol_nat_case_value_elim:
             $hol_nat_case(n)
     by contra:
         ? $hol_nat_case(n)
-        hol_nat_case_value(n) = False
+        by thm hol_nat_case_false_eval(n) => hol_nat_case_value(n) = False
         impossible $holds(False)
 
 thm hol_nat_cases:
@@ -1124,12 +1074,13 @@ thm hol_nat_cases:
             $holds(hol_nat_case_value(k))
             =>:
                 $holds(hol_nat_case_value(hol_suc(k)))
+        hol_suc(k) $in HolNat
+        hol_nat_case_value(hol_suc(k)) $in Bool
         witness $hol_nat_has_predecessor(hol_suc(k)) from k
         by def $hol_nat_case(hol_suc(k))
         release thm hol_nat_case_value_intro(hol_suc(k))
     release thm hol_nat_induction(hol_nat_case_value, n)
     release thm hol_nat_case_value_elim(n)
-    n = hol_zero or $hol_nat_has_predecessor(n)
 
 # Numerals are successor terms in the constructed type.
 have hol_one HolNat = hol_suc(hol_zero)
@@ -1138,44 +1089,14 @@ have hol_two HolNat = hol_suc(hol_one)
 
 have hol_three HolNat = hol_suc(hol_two)
 
-hol_one = hol_suc(hol_zero)
-
-hol_two = hol_suc(hol_one)
-
-hol_three = hol_suc(hol_two)
-
-release thm hol_nat_successor_not_zero(hol_zero)
-
-release thm hol_nat_successor_not_zero(hol_one)
-
-release thm hol_nat_successor_not_zero(hol_two)
-
-hol_one != hol_zero
-
-hol_two != hol_zero
-
-hol_three != hol_zero
-
-by contra:
-    ? hol_two != hol_one
-    hol_suc(hol_one) = hol_suc(hol_zero)
-    release thm hol_nat_successor_injective(hol_one, hol_zero)
-    impossible hol_one = hol_zero
-
-by contra:
-    ? hol_three != hol_one
-    hol_suc(hol_two) = hol_suc(hol_zero)
-    release thm hol_nat_successor_injective(hol_two, hol_zero)
-    impossible hol_two = hol_zero
-
-by contra:
-    ? hol_three != hol_two
-    hol_suc(hol_two) = hol_suc(hol_one)
-    release thm hol_nat_successor_injective(hol_two, hol_one)
-    impossible hol_two = hol_one
-
 # An induction application rules out fixed points of successor.
 have fn hol_nat_not_fixed(n HolNat) Bool = hol_not(\hol_equal<HolNat>(hol_suc(n), n))
+
+thm hol_nat_not_fixed_eval:
+    ? forall n HolNat:
+        hol_nat_not_fixed(n) = hol_not(\hol_equal<HolNat>(hol_suc(n), n))
+    hol_suc(n) $in HolNat
+    \hol_equal<HolNat>(hol_suc(n), n) $in Bool
 
 thm hol_nat_not_fixed_intro:
     ? forall n HolNat:
@@ -1183,7 +1104,7 @@ thm hol_nat_not_fixed_intro:
         =>:
             $holds(hol_nat_not_fixed(n))
     release thm hol_not_equal_intro(HolNat, hol_suc(n), n)
-    hol_nat_not_fixed(n) = hol_not(\hol_equal<HolNat>(hol_suc(n), n))
+    by thm hol_nat_not_fixed_eval(n) => hol_nat_not_fixed(n) = hol_not(\hol_equal<HolNat>(hol_suc(n), n))
     $holds(hol_nat_not_fixed(n))
 
 thm hol_nat_not_fixed_elim:
@@ -1191,7 +1112,7 @@ thm hol_nat_not_fixed_elim:
         $holds(hol_nat_not_fixed(n))
         =>:
             hol_suc(n) != n
-    hol_nat_not_fixed(n) = hol_not(\hol_equal<HolNat>(hol_suc(n), n))
+    by thm hol_nat_not_fixed_eval(n) => hol_nat_not_fixed(n) = hol_not(\hol_equal<HolNat>(hol_suc(n), n))
     release thm hol_not_equal_elim(HolNat, hol_suc(n), n)
 
 thm hol_nat_successor_not_fixed:
@@ -1204,6 +1125,8 @@ thm hol_nat_successor_not_fixed:
             $holds(hol_nat_not_fixed(k))
             =>:
                 $holds(hol_nat_not_fixed(hol_suc(k)))
+        hol_suc(k) $in HolNat
+        hol_suc(hol_suc(k)) $in HolNat
         release thm hol_nat_not_fixed_elim(k)
         by contra:
             ? hol_suc(hol_suc(k)) != hol_suc(k)
@@ -1212,31 +1135,6 @@ thm hol_nat_successor_not_fixed:
         release thm hol_nat_not_fixed_intro(hol_suc(k))
     release thm hol_nat_induction(hol_nat_not_fixed, n)
     release thm hol_nat_not_fixed_elim(n)
-
-# These predicates isolate the two hypotheses of induction in rejection controls.
-have fn hol_nat_is_zero(n HolNat) Bool = \hol_equal<HolNat>(n, hol_zero)
-
-hol_nat_is_zero(hol_zero) = \hol_equal<HolNat>(hol_zero, hol_zero)
-
-release thm hol_equal_intro(HolNat, hol_zero, hol_zero)
-
-$holds(hol_nat_is_zero(hol_zero))
-
-have fn hol_nat_false(n HolNat) Bool = False
-
-thm hol_nat_false_step:
-    ? $hol_nat_step(hol_nat_false)
-    claim:
-        ? forall n HolNat:
-            $holds(hol_nat_false(n))
-            =>:
-                $holds(hol_nat_false(hol_suc(n)))
-        by contra:
-            ? $holds(hol_nat_false(hol_suc(n)))
-            hol_nat_false(n) = False
-            impossible $holds(False)
-    by def $hol_nat_step(hol_nat_false)
-
 
 # Host numerals become constructor terms; the recursive measure has fixed lower bound zero.
 algo hol_of_nat(n N) HolNat by induc n from 0:
@@ -1249,26 +1147,9 @@ thm hol_of_nat_zero:
 thm hol_of_nat_suc:
     ? forall n N:
         hol_of_nat(n + 1) = hol_suc(hol_of_nat(n))
-    n + 1 >= 1
-    (n + 1) - 1 = n
+    release thm hol_host_successor_index(n)
 
 have hol_four HolNat = hol_suc(hol_three)
-
-hol_of_nat(1) = hol_suc(hol_of_nat(0))
-
-hol_of_nat(1) = hol_one
-
-hol_of_nat(2) = hol_suc(hol_of_nat(1))
-
-hol_of_nat(2) = hol_two
-
-hol_of_nat(3) = hol_suc(hol_of_nat(2))
-
-hol_of_nat(3) = hol_three
-
-hol_of_nat(4) = hol_suc(hol_of_nat(3))
-
-hol_of_nat(4) = hol_four
 
 # The derived HOL induction proves that every HolNat has a host numeral index.
 prop hol_has_nat_index(a HolNat):
@@ -1285,6 +1166,12 @@ thm hol_nat_indexed_intro:
             $holds(hol_nat_indexed(a))
     by def $holds(hol_nat_indexed(a))
 
+thm hol_nat_indexed_false_eval:
+    ? forall a HolNat:
+        not $hol_has_nat_index(a)
+        =>:
+            hol_nat_indexed(a) = False
+
 thm hol_nat_indexed_elim:
     ? forall a HolNat:
         $holds(hol_nat_indexed(a))
@@ -1292,7 +1179,7 @@ thm hol_nat_indexed_elim:
             $hol_has_nat_index(a)
     by contra:
         ? $hol_has_nat_index(a)
-        hol_nat_indexed(a) = False
+        by thm hol_nat_indexed_false_eval(a) => hol_nat_indexed(a) = False
         impossible $holds(False)
 
 thm hol_of_nat_surjective:
@@ -1307,6 +1194,9 @@ thm hol_of_nat_surjective:
                 $holds(hol_nat_indexed(hol_suc(k)))
         release thm hol_nat_indexed_elim(k)
         obtain n from exist t N st {hol_of_nat(t) = k}
+        n + 1 $in N
+        hol_suc(k) $in HolNat
+        hol_of_nat(n) $in HolNat
         release thm hol_of_nat_suc(n)
         witness $hol_has_nat_index(hol_suc(k)) from n + 1
         release thm hol_nat_indexed_intro(hol_suc(k))
@@ -1328,7 +1218,6 @@ thm hol_of_nat_positive_not_zero:
     n - 1 $in N
     hol_of_nat(n) = hol_suc(hol_of_nat(n - 1))
     release thm hol_nat_successor_not_zero(hol_of_nat(n - 1))
-    hol_of_nat(n) != hol_zero
 
 thm hol_index_unique_zero:
     ? $hol_nat_index_unique(0)
@@ -1351,6 +1240,7 @@ thm hol_index_unique_step:
         $hol_nat_index_unique(m)
         =>:
             $hol_nat_index_unique(m + 1)
+    m + 1 $in N
     claim:
         ? forall n N:
             hol_of_nat(m + 1) = hol_of_nat(n)
@@ -1366,6 +1256,8 @@ thm hol_index_unique_step:
             case n >= 1:
                 n - 1 $in N
                 release thm hol_of_nat_suc(m)
+                hol_of_nat(n - 1) $in HolNat
+                hol_of_nat(m) $in HolNat
                 hol_of_nat(n) = hol_suc(hol_of_nat(n - 1))
                 hol_suc(hol_of_nat(m)) = hol_suc(hol_of_nat(n - 1))
                 release thm hol_nat_successor_injective(hol_of_nat(m), hol_of_nat(n - 1))
@@ -1410,6 +1302,7 @@ have fn hol_to_nat by exist!:
 thm hol_of_to_nat:
     ? forall a HolNat:
         hol_of_nat(hol_to_nat(a)) = a
+    release obj def hol_to_nat
 
 thm hol_to_of_nat:
     ? forall n N:
@@ -1427,6 +1320,10 @@ thm hol_to_nat_zero:
 thm hol_to_nat_suc:
     ? forall a HolNat:
         hol_to_nat(hol_suc(a)) = hol_to_nat(a) + 1
+    release obj def hol_to_nat
+    hol_suc(a) $in HolNat
+    hol_to_nat(a) $in N
+    hol_to_nat(a) + 1 $in N
     release thm hol_of_nat_suc(hol_to_nat(a))
     release thm hol_of_to_nat(a)
     hol_suc(hol_of_nat(hol_to_nat(a))) = hol_suc(a)
@@ -1447,8 +1344,7 @@ thm hol_add_steps_zero:
 thm hol_add_steps_suc:
     ? forall n N, a HolNat:
         hol_add_steps(n + 1, a) = hol_suc(hol_add_steps(n, a))
-    n + 1 >= 1
-    (n + 1) - 1 = n
+    release thm hol_host_successor_index(n)
 
 have fn plus(a, b HolNat) HolNat = hol_add_steps(hol_to_nat(b), a)
 
@@ -1456,21 +1352,27 @@ have fn plus(a, b HolNat) HolNat = hol_add_steps(hol_to_nat(b), a)
 thm hol_plus_zero:
     ? forall a HolNat:
         plus(a, hol_zero) = a
+    release thm hol_to_nat_zero
+    hol_to_nat(hol_zero) $in N
     plus(a, hol_zero) = hol_add_steps(hol_to_nat(hol_zero), a)
     hol_add_steps(hol_to_nat(hol_zero), a) = hol_add_steps(0, a)
     release thm hol_add_steps_zero(a)
-    plus(a, hol_zero) = a
 
 thm hol_plus_suc:
     ? forall a, b HolNat:
         plus(a, hol_suc(b)) = hol_suc(plus(a, b))
-    release thm hol_to_nat_suc(b)
+    hol_suc(b) $in HolNat
+    hol_to_nat(b) $in N
+    hol_to_nat(b) + 1 $in N
+    hol_to_nat(hol_suc(b)) $in N
+    hol_add_steps(hol_to_nat(b), a) $in HolNat
+    hol_add_steps(hol_to_nat(b) + 1, a) $in HolNat
     plus(a, hol_suc(b)) = hol_add_steps(hol_to_nat(hol_suc(b)), a)
+    release thm hol_to_nat_suc(b)
     hol_add_steps(hol_to_nat(hol_suc(b)), a) = hol_add_steps(hol_to_nat(b) + 1, a)
     release thm hol_add_steps_suc(hol_to_nat(b), a)
     plus(a, b) = hol_add_steps(hol_to_nat(b), a)
     hol_suc(hol_add_steps(hol_to_nat(b), a)) = hol_suc(plus(a, b))
-    plus(a, hol_suc(b)) = hol_suc(plus(a, b))
 
 # The calculation uses the addition equations and the symbolic constructor numerals.
 thm hol_two_plus_two:
@@ -1481,20 +1383,240 @@ thm hol_two_plus_two:
     release thm hol_plus_suc(hol_two, hol_one)
     plus(hol_two, hol_two) = plus(hol_two, hol_suc(hol_one)) = hol_suc(plus(hol_two, hol_one)) = hol_suc(hol_three) = hol_four
 
+# The arithmetic conclusions reuse these three concrete conversions.
+thm hol_small_numeral_conversions:
+    ? forall:
+        hol_of_nat(2) = hol_two
+        hol_of_nat(3) = hol_three
+        hol_of_nat(4) = hol_four
+    hol_of_nat(1) = hol_suc(hol_of_nat(0))
+    hol_of_nat(1) = hol_one
+    hol_of_nat(2) = hol_suc(hol_of_nat(1))
+    hol_of_nat(2) = hol_two
+    hol_of_nat(3) = hol_suc(hol_of_nat(2))
+    hol_of_nat(3) = hol_three
+    hol_of_nat(4) = hol_suc(hol_of_nat(3))
+    hol_of_nat(4) = hol_four
+
 thm hol_converted_two_plus_two:
     ? plus(hol_of_nat(2), hol_of_nat(2)) = hol_of_nat(4)
-    hol_of_nat(2) = hol_two
-    hol_of_nat(4) = hol_four
+    release thm hol_small_numeral_conversions()
     plus(hol_of_nat(2), hol_of_nat(2)) = plus(hol_two, hol_two)
-    plus(hol_of_nat(2), hol_of_nat(2)) = hol_of_nat(4)
-
-$holds(\hol_equal<HolNat>(plus(hol_of_nat(2), hol_of_nat(2)), hol_of_nat(4)))
 
 thm hol_four_not_three:
     ? hol_four != hol_three
     release thm hol_nat_successor_not_fixed(hol_three)
     hol_four = hol_suc(hol_three)
-    hol_four != hol_three
 
 thm hol_two_plus_two_not_three:
     ? plus(hol_of_nat(2), hol_of_nat(2)) != hol_of_nat(3)
+    release thm hol_small_numeral_conversions()
+    release thm hol_converted_two_plus_two
+    release thm hol_four_not_three
+
+
+# Public example theorem used by the independent module caller.
+# Closed HOL formula: forall P : N -> Bool, (forall n : N, P(n)) implies P(0).
+# The outer quantifier ranges over predicate values.
+have fn instantiate_zero(p fn(n N) Bool) Bool = hol_implies(\hol_all<N>(p), p(0))
+
+thm all_predicates_instantiate_at_zero:
+    ? $all_true(fn(n N) Bool, instantiate_zero)
+    claim:
+        ? forall p fn(n N) Bool:
+            $holds(instantiate_zero(p))
+        p(0) $in Bool
+        \hol_all<N>(p) $in Bool
+        claim:
+            ? forall:
+                $holds(\hol_all<N>(p))
+                =>:
+                    $holds(p(0))
+            release thm hol_universal_instantiation(N, p, 0)
+        release thm hol_implies_intro(\hol_all<N>(p), p(0))
+        instantiate_zero(p) = hol_implies(\hol_all<N>(p), p(0))
+        $holds(instantiate_zero(p))
+    by def $all_true(fn(n N) Bool, instantiate_zero)
+
+# Concrete demonstrations are checked in separate local scopes.
+
+# Constructor numerals and their inequalities.
+sketch:
+    hol_one = hol_suc(hol_zero)
+
+    hol_two = hol_suc(hol_one)
+
+    hol_three = hol_suc(hol_two)
+
+    release thm hol_nat_successor_not_zero(hol_zero)
+
+    release thm hol_nat_successor_not_zero(hol_one)
+
+    release thm hol_nat_successor_not_zero(hol_two)
+
+    hol_one != hol_zero
+
+    hol_two != hol_zero
+
+    hol_three != hol_zero
+
+    by contra:
+        ? hol_two != hol_one
+        hol_suc(hol_one) = hol_suc(hol_zero)
+        release thm hol_nat_successor_injective(hol_one, hol_zero)
+        impossible hol_one = hol_zero
+
+    by contra:
+        ? hol_three != hol_one
+        hol_suc(hol_two) = hol_suc(hol_zero)
+        release thm hol_nat_successor_injective(hol_two, hol_zero)
+        impossible hol_two = hol_zero
+
+    by contra:
+        ? hol_three != hol_two
+        hol_suc(hol_two) = hol_suc(hol_one)
+        release thm hol_nat_successor_injective(hol_two, hol_one)
+        impossible hol_two = hol_one
+
+    by thm hol_equal_intro(HolNat, plus(hol_of_nat(2), hol_of_nat(2)), hol_of_nat(4)) => $holds(\hol_equal<HolNat>(plus(hol_of_nat(2), hol_of_nat(2)), hol_of_nat(4)))
+
+sketch:
+    # These predicates isolate the two hypotheses of induction in rejection controls.
+    have fn hol_nat_is_zero(n HolNat) Bool = \hol_equal<HolNat>(n, hol_zero)
+
+    hol_nat_is_zero(hol_zero) = \hol_equal<HolNat>(hol_zero, hol_zero)
+
+    release thm hol_equal_intro(HolNat, hol_zero, hol_zero)
+
+    $holds(hol_nat_is_zero(hol_zero))
+
+    have fn hol_nat_false(n HolNat) Bool = False
+
+    thm hol_nat_false_step:
+        ? $hol_nat_step(hol_nat_false)
+        thm hol_nat_false_eval:
+            ? forall n HolNat:
+                hol_nat_false(n) = False
+        claim:
+            ? forall n HolNat:
+                $holds(hol_nat_false(n))
+                =>:
+                    $holds(hol_nat_false(hol_suc(n)))
+            by contra:
+                ? $holds(hol_nat_false(hol_suc(n)))
+                by thm hol_nat_false_eval(n) => hol_nat_false(n) = False
+                impossible $holds(False)
+        by def $hol_nat_step(hol_nat_false)
+
+sketch:
+    # Reification of n = n gives a Boolean-valued predicate on the infinite set N.
+    have fn reflexive(n N) Bool = \hol_equal<N>(n, n)
+
+    thm reflexive_everywhere:
+        ? $all_true(N, reflexive)
+        claim:
+            ? forall n N:
+                $holds(reflexive(n))
+            release thm hol_equal_intro(N, n, n)
+            reflexive(n) = \hol_equal<N>(n, n)
+        by def $all_true(N, reflexive)
+
+    release thm hol_all_intro(N, reflexive)
+
+    $holds(\hol_all<N>(reflexive))
+
+    # Function spaces can themselves be quantifier domains and function arguments.
+    \hol_all<fn(x N) Bool> $in fn(p fn(x fn(x N) Bool) Bool) Bool
+
+    forall p fn(x N) Bool, q fn(f fn(x N) Bool) Bool:
+        q(p) $in Bool
+
+sketch:
+    release thm hol_all_intro(fn(n N) Bool, instantiate_zero)
+
+    $holds(\hol_all<fn(n N) Bool>(instantiate_zero))
+
+# Truth tables and instances of the interpreted axioms.
+sketch:
+    release thm hol_not_intro(False)
+
+    release thm hol_and_intro(True, True)
+
+    release thm hol_or_intro_right(False, True)
+
+    $holds(\hol_eta_axiom<N, N>)
+
+    $holds(\hol_select_axiom<N>)
+
+    $holds(hol_infinity_axiom)
+
+    release thm hol_select_axiom_valid(Bool)
+
+    $holds(\hol_select_axiom<Bool>)
+
+    release thm hol_select_axiom_valid(fn(n N) Bool)
+
+    $holds(\hol_select_axiom<fn(n N) Bool>)
+
+sketch:
+    # An existential example supplies an explicit witness; it does not assert universality.
+    have fn zero_predicate(n N) Bool = \hol_equal<N>(n, 0)
+
+    zero_predicate(0) = \hol_equal<N>(0, 0)
+
+    release thm hol_equal_intro(N, 0, 0)
+
+    $holds(zero_predicate(0))
+
+    witness $some_true(N, zero_predicate) from 0
+
+    release thm hol_exists_intro(N, zero_predicate)
+
+    $holds(\hol_exists<N>(zero_predicate))
+
+    # Singleton predicates constrain the result; an unsatisfiable predicate only has a type guarantee.
+    release thm hol_select(N, zero_predicate, 0)
+
+
+    thm zero_predicate_value:
+        ? forall k N:
+            zero_predicate(k) = \hol_equal<N>(k, 0)
+
+    by thm zero_predicate_value(\hol_hilbert<N>(zero_predicate)) => zero_predicate(\hol_hilbert<N>(zero_predicate)) = \hol_equal<N>(\hol_hilbert<N>(zero_predicate), 0)
+
+    $holds(\hol_equal<N>(\hol_hilbert<N>(zero_predicate), 0))
+
+    release thm hol_equal_elim(N, \hol_hilbert<N>(zero_predicate), 0)
+
+    \hol_hilbert<N>(zero_predicate) = 0
+
+    have fn one_predicate(n N) Bool = \hol_equal<N>(n, 1)
+
+    one_predicate(1) = \hol_equal<N>(1, 1)
+
+    release thm hol_equal_intro(N, 1, 1)
+
+    $holds(one_predicate(1))
+
+    release thm hol_select(N, one_predicate, 1)
+
+
+    thm one_predicate_value:
+        ? forall k N:
+            one_predicate(k) = \hol_equal<N>(k, 1)
+
+    by thm one_predicate_value(\hol_hilbert<N>(one_predicate)) => one_predicate(\hol_hilbert<N>(one_predicate)) = \hol_equal<N>(\hol_hilbert<N>(one_predicate), 1)
+
+    $holds(\hol_equal<N>(\hol_hilbert<N>(one_predicate), 1))
+
+    release thm hol_equal_elim(N, \hol_hilbert<N>(one_predicate), 1)
+
+    \hol_hilbert<N>(one_predicate) = 1
+
+    have fn hol_false_predicate(n N) Bool = False
+
+    \hol_hilbert<N>(hol_false_predicate) $in N
+
+    hol_false_predicate(\hol_hilbert<N>(hol_false_predicate)) = False
+
+    not $holds(hol_false_predicate(\hol_hilbert<N>(hol_false_predicate)))

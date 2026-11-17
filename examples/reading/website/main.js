@@ -20,6 +20,7 @@
       status.textContent=kind+"："+(wd?"有定义 "+wd.object:fact?"事实 "+fact.text:"源码行 "+(statement?.line||"—"));
     }
     const reader=await LitexReading.open(document.getElementById("component-reader"),readingJson,{
+      experience:"textbook",
       baseUrl:manifestUrl.href,locale:"zh",onNavigate:selection=>report("组件",selection)
     });
     const conclusion=readingJson.statements.filter(value=>value.status==="accepted"&&value.source_id===readingJson.entry_source_id).at(-1);

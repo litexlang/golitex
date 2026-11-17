@@ -49,11 +49,15 @@ impl Runtime {
         Some(OrderSignFromNegativeLiteralBoundBuiltinRuleProof { cite_fact_id })
     }
 
-    fn known_positive_lower_bound_cite(&self, x: &Obj) -> Option<FactId> {
+    pub(crate) fn known_positive_lower_bound_cite(&self, x: &Obj) -> Option<FactId> {
         // Scan known >= and > with x on the left and a positive literal on the right.
         for env in self.execution_environments_stack.iter().rev() {
             let facts = &env.facts.known_atomic_except_equality_facts.by_prop;
-            for ((_, _), knowns) in facts.iter() {
+            for predicate in [">=", ">", "<=", "<"] {
+                let key = (crate::ast::names::AtomicName::plain(predicate.into()), true);
+                let Some(knowns) = facts.get(&key) else {
+                    continue;
+                };
                 for known in knowns {
                     match known {
                         crate::ast::fact::AtomicFact::GreaterEqualFact(g)
@@ -88,10 +92,14 @@ impl Runtime {
         None
     }
 
-    fn known_negative_upper_bound_cite(&self, x: &Obj) -> Option<FactId> {
+    pub(crate) fn known_negative_upper_bound_cite(&self, x: &Obj) -> Option<FactId> {
         for env in self.execution_environments_stack.iter().rev() {
             let facts = &env.facts.known_atomic_except_equality_facts.by_prop;
-            for ((_, _), knowns) in facts.iter() {
+            for predicate in ["<=", "<", ">=", ">"] {
+                let key = (crate::ast::names::AtomicName::plain(predicate.into()), true);
+                let Some(knowns) = facts.get(&key) else {
+                    continue;
+                };
                 for known in knowns {
                     match known {
                         crate::ast::fact::AtomicFact::LessEqualFact(l) if l.left.ir() == x.ir() => {

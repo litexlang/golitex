@@ -15,9 +15,8 @@ fn builtin_short_names_parse_to_the_existing_objects() {
             "set_prod({1,2},fn(x R)R{x})",
             "finite_set_product({1,2},fn(x R)R{x})",
         ),
-        ("integ(1,2,3)", "integral(1,2,3)"),
         (
-            "deriv(fn(x R)R{integ(fn(t R)R{t},0,x)},2)",
+            "deriv(fn(x R)R{integral(fn(t R)R{t},0,x)},2)",
             "derivative(fn(x R)R{integral(fn(t R)R{t},0,x)},2)",
         ),
     ] {
@@ -182,14 +181,14 @@ fn builtin_short_names_keep_arity_wd_and_failure_recovery() {
     );
     for code in [
         "eval deriv(square)",
-        "eval integ(square,0)",
+        "eval integral(square,0)",
         "eval set_sum({1,2})",
         "eval set_prod({1,2},square,0)",
         "eval grad_at(square,3)",
         "eval pderiv(square,3,2)",
         "$diff_at(square)",
         "$has_deriv_at(square,3)",
-        "$has_integ(square,0,1)",
+        "$has_integral(square,0,1)",
         "$integrable(square,0)",
         "$darboux_bounds(square,0,1)",
         "$antideriv_on(square,broken)",
@@ -198,7 +197,7 @@ fn builtin_short_names_keep_arity_wd_and_failure_recovery() {
         "release thm integ_pow(square,0,1)",
         "release thm darboux_fold(square)",
         "deriv(unknown_fn,3)=6",
-        "0*integ(unknown_fn,0,1)=0",
+        "0*integral(unknown_fn,0,1)=0",
         "$has_deriv_at(square,3,7)",
         "$diff_at(fn(x R)R{abs(x)},0)",
         "release thm deriv_add(square,square,broken,3,6,6)",
@@ -341,7 +340,11 @@ fn riemann_short_names_tracer_keeps_canonical_output_and_mixed_reuse() {
             !rt.run_litex_code(statement).unwrap().success,
             "{statement}"
         );
-        assert!(rt.run_litex_code("integ(square,0,1)=1/3").unwrap().success);
+        assert!(
+            rt.run_litex_code("integral(square,0,1)=1/3")
+                .unwrap()
+                .success
+        );
     }
 }
 
@@ -371,7 +374,7 @@ fn builtin_short_names_keep_lean_output_and_existing_unsupported_routes() {
         ),
         (short_bt.as_str(), original_bt, true),
         (
-            "have fn square(x R)R=x^2\nrelease thm riemann_integral_power(square,0,1,2)\ninteg(square,0,1)=1/3",
+            "have fn square(x R)R=x^2\nrelease thm riemann_integral_power(square,0,1,2)\nintegral(square,0,1)=1/3",
             "have fn square(x R)R=x^2\nrelease thm riemann_integral_power(square,0,1,2)\nintegral(square,0,1)=1/3",
             false,
         ),

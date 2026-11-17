@@ -20,6 +20,35 @@ fn check(source: &str, expected: bool) {
 }
 
 #[test]
+fn zero_products_have_limits_with_all_domain_checks() {
+    for source in [
+        "lim_pos_inf(fn(t R) R {0*t})=0",
+        "lim_neg_inf(fn(t R) R {t*0})=0",
+        "lim_pos_inf(fn(t '(1,)) R {0*(t-1)})=0",
+        "lim(fn(n N+) R {0*n})=0",
+        "forall c R:\n    c=0\n    =>:\n        lim_pos_inf(fn(t R) R {c*t})=0",
+    ] {
+        check(source, true);
+    }
+    for source in [
+        "lim_pos_inf(fn(t R) R {0*t})=1",
+        "lim_pos_inf(fn(t R) R {1*t})=0",
+        "lim_pos_inf(fn(t R) R {0*(1/t)})=0",
+        "fn_lim(fn(t {0}) R {0*t},0)=0",
+    ] {
+        check(source, false);
+    }
+    let mut rt = runtime();
+    let run = rt.run_litex_code("lim_pos_inf(fn(t R) R {0*t})=0").unwrap();
+    assert!(run.success);
+    let json = crate::json_output::project_run_detailed(&run, &rt, "zero", None).stringify();
+    assert!(json.contains("ZeroProduct") && json.contains("zero_factor"));
+    assert!(crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+        .compile_run(&run, "zero_limit")
+        .is_err());
+}
+
+#[test]
 fn direct_analysis_all_80_audited_interfaces() {
     let operations = [
         "constant", "neg", "abs", "scale", "power", "add", "subtract", "multiply", "divide",
@@ -367,4 +396,56 @@ fn structural_limit_existence_records_evidence_and_preserves_lean_boundary() {
             .expect_err("structural limit strategy replay remains unsupported");
         assert!(format!("{error:?}").contains("Exist/StructuralLimit"));
     }
+}
+
+#[test]
+fn integral_limit_reuses_the_anonymous_body_parameter() {
+    use crate::execute::execute_fact_stmt::structural_limit::{
+        StructuralLimitApproach, StructuralLimitConstructorProof,
+    };
+    let mut rt = runtime();
+    let source = "have f fn(s '(0,1)) R=fn(t '(0,1)) R {integral(fn(x R) R {x},t,1)}";
+    assert!(rt.run_litex_code(source).unwrap().success);
+    let function = Obj::Identifier(IdentifierObj::plain(
+        rt.resolve_plain_atom("f").unwrap(),
+        "f".into(),
+    ));
+    let zero = Obj::Literal(Literal::Number(Number::new("0".into())));
+    let state = VerifyState::top_level();
+    let mut domain = rt
+        .checked_real_function_limit_domain(&function, state)
+        .unwrap()
+        .unwrap();
+    let (literal, _) = rt
+        .exact_property_object_values_of_shapes(&function, &[EqualToObjShape::AnonymousFn])
+        .into_iter()
+        .next()
+        .unwrap();
+    let Obj::FunctionSpace(FunctionSpace::AnonymousFn(body)) = literal else {
+        panic!("anonymous function");
+    };
+    let parameter = &body.body.set_bound_parameters.groups[0].params[0];
+    // Model an equivalent declared signature with its own bound identifier.
+    domain.source.signature.set_bound_parameters.groups[0].params[0] =
+        BoundName::new(rt.global_ids.allocate_identifier_id(), "s".into());
+    let proof = rt
+        .prove_structural_limit_expression(
+            &body.equal_to,
+            parameter,
+            &domain,
+            &StructuralLimitApproach::Function(LimitApproach::FromRight(Box::new(zero))),
+            state,
+            0,
+            &mut 512,
+        )
+        .unwrap()
+        .expect("alpha-renamed integral body has a structural limit");
+    assert!(matches!(
+        proof.constructor,
+        StructuralLimitConstructorProof::RiemannIntegral { .. }
+    ));
+    check(
+        "have f fn(s '(0,1)) R=fn(t '(0,1)) R {integral(fn(x R) R {x},t,1)}\nlim_right(f,0)=2",
+        false,
+    );
 }

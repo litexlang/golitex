@@ -2,10 +2,11 @@
 
 ## Purpose and source
 
-The source is the existing attributed `examples/hol_embedding.lit` development
-provided by chegnxuan huang. This showcase preserves its mathematical declarations
-and proof order, with a local caller demonstrating the checked interpretation.
-Its scope does not include reconstruction of the HOL Light kernel.
+The attributed [original development](../../examples/hol_embedding.lit) was
+provided by chegnxuan huang. This showcase exports [v3](main.lit), which
+keeps the original mathematical constructions. Independent demonstrations
+run in local sketches after the main construction. The [local caller](validation/main.lit)
+demonstrates the checked interpretation through the module interface.
 
 ## Boolean values and logical assertions
 
@@ -59,8 +60,7 @@ nonempty candidates -> Hilbert selection -> interpreted select axiom; native
 N/successor -> interpreted infinity -> least successor-closed carrier ->
 induction and unique numeral indices -> addition and examples.
 
-The import extraction preserves those declarations and proofs without new
-axioms or source trust. The standalone example is a provenance source, not a
-runtime import dependency. A future deep HOL embedding must separately define
-syntax, typing, substitution and derivations and prove their semantic rules;
-the current module does not imply that work has been done.
+The showcase checks these constructions in strict mode, using Litex's native
+foundation. The local caller imports the showcase directly. A deep HOL
+embedding would separately define syntax, typing, substitution, and derivations
+and prove their semantic rules.

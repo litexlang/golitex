@@ -607,7 +607,7 @@ fn lcm_decimal_with_diagnostics(left: &str, right: &str) -> Result<String, Decim
     }
     let gcd = gcd_decimal_str_and_normalize(&normalized_left, &normalized_right)
         .ok_or(DecimalEvaluationError::Unsupported)?;
-    let quotient = safe_div(&normalized_left, &gcd).ok_or(DecimalEvaluationError::Unsupported)?;
+    let quotient = quot_decimal_str_and_normalize(&normalized_left, &gcd);
     let product = mul_signed_decimal_str(&quotient, &normalized_right);
     let magnitude = product.strip_prefix('-').unwrap_or(&product).to_string();
     if normalized_decimal_string_exceeds_exact_digit_budget(&magnitude) {
@@ -916,22 +916,44 @@ pub fn mod_decimal_str_and_normalize(a: &str, b: &str) -> String {
 
 /// Computes the Euclidean quotient on signed integer decimal strings.
 ///
-// Together with mod_decimal_str_and_normalize, this satisfies
-// a = b * quot(a, b) + a % b for a non-zero divisor.
+/// Together with `mod_decimal_str_and_normalize`, this satisfies
+/// `a = b * quot(a, b) + a % b` for a nonzero divisor.
 pub fn quot_decimal_str_and_normalize(a: &str, b: &str) -> String {
     let normalized_a = normalize_decimal_number_string(a);
     let normalized_b = normalize_decimal_number_string(b);
     let (a_is_negative, a_magnitude) = split_sign_and_magnitude(&normalized_a);
-    let (_, b_magnitude) = split_sign_and_magnitude(&normalized_b);
-    let quotient = quot_nonnegative_decimal_str_and_normalize(&a_magnitude, &b_magnitude);
-    let remainder = mod_nonnegative_decimal_str_and_normalize(&a_magnitude, &b_magnitude);
-
-    if !a_is_negative || quotient == "0" && remainder == "0" {
-        quotient
-    } else if remainder == "0" {
-        format!("-{quotient}")
+    let (b_is_negative, b_magnitude) = split_sign_and_magnitude(&normalized_b);
+    let mut magnitude = quot_nonnegative_decimal_str_and_normalize(&a_magnitude, &b_magnitude);
+    if a_is_negative && mod_nonnegative_decimal_str_and_normalize(&a_magnitude, &b_magnitude) != "0"
+    {
+        magnitude = add_decimal_str_and_normalize(&magnitude, "1");
+    }
+    if a_is_negative != b_is_negative && magnitude != "0" {
+        format!("-{magnitude}")
     } else {
-        format!("-{}", add_decimal_str_and_normalize(&quotient, "1"))
+        magnitude
+    }
+}
+
+#[cfg(test)]
+mod quotient_tests {
+    use super::{mod_decimal_str_and_normalize, quot_decimal_str_and_normalize};
+
+    #[test]
+    fn euclidean_quotient_and_remainder_agree_for_signed_divisors() {
+        for a in [-7_i32, -6, -1, 0, 1, 6, 7] {
+            for b in [-3_i32, 3] {
+                let (dividend, divisor) = (a.to_string(), b.to_string());
+                assert_eq!(
+                    quot_decimal_str_and_normalize(&dividend, &divisor),
+                    a.div_euclid(b).to_string(),
+                );
+                assert_eq!(
+                    mod_decimal_str_and_normalize(&dividend, &divisor),
+                    a.rem_euclid(b).to_string(),
+                );
+            }
+        }
     }
 }
 

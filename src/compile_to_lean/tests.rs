@@ -1192,6 +1192,35 @@ const PHASE1_GUARDED_THEOREM: &str = "thm guarded_self:\n    ? forall x C:\n    
 const PHASE1_TRANSITIVITY: &str = "forall a,b,c R:\n    a = b\n    b = c\n    =>:\n        a = c\n        c = a\n        a + 1 = c + 1\n";
 
 #[test]
+fn alpha_endpoint_paths_replay_and_reject_a_broken_chain() {
+    let source = "let first=fn(x R) R {x}\nlet second=first\nfn(y R) R {y}=second";
+    let (mut result, compiler) = execute(source);
+    let proof =
+        &equality_proof(&fact_statement(&result.statement_results[2]).verify_result).searched_proof;
+    assert!(matches!(
+        proof,
+        EqualFactSearchedProof::ByEquivalenceClass(
+            EqualFactSearchedProofByEquivalenceClass::AlphaPath(_)
+        )
+    ));
+    let output = compile_run(&result, &compiler, "alpha_endpoint_paths").unwrap();
+    assert!(output.contains("Eq.trans"));
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =
+        &mut result.statement_results[2]
+    else {
+        panic!("equality statement")
+    };
+    let EqualFactSearchedProof::ByEquivalenceClass(
+        EqualFactSearchedProofByEquivalenceClass::AlphaPath(proof),
+    ) = &mut equality_proof_mut(&mut statement.verify_result).searched_proof
+    else {
+        panic!("alpha path")
+    };
+    proof.path.path.clear();
+    assert!(compile_run(&result, &compiler, "broken_alpha_endpoint_paths").is_err());
+}
+
+#[test]
 fn phase1_numeric_and_typed_aliases_replay_actual_definition_evidence() {
     let sources = [
         ("let numeric_alias = 2 + 3\nnumeric_alias = 5\n5 = numeric_alias\n", 1),

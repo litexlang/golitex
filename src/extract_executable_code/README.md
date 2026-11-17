@@ -81,10 +81,11 @@ with a reserved `__litex_user_` prefix. For example, `have math R = 2` emits
 The source lexer reserves `__` names, so user names cannot collide with this
 generated prefix.
 
-C names colliding with C99 `math.h`, `stdlib.h`, or generated helper symbols
-are emitted with `litex_user_`. Names already starting with that prefix gain
-one more copy of it, which keeps the mapping distinct. Definitions, parameters,
-and references all use the same mapping. Other valid source names are retained.
+C names colliding with the host entrypoint `main`, C99 `math.h` or `stdlib.h`
+symbols, or generated helpers are emitted with `litex_user_`. Names already
+starting with that prefix gain one more copy of it, which keeps the mapping
+distinct. Definitions, parameters, and references all use the same mapping.
+Other valid source names are retained.
 
 ## v1 extractable surface (new kernel)
 

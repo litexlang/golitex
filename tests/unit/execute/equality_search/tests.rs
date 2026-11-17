@@ -312,6 +312,61 @@ fn peer_child_permissions_cannot_reenter_the_peer_stage() {
 }
 
 #[test]
+fn repeated_peer_endpoints_preserve_wd_subjects_and_search_isolation() {
+    let mut runtime = runtime();
+    for code in [
+        "have x R",
+        "let factored_value = (x + 1) * (x - 1)",
+        "let first_alias = factored_value",
+        "let second_alias = first_alias",
+    ] {
+        exec_ok(&mut runtime, code);
+    }
+    for code in ["second_alias = x^2 - 1", "x^2 - 1 = second_alias"] {
+        let goal = equal(&mut runtime, code);
+        let before = store_sizes(&runtime);
+        let proof = runtime
+            .search_equal_fact_proof_by_equivalence_class(&goal, VerifyState::top_level())
+            .unwrap()
+            .expect("alias class reaches its polynomial bridge");
+        let EqualFactSearchedProofByEquivalenceClass::ViaPeers(proof) = proof else {
+            panic!("expected peer bridge")
+        };
+        let wd = proof.bridge.well_defined_proof.as_detailed().unwrap();
+        assert_eq!(wd.left.obj(), &proof.bridge.fact.left);
+        assert_eq!(wd.right.obj(), &proof.bridge.fact.right);
+        check_path(
+            &runtime,
+            &proof.left_path,
+            &goal.left,
+            &proof.bridge.fact.left,
+        );
+        check_path(
+            &runtime,
+            &proof.right_path,
+            &proof.bridge.fact.right,
+            &goal.right,
+        );
+        assert_eq!(store_sizes(&runtime), before);
+    }
+    let invalid = equal(&mut runtime, "second_alias = 1 / 0");
+    let before = store_sizes(&runtime);
+    assert!(runtime
+        .search_equal_fact_proof_by_equivalence_class(&invalid, VerifyState::top_level())
+        .unwrap()
+        .is_none());
+    assert_eq!(store_sizes(&runtime), before);
+    assert!(
+        self::runtime()
+            .run_litex_code(include_str!(
+            "../../../../examples/proof_nodes/equal/by_equivalence_class/reused_endpoint_wd.lit"
+        ))
+            .unwrap()
+            .success
+    );
+}
+
+#[test]
 fn membership_lookup_keeps_pairwise_alpha_without_graph_endpoint_search() {
     let mut runtime = runtime();
     exec_ok(&mut runtime, "let g = fn(x R) R");
@@ -708,4 +763,31 @@ fn free_parameter_objects_failed_aliases_do_not_publish_indexes_or_capture_later
         assert_eq!(store_sizes(&rt), before);
         assert_eq!(rt.top_exec_env().special_properties, index_before);
     }
+}
+
+#[test]
+fn lazy_peer_candidates_reopen_inner_scope_after_reaching_parent_edge() {
+    use super::equivalence_class_graph::EquivalentObjectCandidates;
+    let mut rt = runtime();
+    exec_ok(&mut rt, "have x R");
+    exec_ok(&mut rt, "let z = x");
+    let start = equal(&mut rt, "x = x").left;
+    rt.push_local_exec_env();
+    exec_ok(&mut rt, "let y = z");
+    let target = equal(&mut rt, "y = y").left;
+    let mut candidates = EquivalentObjectCandidates::new(&start);
+    let inner = rt.execution_environments_stack.len() - 1;
+    assert!(candidates.next_in_scope(&rt, inner).is_none());
+    let mut found = None;
+    while let Some(index) = candidates.next_in_scope(&rt, inner - 1) {
+        if candidates.objects[index].ir() == target.ir() {
+            found = Some(index);
+            break;
+        }
+    }
+    let path = KnownEqualityPathProof::new(
+        candidates.path(found.expect("parent edge must reopen inner graph")),
+    );
+    check_path(&rt, &path, &start, &target);
+    rt.pop_local_exec_env();
 }

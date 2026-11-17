@@ -87,6 +87,7 @@ pub enum IntrinsicCodomain {
     EuclideanNorm,
     MatrixFrobeniusNorm,
     RiemannIntegral,
+    ImproperIntegral,
     DerivativeAt,
     SequenceLimit,
     SequenceLimsup,

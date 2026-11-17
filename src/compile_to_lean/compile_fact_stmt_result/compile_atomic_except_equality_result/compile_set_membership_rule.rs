@@ -13,6 +13,12 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match rule {
+            InFactSearchProofByBuiltinRule::RealSegmentMembership(_) => {
+                Err(LeanCompileError::unsupported("RealSegmentMembership"))
+            }
+            InFactSearchProofByBuiltinRule::IntervalInclusion(_) => {
+                Err(LeanCompileError::unsupported("IntervalInclusion"))
+            }
             InFactSearchProofByBuiltinRule::HomogeneousCartesianSequenceMembership(p) => {
                 let AtomicFact::InFact(member) = &p.membership.fact else {
                     return Err(LeanCompileError::unsupported(

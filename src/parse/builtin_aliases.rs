@@ -8,12 +8,61 @@ pub(crate) enum BuiltinAliasKind {
 }
 
 pub(crate) const BUILTIN_ALIASES: &[(&str, &str, BuiltinAliasKind)] = &[
+    (
+        "integrable_oc",
+        "is_integrable_open_closed",
+        BuiltinAliasKind::Predicate,
+    ),
+    (
+        "integrable_co",
+        "is_integrable_closed_open",
+        BuiltinAliasKind::Predicate,
+    ),
+    (
+        "integrable_oo",
+        "is_integrable_open",
+        BuiltinAliasKind::Predicate,
+    ),
+    (
+        "integrable_pos_inf",
+        "is_integrable_pos_inf",
+        BuiltinAliasKind::Predicate,
+    ),
+    (
+        "integrable_neg_inf",
+        "is_integrable_neg_inf",
+        BuiltinAliasKind::Predicate,
+    ),
+    (
+        "has_integ_oc",
+        "has_integral_open_closed",
+        BuiltinAliasKind::Predicate,
+    ),
+    (
+        "has_integ_co",
+        "has_integral_closed_open",
+        BuiltinAliasKind::Predicate,
+    ),
+    (
+        "has_integ_oo",
+        "has_integral_open",
+        BuiltinAliasKind::Predicate,
+    ),
+    (
+        "has_integ_pos_inf",
+        "has_integral_pos_inf",
+        BuiltinAliasKind::Predicate,
+    ),
+    (
+        "has_integ_neg_inf",
+        "has_integral_neg_inf",
+        BuiltinAliasKind::Predicate,
+    ),
     ("deriv", "derivative", BuiltinAliasKind::Object),
     ("pderiv", "partial_derivative", BuiltinAliasKind::Object),
     ("grad_at", "gradient_at", BuiltinAliasKind::Object),
     ("set_sum", "finite_set_sum", BuiltinAliasKind::Object),
     ("set_prod", "finite_set_product", BuiltinAliasKind::Object),
-    ("integ", "integral", BuiltinAliasKind::Object),
     (
         "diff_at",
         "is_differentiable_at",

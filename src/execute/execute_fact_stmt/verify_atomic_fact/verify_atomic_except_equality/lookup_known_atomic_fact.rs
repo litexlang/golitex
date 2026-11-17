@@ -48,73 +48,136 @@ impl Runtime {
         }
         let key = (fact.prop_name(), atomic_fact_has_positive_polarity(fact));
         let goal_args = atomic_fact_args_ref(fact);
-        let mut candidates = Vec::new();
-        for env in self.execution_environments_stack.iter().rev() {
-            if let Some(knowns) = env
+        // Membership already has a subject index. Check the submitted object
+        // before scanning other subjects or exposing equality candidates.
+        if let AtomicFact::InFact(member) = fact {
+            let subject = member.element.ir();
+            let direct = self.execution_environments_stack.iter().rev().find_map(|env| {
+                env.special_properties.get(&subject)?.memberships.iter().find(|known| {
+                    super::super::verify_equality::equivalence_class_graph::objects_match_directly(&known.set, &member.set)
+                }).cloned()
+            });
+            if let Some(known) = direct {
+                if let Some(proof) =
+                    self.match_known_atomic_lookup(fact, &AtomicFact::InFact(known))
+                {
+                    return Some(proof);
+                }
+            }
+        }
+        let mut equivalents =
+            super::super::verify_equality::equivalence_class_graph::EquivalentArguments::new(
+                &goal_args,
+                self.execution_environments_stack.len(),
+            );
+        let mut attempted = std::collections::HashSet::new();
+        loop {
+            // Borrow the bucket until a compatible source is found. Only that
+            // source is cloned for proof construction, after the borrow ends.
+            let candidate = self
+                .execution_environments_stack
+                .iter()
+                .rev()
+                .find_map(|env| {
+                    env.facts
+                        .known_atomic_except_equality_facts
+                        .by_prop
+                        .get(&key)?
+                        .iter()
+                        .find(|known| {
+                            !attempted.contains(&known.fact_id())
+                                && equivalents.matches(&atomic_fact_args_ref(known))
+                        })
+                        .cloned()
+                });
+            if let Some(known) = candidate {
+                attempted.insert(known.fact_id());
+                if let Some(proof) = self.match_known_atomic_lookup(fact, &known) {
+                    return Some(proof);
+                }
+                continue;
+            }
+            if !equivalents.advance(self) {
+                break;
+            }
+        }
+        // Keep the existing multiplication certificate fallback. It is needed
+        // only for sources containing a multiplication argument on both sides.
+        for env_index in (0..self.execution_environments_stack.len()).rev() {
+            let count = self.execution_environments_stack[env_index]
                 .facts
                 .known_atomic_except_equality_facts
                 .by_prop
                 .get(&key)
-            {
-                candidates.extend(knowns.iter().cloned());
-            }
-        }
-        // Candidate matching is read-only. Exact path queries borrow only
-        // reachable edges; a caller-provided snapshot can still be reused.
-        let mut adjacency = None;
-        for known in candidates {
-            let args = atomic_fact_args_ref(&known);
-            if args.len() != goal_args.len() {
-                continue;
-            }
-            let mut matches = Vec::new();
-            for (left, right) in args.iter().zip(&goal_args) {
-                let proof = match self.lookup_known_obj_equality_with_graph(
-                    left,
-                    right,
-                    &mut adjacency,
-                ) {
-                    Some(proof) => proof,
-                    // Stored-fact argument matching may also use a zero-premise
-                    // algebraic identity such as `(a*b)*(c*d) = a*b*c*d`.
-                    // This is a computed certificate, not a new truth search.
-                    None if multiplication_association_shape(left)
-                        && multiplication_association_shape(right) =>
-                    {
-                        let comparison = EqualFact {
-                            fact_id: self.global_ids.allocate_fact_id(),
-                            left: (*left).clone(),
-                            right: (*right).clone(),
-                            line_file: None,
-                        };
-                        let Some(calculation) = self
-                            .search_equal_fact_by_calculation(
-                                &comparison,
-                                crate::execute::execute_fact_stmt::VerifyState::top_level(),
-                            )
-                            .ok()
-                            .flatten()
-                        else {
-                            break;
-                        };
-                        EqualFactSearchedProof::ByBuiltinRule(
-                            crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::Calculation(
-                                calculation,
-                            ),
-                        )
-                    }
-                    None => break,
-                };
-                matches.push(proof);
-            }
-            if matches.len() == args.len() {
-                return Some(AtomicExceptEqualityFactSearchProofByKnownAtomicFact {
-                    cite_fact_id: known.fact_id(),
-                    why_parameters_of_known_fact_are_equal_to_givens: matches,
-                });
+                .map_or(0, Vec::len);
+            for index in 0..count {
+                let known = &self.execution_environments_stack[env_index]
+                    .facts
+                    .known_atomic_except_equality_facts
+                    .by_prop[&key][index];
+                if attempted.contains(&known.fact_id()) {
+                    continue;
+                }
+                let args = atomic_fact_args_ref(known);
+                if args.len() != goal_args.len()
+                    || !args.iter().zip(&goal_args).any(|(left, right)| {
+                        multiplication_association_shape(left)
+                            && multiplication_association_shape(right)
+                    })
+                {
+                    continue;
+                }
+                let known = known.clone();
+                if let Some(proof) = self.match_known_atomic_lookup(fact, &known) {
+                    return Some(proof);
+                }
             }
         }
         None
+    }
+
+    fn match_known_atomic_lookup(
+        &mut self,
+        goal: &AtomicFact,
+        known: &AtomicFact,
+    ) -> Option<AtomicExceptEqualityFactSearchProofByKnownAtomicFact> {
+        let goal_args = atomic_fact_args_ref(goal);
+        let args = atomic_fact_args_ref(known);
+        if args.len() != goal_args.len() {
+            return None;
+        }
+        let mut matches = Vec::new();
+        for (left, right) in args.iter().zip(&goal_args) {
+            let proof = match self.lookup_known_obj_equality(left, right) {
+                Some(proof) => proof,
+                None if multiplication_association_shape(left)
+                    && multiplication_association_shape(right) =>
+                {
+                    let comparison = EqualFact {
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        left: (*left).clone(),
+                        right: (*right).clone(),
+                        line_file: None,
+                    };
+                    let calculation = self
+                        .search_equal_fact_by_calculation(
+                            &comparison,
+                            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+                        )
+                        .ok()
+                        .flatten()?;
+                    EqualFactSearchedProof::ByBuiltinRule(
+                        crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::Calculation(calculation),
+                    )
+                }
+                None => return None,
+            };
+            matches.push(proof);
+        }
+        Some(AtomicExceptEqualityFactSearchProofByKnownAtomicFact {
+            cite_fact_id: known.fact_id(),
+            why_parameters_of_known_fact_are_equal_to_givens: matches,
+        })
     }
 
     pub(in crate::execute) fn lookup_known_obj_equality(

@@ -754,15 +754,15 @@ impl SourceObserver for Capture {
         self.capturing_ast = true;
         let _ast = capture_ast__stmt__Stmt(statement, self, runtime);
         self.capturing_ast = false;
-        if self.layout == super::ReadingLayout::Latex {
-            self.capture_latex_block(first, statement, block, runtime);
-        }
         for environment in &runtime.execution_environments_stack {
             self.index_environment(environment, runtime);
         }
         self.capture_source_result(first, result, runtime);
         let mapped = self.map_occurrences(block);
         self.finish_source_statements(first, mapped);
+        if self.layout == super::ReadingLayout::Latex {
+            self.capture_latex_block(first, statement, block, runtime);
+        }
     }
 
     fn completed(&mut self, _runtime: &Runtime, result: &RunLitexCodeResult) {

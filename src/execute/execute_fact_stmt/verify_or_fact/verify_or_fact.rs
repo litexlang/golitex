@@ -156,39 +156,49 @@ impl Runtime {
     ) -> RuntimeResult<Option<OrFactSearchedProof>> {
         let lookup_key = or_fact_index_key(fact);
         let goal_args = or_fact_args_ref(fact);
-        let mut candidates = Vec::new();
-        for env in self.execution_environments_stack.iter().rev() {
-            if let Some(knowns) = env.facts.known_or.by_key.get(&lookup_key) {
-                candidates.extend(knowns.iter().cloned());
-            }
-        }
-        // Reuse one read-only graph; every parameter transport retains its
-        // identity/alpha proof or stored equality path, without truth search.
-        let mut adjacency = None;
-        for known in candidates {
-            if !or_facts_same_shape(&known, fact) {
+        let mut equivalents = crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::EquivalentArguments::new(
+            &goal_args, self.execution_environments_stack.len(),
+        );
+        let mut attempted = std::collections::HashSet::new();
+        loop {
+            let candidate = self
+                .execution_environments_stack
+                .iter()
+                .rev()
+                .find_map(|env| {
+                    env.facts
+                        .known_or
+                        .by_key
+                        .get(&lookup_key)?
+                        .iter()
+                        .find(|known| {
+                            !attempted.contains(&known.fact_id)
+                                && or_facts_same_shape(known, fact)
+                                && equivalents.matches(&or_fact_args_ref(known))
+                        })
+                        .cloned()
+                });
+            if let Some(known) = candidate {
+                attempted.insert(known.fact_id);
+                let mut matches = Vec::new();
+                for (known_arg, goal_arg) in or_fact_args_ref(&known).iter().zip(&goal_args) {
+                    let Some(proof) = self.lookup_known_obj_equality(known_arg, goal_arg) else {
+                        break;
+                    };
+                    matches.push(proof);
+                }
+                if matches.len() == goal_args.len() {
+                    return Ok(Some(OrFactSearchedProof::ByKnownOrFact(
+                        OrFactSearchProofByKnownOrFact {
+                            cite_fact_id: known.fact_id,
+                            why_parameters_of_known_fact_are_equal_to_givens: matches,
+                        },
+                    )));
+                }
                 continue;
             }
-            let known_args = or_fact_args_ref(&known);
-            if known_args.len() != goal_args.len() {
-                continue;
-            }
-            let mut matches = Vec::new();
-            for (known_arg, goal_arg) in known_args.iter().zip(&goal_args) {
-                let Some(proof) =
-                    self.lookup_known_obj_equality_with_graph(known_arg, goal_arg, &mut adjacency)
-                else {
-                    break;
-                };
-                matches.push(proof);
-            }
-            if matches.len() == known_args.len() {
-                return Ok(Some(OrFactSearchedProof::ByKnownOrFact(
-                    OrFactSearchProofByKnownOrFact {
-                        cite_fact_id: known.fact_id,
-                        why_parameters_of_known_fact_are_equal_to_givens: matches,
-                    },
-                )));
+            if !equivalents.advance(self) {
+                break;
             }
         }
         Ok(None)

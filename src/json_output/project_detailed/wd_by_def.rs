@@ -149,6 +149,7 @@ pub(super) fn project_obj_wd_by_def(
         ObjWellDefinedProofByDef::MatrixOperator(MatrixOperatorObjWellDefinedProofByDef::Trace(p)) =>
             project_common_by_def(obj, "MatrixOperator", "Trace", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
         ObjWellDefinedProofByDef::IntegralOperator(crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedProof::Riemann(p))=>super::riemann_integral::object_wd(p,runtime),
+        ObjWellDefinedProofByDef::IntegralOperator(crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedProof::Improper(p))=>super::improper_integral::object_wd(p,runtime),
         ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::AtPoint(p)) => super::function_derivative::object_wd(p,runtime),
         ObjWellDefinedProofByDef::BoundOperator(
             BoundOperatorObjWellDefinedProofByDef::Supremum(p),

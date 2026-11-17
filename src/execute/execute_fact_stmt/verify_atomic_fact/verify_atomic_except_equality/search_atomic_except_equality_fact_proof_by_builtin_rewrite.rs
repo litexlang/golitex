@@ -8,7 +8,7 @@ use crate::ast::fact::{
 use crate::ast::fact::atomic_fact_args_ref;
 use crate::ast::obj::Obj;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::helper::replace_obj_matching_ir;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::equivalence_class_members_with_paths_in_adjacency;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::equivalence_class_graph::EquivalentObjectCandidates;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::runtime_ids::FactId;
@@ -222,41 +222,44 @@ impl Runtime {
             return Ok(None);
         }
         let args: Vec<Obj> = atomic_fact_args_ref(fact).into_iter().cloned().collect();
-        let adjacency = self.visible_equivalence_class_adjacency();
         let residual_state = verify_state.without_rewrite();
 
-        for (arg_index, arg) in args.iter().enumerate() {
-            let from_ir = arg.ir();
-            for (peer, path) in equivalence_class_members_with_paths_in_adjacency(&adjacency, arg) {
-                if path.is_empty() {
-                    continue;
+        let mut candidates: Vec<_> = args.iter().map(EquivalentObjectCandidates::new).collect();
+        for scope in (0..self.execution_environments_stack.len()).rev() {
+            for (arg_index, arg) in args.iter().enumerate() {
+                let from_ir = arg.ir();
+                while let Some(index) = candidates[arg_index].next_in_scope(self, scope) {
+                    let peer = &candidates[arg_index].objects[index];
+                    let path = candidates[arg_index].path(index);
+                    let mut rewritten_args = args.clone();
+                    rewritten_args[arg_index] =
+                        replace_obj_matching_ir(&rewritten_args[arg_index], &from_ir, peer);
+                    if rewritten_args[arg_index].ir() == from_ir {
+                        continue;
+                    }
+                    let Some(rewritten) = atomic_fact_with_args(
+                        fact,
+                        rewritten_args,
+                        self.global_ids.allocate_fact_id(),
+                    ) else {
+                        continue;
+                    };
+                    let proof_of_rewritten_fact =
+                        self.verify_atomic_fact(&rewritten, residual_state.clone())?;
+                    if proof_of_rewritten_fact.is_failed() {
+                        continue;
+                    }
+                    return Ok(Some(
+                        AtomicExceptEqualityFactSearchProofByKnownEqualObjSubstitution {
+                            rewritten_fact: rewritten.into(),
+                            cited_equal_fact_ids: path
+                                .into_iter()
+                                .map(|(_, _, fact_id)| fact_id)
+                                .collect(),
+                            proof_of_rewritten_fact,
+                        },
+                    ));
                 }
-                let mut rewritten_args = args.clone();
-                rewritten_args[arg_index] =
-                    replace_obj_matching_ir(&rewritten_args[arg_index], &from_ir, &peer);
-                if rewritten_args[arg_index].ir() == from_ir {
-                    continue;
-                }
-                let Some(rewritten) =
-                    atomic_fact_with_args(fact, rewritten_args, self.global_ids.allocate_fact_id())
-                else {
-                    continue;
-                };
-                let proof_of_rewritten_fact =
-                    self.verify_atomic_fact(&rewritten, residual_state.clone())?;
-                if proof_of_rewritten_fact.is_failed() {
-                    continue;
-                }
-                return Ok(Some(
-                    AtomicExceptEqualityFactSearchProofByKnownEqualObjSubstitution {
-                        rewritten_fact: rewritten.into(),
-                        cited_equal_fact_ids: path
-                            .into_iter()
-                            .map(|(_, _, fact_id)| fact_id)
-                            .collect(),
-                        proof_of_rewritten_fact,
-                    },
-                ));
             }
         }
         Ok(None)

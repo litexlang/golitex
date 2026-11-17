@@ -69,6 +69,9 @@ impl LitexToLeanCompiler {
         ];
         let mut definitions = Vec::new();
         let (raw_body, expected, rule) = match &p.constructor {
+            C::ZeroWidth { .. } | C::ReciprocalSqrt { .. } | C::ReciprocalNaturalPower { .. } => {
+                return Err(invalid("ElementaryIntegralUnsupported"))
+            }
             C::Constant { value_real } => {
                 if contains_parameter(&p.expression, variable) {
                     return Err(invalid("ConstantScope"));

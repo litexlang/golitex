@@ -287,18 +287,19 @@ fn order_domain_reuses_checked_argument_wd_without_publishing_it() {
     };
     assert_eq!(requirements.len(), 2);
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof;
-    // Only the difference requires checked-argument reuse; the ordinary
-    // finite-set-size membership retains its earlier successful verify route.
+    // Both arguments reuse their completed WD before ordinary verification.
     let PredicateDomainRequirementProof::CheckedArgument(requirement) = &requirements[0].result
     else {
         panic!("checked difference requirement")
     };
     assert_eq!(requirement.argument_index, 0);
     assert_eq!(requirement.membership.set, StandardSet::R);
-    let PredicateDomainRequirementProof::Verified(result) = &requirements[1].result else {
-        panic!("ordinary finite size requirement must keep priority")
+    let PredicateDomainRequirementProof::CheckedArgument(requirement) = &requirements[1].result
+    else {
+        panic!("checked finite size requirement")
     };
-    assert!(!result.is_failed());
+    assert_eq!(requirement.argument_index, 1);
+    assert_eq!(requirement.membership.set, StandardSet::R);
     assert_eq!(memory_sizes(&rt), before, "domain fallback published state");
 }
 
@@ -312,6 +313,8 @@ fn order_domain_reuse_does_not_bypass_failed_argument_guards() {
         ),
         ("", "1 / 0 < 1"),
         ("", "sqrt(-1) < 1"),
+        ("", "ln(0) <= 0"),
+        ("have x R", "x / x <= x / x"),
     ] {
         let mut rt = runtime();
         assert!(rt.run_litex_code(setup).unwrap().success);
@@ -342,6 +345,65 @@ fn order_domain_reuse_projects_its_checked_argument_provenance() {
     let json = crate::json_output::emit_run_detailed(&result, &rt, "eval", None);
     assert!(json.contains("by_checked_argument_membership"), "{json}");
     assert!(json.contains("argument_index"), "{json}");
+}
+
+#[test]
+fn checked_argument_membership_precedes_reverification_in_a_simple_order() {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof;
+    use crate::prelude::*;
+    let mut rt = runtime();
+    assert!(rt.run_litex_code("have n N").unwrap().success);
+    let Fact::AtomicFact(goal) = fact(&mut rt, "n + 1 >= 1") else {
+        panic!("atomic comparison")
+    };
+    let before = memory_sizes(&rt);
+    let VerifyAtomicFactWellDefinedResult::Success(proof) = rt
+        .verify_atomic_fact_well_definedness(&goal, VerifyState::top_level())
+        .unwrap()
+    else {
+        panic!("natural successor comparison WD")
+    };
+    let PredicateDomainProof::ByRequirements(requirements) = &proof.detailed_ref().predicate_domain
+    else {
+        panic!("comparison domains")
+    };
+    assert_eq!(requirements.len(), 2);
+    for (index, requirement) in requirements.iter().enumerate() {
+        let PredicateDomainRequirementProof::CheckedArgument(checked) = &requirement.result else {
+            panic!("expected direct reuse for argument {index}")
+        };
+        assert_eq!(checked.argument_index, index);
+        assert_eq!(checked.requirement, requirement.requirement);
+        assert_eq!(checked.membership.set, StandardSet::R);
+    }
+    assert_eq!(memory_sizes(&rt), before, "WD reuse published state");
+}
+
+#[test]
+fn checked_argument_reverification_tracer_works_in_all_output_modes() {
+    use crate::result_detail::OutputDetail;
+    for detail in [
+        OutputDetail::Compact,
+        OutputDetail::Normal,
+        OutputDetail::Detailed,
+    ] {
+        let mut rt = Runtime::new_with_result_detail(
+            LaunchCommand::Eval {
+                code: String::new(),
+                session: false,
+                strict: true,
+                language: OutputLanguage::English,
+            },
+            detail,
+        );
+        let run = rt
+            .run_litex_code(include_str!(
+                "../../../../examples/wd/checked_argument_before_reverification.lit"
+            ))
+            .unwrap();
+        assert!(run.success, "{detail:?}: {:?}", run.session_error);
+        assert_eq!(rt.execution_environments_stack.len(), 1);
+    }
 }
 
 fn runtime() -> Runtime {

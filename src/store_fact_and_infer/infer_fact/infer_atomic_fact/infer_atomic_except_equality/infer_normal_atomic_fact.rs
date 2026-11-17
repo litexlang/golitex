@@ -16,6 +16,23 @@ impl Runtime {
         normal: &NormalAtomicFact,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Vec<InferNormalAtomicFactResult>> {
+        if let Some((integral, value)) =
+            crate::execute::execute_fact_stmt::improper_integral::predicate_integral(
+                &AtomicFact::NormalAtomicFact(normal.clone()),
+            )
+        {
+            let mut clauses = self.improper_definition_requirements(&integral, value.clone());
+            if value.is_some() {
+                clauses.push(self.improper_predicate(&integral, None).into());
+            }
+            let mut derived = Vec::new();
+            for clause in clauses {
+                derived.push(self.store_inferred_fact(&clause)?);
+            }
+            return Ok(vec![InferNormalAtomicFactResult::ExpandDefinition(
+                InferExpandDefinitionResult { derived },
+            )]);
+        }
         let mut rules = Vec::new();
         if let Some(param_types) = self.infer_normal_atomic_param_types(normal, verify_state)? {
             rules.push(InferNormalAtomicFactResult::ParamTypes(param_types));

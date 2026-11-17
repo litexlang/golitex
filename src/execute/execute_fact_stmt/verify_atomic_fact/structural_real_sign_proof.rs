@@ -18,6 +18,10 @@ pub enum RealSign {
 }
 
 pub enum StructuralRealSignReason {
+    ResolvedBound {
+        real: Box<StructuralMembershipProof>,
+        source: Box<AtomicExceptEqualityFactKnownProof>,
+    },
     DifferenceFromOrder {
         left_real: Box<StructuralMembershipProof>,
         right_real: Box<StructuralMembershipProof>,
@@ -85,6 +89,10 @@ pub enum StructuralRealSignReason {
     PositivePower {
         base: Box<StructuralRealSignProof>,
         exponent_real: Box<StructuralMembershipProof>,
+    },
+    NonzeroIntegerPower {
+        base: Box<StructuralRealSignProof>,
+        exponent_integer: Box<StructuralMembershipProof>,
     },
     PositiveEvenPower {
         base: Box<StructuralRealSignProof>,

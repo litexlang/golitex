@@ -89,11 +89,20 @@ fn statement(
         _ => flow,
     };
     let marker = annotations.as_mut().and_then(|owner| owner.record(value));
+    let hint = marker.and_then(|index| annotations.as_ref()?.hint(index));
+    let reading = hint.is_some();
+    let assumption = hint.and_then(|hint| hint.assumption.clone());
+    let released = hint.map(|hint| hint.release.clone()).unwrap_or_default();
+    let transition = match (transition, hint) {
+        (Some(Phrase::Also), Some(hint)) if hint.follows_previous => Some(Phrase::Hence),
+        (Some(Phrase::Also), Some(_)) => Some(Phrase::Assertion),
+        _ => transition,
+    };
     let o = |x| obj(x, modules, lang);
     let f = |x| fact(x, modules, lang);
     let say = |key, a: &str, b: &str, c: &str| flow.paragraph(&sentence(lang, key, a, b, c));
     let rendered = match value {
-        Stmt::Fact(x) => fact_paragraph(x, modules, lang, transition, flow)?,
+        Stmt::Fact(x) => fact_paragraph(x, modules, lang, transition, flow, reading)?,
         Stmt::Trust(x) => match x {
             TrustBoundaryStmt::TrustStmt(x) => format!(
                 "{}{}",
@@ -138,7 +147,10 @@ fn statement(
                     "{}{}",
                     say(
                         Phrase::ContraryAssumption,
-                        &inline(&format!(r"\neg\left({}\right)", f(&x.to_prove)?)),
+                        &inline(&match assumption {
+                            Some(assumption) => assumption,
+                            None => contrary_assumption(&x.to_prove, modules, lang)?,
+                        }),
                         "",
                         ""
                     ),
@@ -295,12 +307,23 @@ fn statement(
             ),
         },
         Stmt::ReleaseAndExpand(x) => match x {
-            ReleaseAndExpandStmt::ReleaseThmStmt(x) => say(
-                Phrase::ApplyTheorem,
-                &inline(&theorem_call(&x.call, modules, lang)?),
-                "",
-                "",
-            ),
+            ReleaseAndExpandStmt::ReleaseThmStmt(x) => {
+                let call = inline(&theorem_call(&x.call, modules, lang)?);
+                if released.is_empty() {
+                    say(Phrase::ApplyTheorem, &call, "", "")
+                } else {
+                    let conclusions = released
+                        .iter()
+                        .map(|formula| inline(formula))
+                        .collect::<Vec<_>>();
+                    say(
+                        Phrase::TheoremConclusions,
+                        &call,
+                        &conclusions.join(", "),
+                        "",
+                    )
+                }
+            }
             ReleaseAndExpandStmt::ReleaseStructDefStmt(x) => {
                 say(Phrase::ReleaseStruct, &inline(&o(&x.obj)?), "", "")
             }
@@ -462,7 +485,7 @@ fn statement(
             ProofBlockStmt::ClaimStmt(x) => format!(
                 "{}{}{}",
                 flow.heading(Phrase::Claim, "", lang),
-                fact_paragraph(&x.fact, modules, lang, None, flow)?,
+                fact_paragraph(&x.fact, modules, lang, None, flow, reading)?,
                 proof(&x.proof, modules, lang, annotations, flow)?
             ),
             ProofBlockStmt::SketchStmt(x) => format!(
@@ -494,6 +517,9 @@ fn definition(
     annotations: &mut Option<StatementAnnotations<'_>>,
     flow: Flow,
 ) -> RuntimeResult<String> {
+    let reading = annotations
+        .as_ref()
+        .is_some_and(StatementAnnotations::has_reading_hints);
     let say = |key, a: &str, b: &str, c: &str| flow.paragraph(&sentence(lang, key, a, b, c));
     Ok(match value {
         DefinitionStmt::DefineObj(x) => define_obj(x, modules, lang, flow)?,
@@ -626,7 +652,7 @@ fn definition(
         DefinitionStmt::DefThmStmt(x) => format!(
             "{}{}{}",
             flow.heading(Phrase::Theorem, &x.name, lang),
-            fact_paragraph(&x.fact, modules, lang, None, flow)?,
+            fact_paragraph(&x.fact, modules, lang, None, flow, reading)?,
             proof(&x.prove_process, modules, lang, annotations, flow)?
         ),
         DefinitionStmt::AxiomStmt(x) => format!(
@@ -857,12 +883,33 @@ fn define_obj(
     })
 }
 
+fn contrary_assumption(
+    value: &Fact,
+    modules: &GlobalModuleManager,
+    lang: OutputLanguage,
+) -> RuntimeResult<String> {
+    match value {
+        Fact::AtomicFact(atomic_fact) => {
+            if let Some(opposite) =
+                crate::ast::fact::negate_atomic_fact(atomic_fact, atomic_fact.fact_id())
+            {
+                return atomic(&opposite, modules, lang);
+            }
+        }
+        Fact::NotExistFact(exist) => return fact(&Fact::ExistFact(exist.clone()), modules, lang),
+        Fact::ExistFact(exist) => return fact(&Fact::NotExistFact(exist.clone()), modules, lang),
+        _ => {}
+    }
+    Ok(format!(r"\neg\left({}\right)", fact(value, modules, lang)?))
+}
+
 fn fact_paragraph(
     value: &Fact,
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
     transition: Option<Phrase>,
     flow: Flow,
+    reading: bool,
 ) -> RuntimeResult<String> {
     // A proof uses inline formulas, preserving all clauses and comparisons.
     // Stand-alone assertions retain their specialized display typography.
@@ -879,7 +926,11 @@ fn fact_paragraph(
                 )
             ));
         }
-        return Ok(format!("{};\n", inline(&fact(value, modules, lang)?)));
+        let suffix = if reading { "" } else { ";" };
+        return Ok(format!(
+            "{}{suffix}\n",
+            inline(&fact(value, modules, lang)?)
+        ));
     }
     match value {
         Fact::ForallFact(x) => forall_paragraph(x, modules, lang, flow),
@@ -893,7 +944,12 @@ fn fact_paragraph(
                 .collect::<RuntimeResult<Vec<_>>>()?,
         ))),
         Fact::AtomicFact(_) | Fact::ChainFact(_) | Fact::OrFact(_) => {
-            Ok(format!("{};\n", inline(&fact(value, modules, lang)?)))
+            let formula = fact(value, modules, lang)?;
+            Ok(if reading {
+                flow.math(&formula)
+            } else {
+                format!("{};\n", inline(&formula))
+            })
         }
         Fact::ExistFact(x) | Fact::ExistUniqueFact(x) | Fact::NotExistFact(x)
             if x.facts.len() > 1 =>

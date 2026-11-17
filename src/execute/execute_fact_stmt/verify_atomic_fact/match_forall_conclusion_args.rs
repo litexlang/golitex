@@ -214,8 +214,17 @@ impl Runtime {
                 let Fact::AtomicFact(pattern_atomic) = dom else {
                     continue;
                 };
-                let candidates = self.visible_known_atomics_matching_prop(pattern_atomic);
-                for known in candidates {
+                let candidates = self.visible_known_atomic_locations(pattern_atomic);
+                for (env_index, index) in candidates {
+                    let key = (
+                        pattern_atomic.prop_name(),
+                        atomic_fact_has_positive_polarity(pattern_atomic),
+                    );
+                    let known = self.execution_environments_stack[env_index]
+                        .facts
+                        .known_atomic_except_equality_facts
+                        .by_prop[&key][index]
+                        .clone();
                     let mut trial = subst.clone();
                     let pattern_args = atomic_fact_args_ref(pattern_atomic);
                     let known_args = atomic_fact_args_ref(&known);
@@ -256,23 +265,23 @@ impl Runtime {
         Ok(true)
     }
 
-    fn visible_known_atomics_matching_prop(&self, pattern: &AtomicFact) -> Vec<AtomicFact> {
+    fn visible_known_atomic_locations(&self, pattern: &AtomicFact) -> Vec<(usize, usize)> {
         let key = (
             pattern.prop_name(),
             atomic_fact_has_positive_polarity(pattern),
         );
-        let mut out = Vec::new();
-        for env in self.execution_environments_stack.iter().rev() {
+        let mut locations = Vec::new();
+        for (env_index, env) in self.execution_environments_stack.iter().enumerate().rev() {
             if let Some(entries) = env
                 .facts
                 .known_atomic_except_equality_facts
                 .by_prop
                 .get(&key)
             {
-                out.extend(entries.iter().cloned());
+                locations.extend((0..entries.len()).map(|index| (env_index, index)));
             }
         }
-        out
+        locations
     }
 
     fn prove_objs_equal_strict(

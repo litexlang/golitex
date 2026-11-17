@@ -82,6 +82,7 @@ impl Obj {
                     ));
                 }
                 Obj::IntegralOperator(IntegralOperator::Riemann(x)) => s.push_str(x.ir().as_str()),
+                Obj::IntegralOperator(IntegralOperator::Improper(x)) => s.push_str(x.ir().as_str()),
                 Obj::DerivativeOperator(DerivativeOperator::AtPoint(x)) => {
                     s.push_str(x.ir().as_str())
                 }
@@ -1161,4 +1162,16 @@ impl RiemannIntegral {
             self.upper.ir()
         ))
     }
+}
+
+impl ImproperIntegral {
+    pub fn ir(&self) -> ObjIR {
+        let args: Vec<_> = self
+            .operand_refs()
+            .into_iter()
+            .map(|arg| arg.ir().to_string())
+            .collect();
+        ObjIR(format!("{}({})", self.bounds.name(), args.join(", ")))
+    }
+    impl_display_pair!();
 }

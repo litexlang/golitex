@@ -193,8 +193,8 @@ impl LitexToLeanCompiler {
                         format!("h_{}", assumed.store_and_infer.primary_fact_id().value())
                     })
                     .collect();
-                // The producer checked absence after carrier WD and before
-                // introducing these parameters or assuming these guards.
+                // The producer checks absence after closing the binder scope.
+                // Its evidence can use only the prefix before these assumptions.
                 let prior = SourcePosition {
                     before: wd.param_type_well_defined.len(),
                     ..*position

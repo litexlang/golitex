@@ -25,6 +25,7 @@ const publicAPI=window.LitexReading;window.LitexReading={...publicAPI,mount:(tar
 async function run(){
  await vm.runInContext(fs.readFileSync(path.join(__dirname,'../app.js'),'utf8'),context);
  assert(root.querySelector('.lr-manuscript'));await root.querySelector('[data-layout="source"]').click();
+ assert(!root.querySelector('.lr-ide-input'));await root.querySelector('.lr-edit-mode').click();
  const editor=root.querySelector('.lr-ide-input');editor.value+='\n1=1\n';await editor.trigger('input');await root.querySelector('.lr-check').click();
  assert.equal(requests.length,1);assert.equal(requests[0].strict,true);assert(!root.querySelector('.lr-editor-error'));
  await root.querySelector('[data-layout="latex"]').click();assert(root.querySelector('.lr-manuscript'));

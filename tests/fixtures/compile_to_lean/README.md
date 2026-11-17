@@ -4,6 +4,7 @@ Maintained file-based compiler inputs live here:
 
 - `identity.lit` and its actual generated `identity.lean` test complete stdout.
 - `polynomial_integrals.lit` and `polynomial_integral_coefficients.lit`, each paired with its actual generated `.lean`, cover finite polynomial integration, symbolic coefficients and oriented endpoints. The focused Rust tests consume this checked source directly.
+- `resolved_positive_bound.lit` and its generated `.lean` cover positive-real membership from a numeric lower bound when zero has no preceding source occurrence.
 - `failed_fact.lit` and `unsupported_constructor.lit` test failure diagnostics.
 
 Core compiler regressions contain their own small source strings. Module

@@ -126,6 +126,7 @@ pub(super) fn needs_group(text: &str) -> bool {
         || text.contains(r"\Longleftrightarrow")
         || text.contains(r"\forall")
         || text.contains(r"\exists")
+        || text.contains(r"\nexists")
 }
 
 pub(super) fn group_if_compound(text: &str) -> String {

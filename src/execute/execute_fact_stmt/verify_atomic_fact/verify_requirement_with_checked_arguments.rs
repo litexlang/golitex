@@ -5,9 +5,7 @@ use super::well_defined_result::{
 use crate::prelude::*;
 
 impl Runtime {
-    // Every supplied argument has already passed object WD in this caller.
-    // Preserve ordinary verification priority, then derive the same membership
-    // from a checked operand without rerunning its WD at a reduced ceiling.
+    // Some specialized consumers still require the ordinary verified route.
     pub(in crate::execute) fn verify_requirement_with_checked_arguments(
         &mut self,
         requirement: &Fact,
@@ -22,6 +20,45 @@ impl Runtime {
                 result: PredicateDomainRequirementProof::Verified(Box::new(result)),
             }));
         }
+        Ok(self
+            .requirement_from_checked_arguments(requirement, arguments, requirement_index, state)
+            .ok_or(result))
+    }
+
+    // Every supplied argument has already passed object WD in this caller.
+    // Ordinary predicate domains support this existing evidence route directly.
+    pub(in crate::execute) fn verify_requirement_with_checked_arguments_first(
+        &mut self,
+        requirement: &Fact,
+        arguments: &[&Obj],
+        requirement_index: usize,
+        state: VerifyState,
+    ) -> RuntimeResult<Result<PredicateDomainWellDefinedProof, VerifyFactResult>> {
+        if let Some(proof) = self.requirement_from_checked_arguments(
+            requirement,
+            arguments,
+            requirement_index,
+            state,
+        ) {
+            return Ok(Ok(proof));
+        }
+        let result = self.verify_fact(requirement, state)?;
+        if result.is_failed() {
+            return Ok(Err(result));
+        }
+        Ok(Ok(PredicateDomainWellDefinedProof {
+            requirement: requirement.clone(),
+            result: PredicateDomainRequirementProof::Verified(Box::new(result)),
+        }))
+    }
+
+    fn requirement_from_checked_arguments(
+        &mut self,
+        requirement: &Fact,
+        arguments: &[&Obj],
+        requirement_index: usize,
+        state: VerifyState,
+    ) -> Option<PredicateDomainWellDefinedProof> {
         if let Fact::AtomicFact(AtomicFact::InFact(member)) = requirement {
             if let Obj::StandardSet(target) = &member.set {
                 let index = if arguments.get(requirement_index).copied() == Some(&member.element) {
@@ -35,7 +72,7 @@ impl Runtime {
                     if let Some(membership) =
                         self.search_membership_of_checked_object(&member.element, target, state)
                     {
-                        return Ok(Ok(PredicateDomainWellDefinedProof {
+                        return Some(PredicateDomainWellDefinedProof {
                             requirement: requirement.clone(),
                             result: PredicateDomainRequirementProof::CheckedArgument(
                                 PredicateDomainArgumentMembershipProof::new(
@@ -44,11 +81,11 @@ impl Runtime {
                                     membership,
                                 ),
                             ),
-                        }));
+                        });
                     }
                 }
             }
         }
-        Ok(Err(result))
+        None
     }
 }

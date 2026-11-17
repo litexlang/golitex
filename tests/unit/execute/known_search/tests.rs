@@ -805,3 +805,97 @@ mod literal_event_carrier;
 #[path = "power_set_closure.rs"]
 mod power_set_closure;
 mod template_standard_return;
+
+#[test]
+fn lazy_lookup_prefers_original_goal_before_an_older_equal_subject() {
+    let mut rt = runtime();
+    for code in [
+        "prop marked(t R):\n    t = t",
+        "have x R",
+        "let y = x",
+        "by def $marked(y)",
+        "by def $marked(x)",
+    ] {
+        exec_ok(&mut rt, code);
+    }
+    let goal = atomic(&mut rt, "$marked(x)");
+    let expected = rt
+        .execution_environments_stack
+        .iter()
+        .rev()
+        .find_map(|env| {
+            env.facts
+                .known_atomic_except_equality_facts
+                .by_prop
+                .get(&(goal.prop_name(), true))?
+                .iter()
+                .find(|known| {
+                    crate::ast::fact::atomic_fact_args_ref(known)[0].ir()
+                        == crate::ast::fact::atomic_fact_args_ref(&goal)[0].ir()
+                })
+                .map(AtomicFact::fact_id)
+        })
+        .unwrap();
+    for broader in [false, true] {
+        let proof = if broader {
+            rt.search_atomic_except_equality_fact_proof_by_known_atomic_fact(
+                &goal,
+                VerifyState::top_level(),
+            )
+            .unwrap()
+        } else {
+            rt.lookup_known_atomic_fact(&goal)
+        }
+        .unwrap();
+        assert_eq!(proof.cite_fact_id, expected);
+    }
+}
+
+#[test]
+fn lazy_lookup_reopens_inner_edges_and_retains_all_argument_combinations() {
+    let mut rt = runtime();
+    for code in [
+        "prop marked(a, b R):\n    a = a",
+        "have x, u R",
+        "let z = x",
+        "let v = u",
+    ] {
+        exec_ok(&mut rt, code);
+    }
+    let goal = atomic(&mut rt, "$marked(x,u)");
+    rt.push_local_exec_env();
+    for code in ["let y = z", "let w = v", "by def $marked(y,w)"] {
+        exec_ok(&mut rt, code);
+    }
+    let proof = rt.lookup_known_atomic_fact(&goal).unwrap();
+    assert!(proof
+        .why_parameters_of_known_fact_are_equal_to_givens
+        .iter()
+        .all(|proof| { matches!(proof, EqualFactSearchedProof::ByEquivalenceClass(_)) }));
+    assert!(rt.fact_by_id_in_stack(proof.cite_fact_id).is_some());
+    rt.pop_local_exec_env();
+    assert!(rt.lookup_known_atomic_fact(&goal).is_none());
+}
+
+#[test]
+fn lazy_lookup_prefers_current_scope_equivalence_before_parent_equivalence() {
+    let mut rt = runtime();
+    for code in [
+        "prop marked(t R):\n    t = t",
+        "have x R",
+        "let outer = x",
+        "by def $marked(outer)",
+    ] {
+        exec_ok(&mut rt, code);
+    }
+    let goal = atomic(&mut rt, "$marked(x)");
+    rt.push_local_exec_env();
+    exec_ok(&mut rt, "let inner = x");
+    exec_ok(&mut rt, "by def $marked(inner)");
+    let proof = rt.lookup_known_atomic_fact(&goal).unwrap();
+    let source = rt.fact_by_id_in_stack(proof.cite_fact_id).unwrap();
+    assert!(format!("{source:?}").contains("inner"));
+    rt.pop_local_exec_env();
+    let proof = rt.lookup_known_atomic_fact(&goal).unwrap();
+    assert!(format!("{:?}", rt.fact_by_id_in_stack(proof.cite_fact_id).unwrap()).contains("outer"));
+}

@@ -39,7 +39,7 @@ async function run(){
 
   page=await open({file:true});assert(page.root.querySelectorAll(".lr-extra-examples a").some(link=>link.href==="lessons/zh/definitions/index.html?lang=zh"));page.reader.destroy();
 
-  page=await open();const input=page.root.querySelector(".lr-ide-input");input.value+="\n# keep this edit";await input.trigger("input");
+  page=await open();await page.root.querySelector(".lr-edit-mode").click();const input=page.root.querySelector(".lr-ide-input");input.value+="\n# keep this edit";await input.trigger("input");
   assert(page.reader.hasLocalEdits());await page.language("en");
   assert.deepEqual(page.assigned,[]);assert(page.root.querySelector(".lr-ide-input").value.endsWith("# keep this edit"));
   assert(page.document.getElementById("upload-status").textContent.includes("edited source is kept"));
@@ -51,7 +51,7 @@ async function run(){
   page=await open({alternate:"https://outside.example/lesson/"});await page.language("en");
   assert.deepEqual(page.assigned,[],"alternate source pages must share the current origin");page.reader.destroy();
 
-  page=await open();await page.root.querySelector(".lr-check").click();
+  page=await open();await page.root.querySelector(".lr-edit-mode").click();await page.root.querySelector(".lr-check").click();
   assert.equal(page.requests.length,1,page.root.querySelector(".lr-editor-error")?.textContent);assert.equal(page.requests[0].url,"/api/reading/build");
   const body=JSON.parse(page.requests[0].body);assert.equal(body.entry.kind,"file");assert.equal(body.strict,true);
   assert(body.files.some(file=>file.content===page.initial.sources[0].content),"the checking host receives the retained source, not proof JSON");
@@ -60,10 +60,10 @@ async function run(){
   page.reader.destroy();
 
   const incomplete=fixture("definition");incomplete.sources.shift();page=await open({initial:incomplete});
-  await page.root.querySelector(".lr-check").click();assert.equal(page.requests.length,0);
+  await page.root.querySelector(".lr-edit-mode").click();await page.root.querySelector(".lr-check").click();assert.equal(page.requests.length,0);
   assert(page.root.querySelector(".lr-editor-error").textContent.includes("教材依赖不完整"));page.reader.destroy();
 
-  page=await open({initial:fixture("book")});await page.root.querySelector(".lr-check").click();
+  page=await open({initial:fixture("book")});await page.root.querySelector(".lr-edit-mode").click();await page.root.querySelector(".lr-check").click();
   assert.equal(page.requests.length,1);
   const complete=JSON.parse(page.requests[0].body).files.find(file=>file.path==="litex.config").content;
   assert.equal(complete.split("\n").filter(line=>line.includes(" = ")).length,3,"a complete book retains its full configuration");page.reader.destroy();

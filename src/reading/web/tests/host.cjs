@@ -54,6 +54,7 @@ async function open({referrer="",parent=null,holdResult}={}){
 open.serial=1;
 async function run(){
   const page=await open();await page.chapter(1);
+  assert(!page.root.querySelector(".lr-ide-input"));await page.root.querySelector(".lr-edit-mode").click();
   let editor=page.root.querySelector(".lr-ide-input");const original=editor.value;
   assert(original.includes("above_zero(1)"));assert(page.row(1).querySelector(".lr-inference-toggle"));
   editor.value=original.replace("above_zero(1)","above_zero(-1)");await editor.trigger("input");
@@ -93,6 +94,7 @@ async function run(){
 
   let release,arrived;const held=new Promise(resolve=>{release=resolve;}),started=new Promise(resolve=>{arrived=resolve;});
   const navigating=await open({holdResult:async()=>{arrived();await held;}});await navigating.chapter(1);
+  await navigating.root.querySelector(".lr-edit-mode").click();
   const draft=navigating.root.querySelector(".lr-ide-input");draft.value=draft.value.replace("above_zero(1)","above_zero(-1)");await draft.trigger("input");
   const checking=navigating.root.querySelector(".lr-check").click();await started;await navigating.chapter(2);
   assert.equal(navigating.root.querySelector(".lr-ide-input").dataset.sourcePath,"03-local-proofs.lit","the reader moved before the response was released");
@@ -116,7 +118,8 @@ async function run(){
     {origin:"https://textbook.test",source:parent,data:{...select,bundle_id:"old-bundle",fact_id:other.id}}
   ]){await embedded.window.dispatch("message",event);assert.deepEqual(embedded.reader.getSelection(),current);}
   const noticeCount=embedded.messages.length,readCount=embedded.reads.length,unloaded=full.facts.find(item=>item.source_id===initial.sources[1].id);
-  assert(unloaded);const staleCheck=embedded.root.querySelector(".lr-check");embedded.reader.destroy();await embedded.window.dispatch("scroll");await embedded.window.dispatch("resize");
+  assert(unloaded);await embedded.root.querySelector(".lr-edit-mode").click();
+  const staleCheck=embedded.root.querySelector(".lr-check");embedded.reader.destroy();await embedded.window.dispatch("scroll");await embedded.window.dispatch("resize");
   await embedded.window.dispatch("message",{origin:"https://textbook.test",source:parent,data:{...select,fact_id:unloaded.id}});
   await sleep(10);assert.equal(embedded.reads.length,readCount,"a disposed reader must not fetch proof for a late parent message");
   await staleCheck.click();assert.equal(embedded.requests.length,0,"a disposed reader must not start a new verifier request");
@@ -124,7 +127,7 @@ async function run(){
   embedded.reader.update(full);assert.equal(embedded.messages.length,noticeCount,"a disposed reader does not announce updates");
   assert.equal(embedded.messages.length,noticeCount);
   for(const referrer of ["file:///tmp/book.html","data:text/html,chapter","not a URL"]){
-    const view=await open({referrer,parent:{}});assert.equal(view.messages.length,0,"an opaque or invalid referrer must not enable parent messaging");assert(view.root.querySelector(".lr-ide-input"));view.reader.destroy();
+    const view=await open({referrer,parent:{}});assert.equal(view.messages.length,0,"an opaque or invalid referrer must not enable parent messaging");assert(view.root.querySelector(".lr-source-code"));view.reader.destroy();
   }
   const changedParent={},changed=await open({referrer:"https://textbook.test/lesson/",parent:changedParent}),oldBundle=changed.reader.getBundleId();
   changed.reader.update(page.requests[0].result);assert.notEqual(changed.reader.getBundleId(),oldBundle);
@@ -133,6 +136,7 @@ async function run(){
   assert.deepEqual(changed.reader.getSelection(),unchanged,"a reused FactId from an older real bundle does not change the new document");
   await changed.window.dispatch("message",{origin:"https://textbook.test",source:changedParent,data:{type:"litex-reading:select",bundle_id:changed.reader.getBundleId(),fact_id:currentFact.id}});
   await until(()=>changed.reader.getSelection().fact===currentFact.id,"current-bundle selection failed");
+  await changed.root.querySelector(".lr-edit-mode").click();
   const oldToken=changed.root.querySelector(".lr-token"),working=changed.root.querySelector(".lr-ide-input");assert(oldToken);
   working.value+="\n# local draft";working.setSelectionRange(working.value.length,working.value.length);await working.trigger("input");
   const cleared=changed.reader.getSelection();assert.equal(cleared.fact,null);assert.equal(cleared.statement,null);assert.equal(changed.messages.at(-1).data.selection.fact,null);

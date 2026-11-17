@@ -8,6 +8,7 @@ use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::runtime::FactId;
 
 pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
+    ImproperIntegral(crate::execute::execute_fact_stmt::improper_integral::ImproperIntegralStructuralProof),
     FiniteSumUpperBound(super::finite_additive_bounds::FiniteSumUpperBoundProof),
     AbsoluteSumTriangle(super::finite_additive_bounds::AbsoluteSumTriangleProof),
     PositiveReciprocalLessEqual(super::positive_reciprocal::PositiveReciprocalLessEqualProof),
