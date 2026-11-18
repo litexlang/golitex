@@ -388,7 +388,7 @@ class ReleasePreflightTest(unittest.TestCase):
     def test_msi_is_a_required_release_asset(self) -> None:
         workflow = (REPOSITORY_ROOT / ".github/workflows/deploy.yml").read_text()
         msi = workflow.split("  package-msi:\n", 1)[1].split("  release:\n", 1)[0]
-        release = workflow.split("  release:\n", 1)[1].split("  publish-crates-io:\n", 1)[0]
+        release = workflow.split("\njobs:\n", 1)[1].split("  release:\n", 1)[1].split("  publish-crates-io:\n", 1)[0]
         self.assertNotIn("continue-on-error:", msi)
         self.assertIn("needs: [validate, build, package-deb, package-msi]", release)
         self.assertIn("name: msi", release)
@@ -401,16 +401,27 @@ class ReleasePreflightTest(unittest.TestCase):
         workflow = (REPOSITORY_ROOT / ".github/workflows/deploy.yml").read_text()
         triggers = workflow.split("on:\n", 1)[1].split("\nconcurrency:", 1)[0]
         self.assertIn("workflow_dispatch:", triggers)
+        self.assertIn("release:\n    types: [published]", triggers)
         self.assertNotIn("  push:", triggers)
         self.assertIn("type: boolean", triggers)
         self.assertIn("default: false", triggers)
         self.assertIn("python3 .github/scripts/release/validate_publish.py", workflow)
         self.assertIn("target_commitish: ${{ github.sha }}", workflow)
         for name in ["release", "publish-docker", "publish-crates-io", "publish-homebrew", "publish-scoop", "deploy-web-server"]:
-            job = workflow.split(f"  {name}:\n", 1)[1].split("\n  #", 1)[0]
-            self.assertIn("if: github.event_name == 'workflow_dispatch' && inputs.publish", job)
+            job = workflow.split("\njobs:\n", 1)[1].split(f"  {name}:\n", 1)[1].split("\n  #", 1)[0]
+            self.assertIn("if: needs.validate.outputs.publish == 'true'", job)
+        self.assertIn("publish: ${{ steps.version.outputs.publish }}", workflow)
+        self.assertIn("RELEASE_VERSION: ${{ github.event.release.tag_name || inputs.version }}", workflow)
+        self.assertIn("RELEASE_ACTION: ${{ github.event.action }}", workflow)
+        self.assertIn("RELEASE_PRERELEASE: ${{ github.event.release.prerelease }}", workflow)
+        release = workflow.split("\njobs:\n", 1)[1].split("  release:\n", 1)[1].split("  publish-crates-io:\n", 1)[0]
+        self.assertIn("if: github.event_name == 'workflow_dispatch'", release)
+        upload = release.split("      - name: Upload assets to published Release\n", 1)[1]
+        self.assertIn("if: github.event_name == 'release'", upload)
+        self.assertIn('gh release upload "$VERSION"', upload)
+        self.assertIn('--clobber --repo "$GITHUB_REPOSITORY"', upload)
         for name in ["publish-crates-io", "publish-homebrew", "publish-scoop", "deploy-web-server"]:
-            job = workflow.split(f"  {name}:\n", 1)[1].split("\n  #", 1)[0]
+            job = workflow.split("\njobs:\n", 1)[1].split(f"  {name}:\n", 1)[1].split("\n  #", 1)[0]
             needs = next(line for line in job.splitlines() if line.startswith("    needs:"))
             self.assertIn("release", needs)
         docker = workflow.split("  publish-docker:\n", 1)[1].split("\n  #", 1)[0]
@@ -472,6 +483,28 @@ class ReleasePreflightTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_publish.validate_tag(version, "")
 
+    def test_published_release_validates_tag_version_action_and_credentials(self) -> None:
+        for version in ("1.2.0", "1.2.0-beta"):
+            environment = {
+                "GITHUB_EVENT_NAME": "release",
+                "RELEASE_ACTION": "published",
+                "GITHUB_REF": f"refs/tags/{version}",
+                "RELEASE_VERSION": version,
+                **{name: "test-secret-value" for name in validate_publish.REQUIRED_CREDENTIALS},
+            }
+            with self.subTest(version=version):
+                self.assertTrue(validate_publish.validate_request(version, environment))
+            for name, value in [
+                ("RELEASE_ACTION", "created"),
+                ("RELEASE_ACTION", "edited"),
+                ("GITHUB_REF", "refs/heads/main"),
+                ("GITHUB_REF", f"refs/tags/v{version}"),
+                ("RELEASE_VERSION", "1.1.0"),
+                *[(name, "") for name in validate_publish.REQUIRED_CREDENTIALS],
+            ]:
+                with self.subTest(version=version, name=name, value=value), self.assertRaises(ValueError):
+                    validate_publish.validate_request(version, {**environment, name: value})
+
     def test_manual_release_guard_exports_version_for_both_modes(self) -> None:
         version = preflight.package_version(REPOSITORY_ROOT / "Cargo.toml")
         with tempfile.TemporaryDirectory(dir=PRIVATE_ROOT) as temporary_directory:
@@ -495,8 +528,32 @@ class ReleasePreflightTest(unittest.TestCase):
                     else:
                         tag_check.assert_not_called()
                 self.assertIn(f"version={version}\n", output.read_text())
+                self.assertIn(f"publish={publish}\n", output.read_text())
                 expected_prerelease = str("-" in version.split("+", 1)[0]).lower()
                 self.assertIn(f"prerelease={expected_prerelease}\n", output.read_text())
+                output.unlink()
+
+    def test_published_release_exports_publish_and_github_prerelease_flag(self) -> None:
+        version = preflight.package_version(REPOSITORY_ROOT / "Cargo.toml")
+        with tempfile.TemporaryDirectory(dir=PRIVATE_ROOT) as temporary_directory:
+            output = Path(temporary_directory) / "github-output"
+            for prerelease in ("false", "true"):
+                environment = {
+                    "GITHUB_OUTPUT": str(output),
+                    "GITHUB_EVENT_NAME": "release",
+                    "RELEASE_ACTION": "published",
+                    "RELEASE_VERSION": version,
+                    "RELEASE_PRERELEASE": prerelease,
+                    "GITHUB_REF": f"refs/tags/{version}",
+                    "GITHUB_SHA": "a" * 40,
+                    **{name: "test-secret-value" for name in validate_publish.REQUIRED_CREDENTIALS},
+                }
+                with self.subTest(prerelease=prerelease), patch.dict(os.environ, environment, clear=True), patch.object(
+                    validate_publish, "validate_tag"
+                ) as tag_check, patch("sys.stdout", new_callable=StringIO):
+                    self.assertEqual(validate_publish.main(), 0)
+                    tag_check.assert_called_once_with(version, "a" * 40)
+                self.assertEqual(output.read_text(), f"version={version}\nprerelease={prerelease}\npublish=true\n")
                 output.unlink()
 
     def test_workflow_archive_smokes_use_shared_preflight(self) -> None:

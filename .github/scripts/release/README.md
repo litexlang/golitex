@@ -78,28 +78,31 @@ so that contract stays shared. No manifest is published. The Homebrew setup acti
 2026.07.10.1 revision, rather than a moving branch. Linux uses Ubuntu 22.04 runners rather than building
 against a newer Ubuntu libc than the Debian bookworm runtime.
 
-`Deploy` runs only through `workflow_dispatch`; branch and tag pushes do not
-start it. Its `publish` input defaults to false. In that mode it derives the
-version from Cargo, builds/packages/tests, and uploads Actions artifacts without
-publishing to any distribution channel.
+`Deploy` starts when a GitHub Release is published, including a prerelease
+published from a draft. Create the release against the desired commit and use
+its exact `Cargo.toml` version as the tag (without a leading `v`). The workflow
+checks out that tagged commit, validates credentials and version, then builds
+and tests all required packages. Once those pass, it uploads the assets to the
+existing release while preserving its title, notes and prerelease setting.
+Draft saves, release edits, and branch or tag pushes do not start deployment.
+Commit the updated workflow before creating the release tag that will use it.
 
-To publish all configured channels, enable the workflow if it is disabled,
-choose `main` in **Run workflow**, set `publish` to true, and enter the exact
-`Cargo.toml` version in `version` (without a leading `v`). The early guard rejects
-another branch, a mismatched or missing version, missing required credentials,
-and an existing version tag that points to another commit. The release tag is
-pinned to the workflow's exact commit. A shared concurrency group serializes
-release runs without cancelling an in-progress publication.
+The manual `workflow_dispatch` entry point remains available. Its `publish`
+input defaults to false, which builds/packages/tests and uploads Actions
+artifacts. For manual publication choose `main`, set `publish` to true, and
+enter the exact Cargo version. The guard rejects another branch, a mismatched
+or missing version, missing required credentials, and an existing version tag
+that points to another commit. A shared concurrency group serializes release
+runs without cancelling an in-progress publication.
 
-After all required builds, archive checks, Debian packages and Windows MSI
-checks pass, the workflow creates the GitHub Release. Its downstream jobs
-publish crates.io, Homebrew, Scoop and Docker, and install the Debian package
-on the web server. These downstream jobs can run independently in parallel.
-Every publishing job requires the explicit manual `publish` selection. Docker
-also waits for the GitHub Release, so a required package failure cannot publish
-the image early. These services do not form one atomic transaction: if a later
-channel fails, inspect its result and rerun the failed jobs rather than treating
-the release as complete or moving the version tag.
+After assets are uploaded, downstream jobs publish crates.io, Homebrew, Scoop
+and Docker, and install the Debian package on the web server. These jobs can
+run independently in parallel. Docker waits for the release assets, so a
+required package failure cannot publish the image early. The published release's
+prerelease flag selects Docker's beta or latest tag. These services do not form
+one atomic transaction. If a later channel fails, inspect its result and rerun
+the failed jobs. A visible GitHub Release indicates that deployment was
+requested; the successful Deploy workflow establishes completion.
 
 `installed_std_cli` holds a mutex for each installation fixture's lifetime,
 including copying, child-process execution and cleanup. This prevents parallel

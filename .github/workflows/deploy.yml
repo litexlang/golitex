@@ -1,7 +1,9 @@
 name: Deploy
 
-# Manual only. Publishing requires an explicit selection and exact Cargo version.
+# Publish a GitHub Release to deploy, or use the manual validation/publication entry point.
 on:
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       publish:
@@ -36,6 +38,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       prerelease: ${{ steps.version.outputs.prerelease }}
+      publish: ${{ steps.version.outputs.publish }}
     steps:
       - uses: actions/checkout@v4
 
@@ -45,11 +48,13 @@ jobs:
           test -f std/basics/litex.config
           test -f std/basics/main.lit
 
-      - name: Validate manual release request
+      - name: Validate release request
         id: version
         env:
           PUBLISH_RELEASE: ${{ inputs.publish }}
-          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_VERSION: ${{ github.event.release.tag_name || inputs.version }}
+          RELEASE_ACTION: ${{ github.event.action }}
+          RELEASE_PRERELEASE: ${{ github.event.release.prerelease }}
           CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           SCOOP_BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
@@ -339,10 +344,10 @@ jobs:
           path: litex_${{ env.VERSION }}_amd64.msi
 
   # ─────────────────────────────────────────────
-  # Job 5: Create GitHub Release
+  # Job 5: Upload GitHub Release assets
   # ─────────────────────────────────────────────
   release:
-    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    if: needs.validate.outputs.publish == 'true'
     name: GitHub Release
     needs: [validate, build, package-deb, package-msi]
     runs-on: ubuntu-latest
@@ -375,6 +380,7 @@ jobs:
         run: ls -lah artifacts/
 
       - name: Create Release
+        if: github.event_name == 'workflow_dispatch'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.VERSION }}
@@ -390,11 +396,19 @@ jobs:
             artifacts/*.deb
             artifacts/*.msi
 
+      - name: Upload assets to published Release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$VERSION" artifacts/*.tar.gz artifacts/*.zip artifacts/*.deb artifacts/*.msi \
+            --clobber --repo "$GITHUB_REPOSITORY"
+
   # ─────────────────────────────────────────────
   # Job 6: Publish to crates.io
   # ─────────────────────────────────────────────
   publish-crates-io:
-    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    if: needs.validate.outputs.publish == 'true'
     name: Publish to crates.io
     needs: [validate, release]
     runs-on: ubuntu-latest
@@ -408,7 +422,7 @@ jobs:
   # Job 7: Update Homebrew tap
   # ─────────────────────────────────────────────
   publish-homebrew:
-    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    if: needs.validate.outputs.publish == 'true'
     name: Update Homebrew tap
     needs: [validate, release]
     runs-on: ubuntu-latest
@@ -504,7 +518,7 @@ jobs:
   # Job 8: Update Scoop bucket
   # ─────────────────────────────────────────────
   publish-scoop:
-    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    if: needs.validate.outputs.publish == 'true'
     name: Update Scoop bucket
     needs: [validate, release]
     runs-on: ubuntu-latest
@@ -569,7 +583,7 @@ jobs:
   # Job 9: Build and push Docker image
   # ─────────────────────────────────────────────
   publish-docker:
-    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    if: needs.validate.outputs.publish == 'true'
     name: Publish Docker image
     needs: [validate, build, release]
     runs-on: ubuntu-latest
@@ -643,7 +657,7 @@ jobs:
   # Job 10: Deploy .deb to litexlang.com web server
   # ─────────────────────────────────────────────
   deploy-web-server:
-    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    if: needs.validate.outputs.publish == 'true'
     name: Deploy .deb to web server
     needs: [validate, package-deb, release]
     runs-on: ubuntu-latest

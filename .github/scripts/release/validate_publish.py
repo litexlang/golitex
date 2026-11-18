@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate an explicit manual release before any publishing job can run."""
+"""Validate published or manual releases before distribution jobs can run."""
 
 from __future__ import annotations
 
@@ -23,15 +23,22 @@ REQUIRED_CREDENTIALS = (
 
 
 def validate_request(version: str, environment: Mapping[str, str]) -> bool:
-    requested = environment.get("PUBLISH_RELEASE", "false")
-    if requested not in ("true", "false"):
-        raise ValueError("PUBLISH_RELEASE must be true or false")
-    if requested == "false":
-        return False
-    if environment.get("GITHUB_EVENT_NAME") != "workflow_dispatch":
-        raise ValueError("publishing requires a manual workflow_dispatch run")
-    if environment.get("GITHUB_REF") != "refs/heads/main":
-        raise ValueError("publishing is allowed only from main")
+    event = environment.get("GITHUB_EVENT_NAME")
+    if event == "release":
+        if environment.get("RELEASE_ACTION") != "published":
+            raise ValueError("publishing requires a published release")
+        if environment.get("GITHUB_REF") != f"refs/tags/{version}":
+            raise ValueError("release tag must exactly match Cargo.toml")
+    else:
+        requested = environment.get("PUBLISH_RELEASE", "false")
+        if requested not in ("true", "false"):
+            raise ValueError("PUBLISH_RELEASE must be true or false")
+        if requested == "false":
+            return False
+        if event != "workflow_dispatch":
+            raise ValueError("publishing requires a published release or manual workflow_dispatch run")
+        if environment.get("GITHUB_REF") != "refs/heads/main":
+            raise ValueError("manual publishing is allowed only from main")
     if environment.get("RELEASE_VERSION", "") != version:
         raise ValueError(f"release version must exactly match Cargo.toml: {version}")
     missing = [name for name in REQUIRED_CREDENTIALS if not environment.get(name)]
@@ -71,8 +78,13 @@ def main() -> int:
         print(f"::error::{error}", file=sys.stderr)
         return 1
     prerelease = "-" in version.split("+", 1)[0]
+    if os.environ.get("GITHUB_EVENT_NAME") == "release":
+        prerelease = os.environ.get("RELEASE_PRERELEASE") == "true"
     with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as output:
-        output.write(f"version={version}\nprerelease={str(prerelease).lower()}\n")
+        output.write(
+            f"version={version}\nprerelease={str(prerelease).lower()}\n"
+            f"publish={str(publishing).lower()}\n"
+        )
     mode = "publish to all configured channels" if publishing else "validate only; no publishing"
     print(f"Release {version}: {mode}")
     return 0

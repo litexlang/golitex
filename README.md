@@ -40,7 +40,7 @@ Formal mathematics is going through the exact same evolution today:
                      Low-Level Formal Verification Engines
 ```
 
-Today, interactive theorem proving is still largely in its "assembly language" era. In traditional proof assistants (such as Lean, Coq, and Isabelle), users spend most of their cognitive energy managing low-level proof plumbing: navigating goal stacks, rewriting tactic scripts (`intro`, `apply`, `simp`), and wrestling with dependent type coercion.
+Today, interactive theorem proving is still largely in its "assembly language" era. In traditional proof assistants (such as Lean, Coq, and Isabelle), users spend most of their cognitive energy managing low-level proof plumbing: navigating hidden goal stacks with `goto`-like tactic scripts (`intro`, `apply`, `simp`), threading hypothesis labels, and wrestling with dependent type coercion.
 
 **Litex brings the high-level language paradigm to formal mathematics:**
 1. **Math-Centric**: You declare definitions, state facts, and write the essential steps of a mathematical proof directly in clean, Pythonic syntax.
@@ -51,9 +51,9 @@ Today, interactive theorem proving is still largely in its "assembly language" e
 
 ## Core Pillars
 
-### 1. Math as Code: Think in Mathematics, Not Tactics
+### 1. Syntax: Math as Code (Think in Mathematics, Not Tactics)
 
-Litex code looks and reads like textbook mathematics. There are no imperative tactic scripts to memorize or fragile proof states to manage:
+Litex syntax looks and reads like textbook mathematics. Instead of imperative tactic scripts that mutate a hidden proof state, Litex separates mathematical objects, facts, and structured deductive steps so static text matches natural mathematical writing:
 
 ```litex
 forall x R:
@@ -62,11 +62,72 @@ forall x R:
 
 The mathematical sentence supplies its own structure: `forall` introduces universal quantification, `R` specifies the real carrier, and `x^2 >= 0` is the checked conclusion.
 
-### 2. Automatic Domain and Well-Definedness Checking
+Because Litex eliminates type-coercion wrappers across number sets ($\mathbb{N}^+ \subset \mathbb{Z} \subset \mathbb{Q} \subset \mathbb{R}$) and hypothesis-handle boilerplate, every clause in an ordinary mathematical sentence maps directly to Litex with a **[de Bruijn factor](examples/litex_vs_lean_speed/README.md#de-bruijn-factor) ($\text{formal length} \div \text{informal length}$) near 1**:
 
-A central insight of Litex's math-centric design is that **mathematical expressions must be well-defined before their truth can even be evaluated**.
+<table>
+<tr>
+<th width="34%">Natural Mathematical Writing</th>
+<th width="30%">Litex (DF* ↓)</th>
+<th width="36%">Lean 4 (DF* ↓)</th>
+</tr>
+<tr>
+<td>
 
-In traditional provers, partial functions (like $1/x$, $\sqrt{x}$, or matrix inverses) require burdensome manual proofs bundled at call sites or verbose subtype machinery. In Litex, domain conditions are declared as natural guards, and the compiler **automatically verifies well-definedness**:
+For every integer $a$ and positive natural number $d$, $a = d \lfloor a/d \rfloor + (a \bmod d)$.
+
+</td>
+<td>
+
+```litex
+# DF* = 0.35 (71.4% shorter)
+forall a Z, d N+:
+    a = d * quot(a, d) + a % d
+```
+
+</td>
+<td>
+
+```lean
+-- DF* = 1.24
+example : ∀ (a : Int) (d : Nat), 0 < d →
+    a = (d : Int) * (a / (d : Int)) + a % (d : Int) :=
+  fun a d _ =>
+    (Int.mul_ediv_add_emod a (d : Int)).symm
+```
+
+</td>
+</tr>
+<tr>
+<td>
+
+The finite set $\{1, 2, 3\}$ has three elements.
+
+</td>
+<td>
+
+```litex
+# DF* = 0.44 (40.9% shorter)
+finite_set_size({1, 2, 3}) = 3
+```
+
+</td>
+<td>
+
+```lean
+-- DF* = 0.75
+example : ({1, 2, 3} : Finset Nat).card = 3 :=
+  by decide
+```
+
+</td>
+</tr>
+</table>
+
+### 2. Semantics: Authentic Mathematical Domains
+
+A signature feature of Litex's language semantics is how it handles **mathematical domains**.
+
+In traditional type-theoretic provers, every function on a type must be total: partial operations (like $1/x$, $\sqrt{x}$, or $\ln(x)$) either adopt artificial out-of-domain defaults (such as $1/0 = 0$) or require verbose dependent subtype proofs bundled at every call site. In Litex, domain conditions are a first-class part of function semantics, and the language **automatically verifies domain obligations at the point of use**:
 
 ```litex
 # Define a reciprocal function guarded by x != 0
@@ -85,24 +146,40 @@ WellDefinedError: object reciprocal(0) is not well-defined
 
 You focus on the mathematical argument; the language automatically ensures that every expression remains mathematically valid.
 
-### 3. The Checker Handles the Routine: Over 500,000 Lines of Pure Rust
+### 3. How Litex Works: Relational Search Instead of $\lambda$-Calculus Elaboration
 
-Litex was designed around a simple engineering goal: **over 500,000 lines of Rust, written for a language that is effortless to write and a checker that is blazingly fast.**
+Litex was designed around a simple engineering goal: **over 500,000 lines of pure Rust, written for a language that is effortless to write and a checker that is blazingly fast.**
 
-When you state a step, Litex executes a bounded verification cycle:
-1. **Retrieve**: Looks through active scope for cited definitions, established facts, and builtin mathematical rules.
-2. **Verify**: Checks well-definedness, matches variable binders, and validates premises.
-3. **Commit**: Records the exact proof grounds and makes the accepted conclusion available to all subsequent steps.
+Why can Litex be designed this way? Whether you write in everyday mathematics, Lean, Coq, or Isabelle, each system encodes mathematical objects differently under the hood—yet **the core mathematical conclusions and relational laws (such as $1 + 1 = 2$, order transitivity, and algebraic identities) are universal consensus.**
+
+Traditional provers verify a statement by elaborating surface tactics and typeclasses into explicit dependent $\lambda$-calculus proof terms (see [how `1 + 1 = 2` is elaborated in Lean](examples/litex_vs_lean_speed/lean-proof-pipeline.md)). Litex works on a fundamentally different principle—**bounded relational search** directly over this shared mathematical consensus:
+1. **Retrieve**: Searches the active scope's relational indices for cited definitions, established facts, and builtin mathematical rules without manual hypothesis labels.
+2. **Verify**: Normalizes algebraic expressions, checks domain obligations, matches variable binders, and validates premises.
+3. **Commit**: Records a traceable JSON proof record and makes the accepted conclusion available to all subsequent steps.
 
 Authors supply the mathematical creativity—key intermediate lemmas, witnesses, case splits, and induction arguments. Litex takes care of the routine algebraic and logical bridges.
 
+<a id="readme-comparisons"></a>
+<a id="expression-length-and-checking-speed"></a>
+
+Because Litex relies on bounded relational search and dedicated Rust normalization rather than dynamic tactic elaboration and $\lambda$-term construction, ordinary mathematical steps verify in sub-millisecond time:
+
+| Mathematical task | Litex (ms) ↓ | Lean (ms) ↓ | Lean ÷ Litex |
+| --- | ---: | ---: | ---: |
+| [The set of positive reals is nonempty](#readme-example-witness_nonempty_positive) | 0.084 | 6.439 | **76.9×** |
+| [Natural-number arithmetic: 1 + 1 = 2](#readme-example-nat_mathlib) | 0.037 | 1.361 | **36.7×** |
+| [The sum of two positive reals is positive](#readme-example-forall_add_pos) | 0.392 | 10.487 | **26.7×** |
+| [The derivative of the square function at 3 is 6](#readme-example-derivative_square_at_three) | 1.464 | 29.945 | **20.5×** |
+
+*(Historical local benchmarks using warm medians excluding startup and imports. See the [full benchmark report](examples/litex_vs_lean_speed/README.md) for detailed methodology and comparisons.)*
+
 ### 4. Built for AI Mathematicians (Agent-Native Architecture)
 
-Litex was engineered from day one to be the native language for AI mathematical reasoning:
+Because Litex's relational search is bounded and traversable, its verification output is natively suited for AI mathematical reasoning:
 
 * **Pythonic Syntax**: Natural for Large Language Models to read and generate without getting trapped in complex tactic grammars.
 * **Persistent Session (`litex -session`)**: Unlike traditional batch provers that reset on failure, Litex provides a stateful REPL. When a candidate step is rejected, **previously accepted context remains intact**. An agent can propose a statement, inspect the feedback, repair the single failed line, and proceed.
-* **Structured, Actionable Diagnostics**: If an agent forgets a domain condition (like $x \neq 0$), Litex returns structured JSON explaining precisely what failed. The agent can immediately deduce what precondition was omitted and self-correct on the next turn.
+* **Traceable JSON Diagnostics**: When a step succeeds, Litex's JSON record traces how it was derived; when a step fails (such as forgetting a domain condition like $x \neq 0$), it pinpoints the exact missing mathematical premise so the agent can self-correct on the next turn.
 
 ```bash
 litex -strict -session -e 'have a R = 2'
@@ -114,7 +191,7 @@ litex> a + 1 = 3
 
 ### 5. One High-Level Source, Multi-Target Ecosystem
 
-Writing in Litex opens up a versatile mathematical ecosystem:
+That same traceable JSON proof record also acts as a dual-purpose intermediate representation (Evidence IR): because Litex's rules rest on universal mathematical consensus, backend compilers can replay the recorded proof steps into target systems without secondary proof search:
 
 * **Compiler Bridge to Formal Kernels**: Compile checkable Litex proofs to standalone Lean 4 files (`litex -lean -f proof.lit`) for independent verification by Lean's kernel. The compiler architecture is designed to expand to Coq/Rocq and Isabelle.
 * **Publication-Ready LaTeX**: Export proofs directly into beautifully typeset LaTeX lecture notes, handouts, or papers (`litex -latex -document -f proof.lit`).
@@ -158,51 +235,6 @@ litex -lean -f proof.lit
 # Generate a complete LaTeX document
 litex -latex -document -lang en -f proof.lit
 ```
-
----
-
-## A Complete Example: Irrationality of √2
-
-To prove that $\sqrt{2}$ is irrational, assume by contradiction that it equals a reduced fraction $p/q$. The algebraic steps force both $p$ and $q$ to be even, contradicting their coprimality:
-
-```litex
-# Prove that sqrt(2) is not rational.
-by contra:
-    ? not sqrt(2) $in Q
-    release thm rational_has_unique_reduced_fraction(sqrt(2))
-    obtain p, q from exist! p Z, q N+ st {sqrt(2) = p / q, gcd(p, q) = 1}
-
-    p^2 = (sqrt(2) * q)^2 = sqrt(2)^2 * q^2 = 2 * q^2
-    p^2 % 2 = (2 * q^2) % 2 = 0
-    release thm prime_divides_power(p, 2, 2)
-
-    p / 2 $in Z
-    q^2 = p^2 / 2 = 2 * (p / 2)^2
-    q^2 % 2 = (2 * (p / 2)^2) % 2 = 0
-    release thm prime_divides_power(q, 2, 2)
-
-    impossible 2 <= gcd(p, q) = 1
-```
-
-Notice the flow: the author names two standard supporting theorems, chooses the reduced fraction, and provides the calculation chain. Litex verifies each line and confirms the contradiction.
-
----
-
-<a id="readme-comparisons"></a>
-<a id="expression-length-and-checking-speed"></a>
-
-## Verification Speed & Benchmark Summary
-
-Because Litex relies on dedicated Rust-engineered verification algorithms rather than heavy dynamic tactic elaboration, ordinary mathematical steps verify in sub-millisecond time.
-
-| Mathematical task | Litex (ms) ↓ | Lean (ms) ↓ | Lean ÷ Litex |
-| --- | ---: | ---: | ---: |
-| [The set of positive reals is nonempty](#readme-example-witness_nonempty_positive) | 0.084 | 6.439 | **76.9×** |
-| [Natural-number arithmetic: 1 + 1 = 2](#readme-example-nat_mathlib) | 0.037 | 1.361 | **36.7×** |
-| [The sum of two positive reals is positive](#readme-example-forall_add_pos) | 0.392 | 10.487 | **26.7×** |
-| [The derivative of the square function at 3 is 6](#readme-example-derivative_square_at_three) | 1.464 | 29.945 | **20.5×** |
-
-*(Historical local benchmarks using warm medians excluding startup and imports. See the [full benchmark report](examples/litex_vs_lean_speed/README.md) for detailed methodology and comparisons.)*
 
 ---
 
