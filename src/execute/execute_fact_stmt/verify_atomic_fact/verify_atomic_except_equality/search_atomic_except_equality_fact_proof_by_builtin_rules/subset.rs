@@ -83,6 +83,11 @@ pub enum SubsetFactSearchProofByBuiltinRule {
     // ⇒ `A $subset C`.
     // Example: trust `A $subset B`; trust `B $subset C`; prove `A $subset C`.
     SubsetTransitivity(SubsetTransitivityBuiltinRuleProof),
+    MappedSetSubset(MappedSetSubsetBuiltinRuleProof),
+}
+
+pub struct MappedSetSubsetBuiltinRuleProof {
+    pub pointwise_membership: Box<VerifyFactResult>,
 }
 
 pub struct ConvexIntervalHullProof {
@@ -406,6 +411,20 @@ impl Runtime {
 
         // A — shape dispatch
         let shape = match (&fact.left, &fact.right) {
+            // A mapped set is contained in C when each bounded output lies in C.
+            // Example: `{a + b for a $in R, b $in R} $subset R`.
+            (Obj::SetFormer(SetFormer::MappedSet(set)), _) => {
+                let clause = self.mapped_set_subset_clause(set, fact)?;
+                let pointwise_membership =
+                    self.verify_builtin_rule_premise(&clause, verify_state)?;
+                Ok((!pointwise_membership.is_failed()).then(|| {
+                    SubsetFactSearchProofByBuiltinRule::MappedSetSubset(
+                        MappedSetSubsetBuiltinRuleProof {
+                            pointwise_membership: Box::new(pointwise_membership),
+                        },
+                    )
+                }))
+            }
             (Obj::StandardSet(left), Obj::StandardSet(right)) => {
                 if standard_set_is_subset_eq(left, right) {
                     return Ok(Some(SubsetFactSearchProofByBuiltinRule::StandardSetSubset(

@@ -13318,6 +13318,9 @@ fn atomic_searched_stages(
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotMatrixInversibleFact(p)) => stages.push(AtomicSearchStage::Verify(&p.determinant_zero)),
 
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(
+            crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::MappedSetSubset(p),
+        )) => stages.push(AtomicSearchStage::Verify(&p.pointwise_membership)),
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(
             crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::FunctionRangeInCodomain(p),
         )) => {
             complete_domain_source_stages(&p.source, &mut stages);
@@ -13473,6 +13476,9 @@ fn atomic_searched_stages(
                 BuiltinPropDefinitionProof::IsMatrixInv(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::MatrixInversible(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::Subset(p) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MappedSetMember(p) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MappedSetMemberFromInputs(p) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MappedSetSubset(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::Superset(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::ProperSubset(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::ProperSuperset(p) => &p.proof_of_requirement_facts,

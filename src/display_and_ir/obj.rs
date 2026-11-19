@@ -384,6 +384,7 @@ impl Obj {
                 Obj::Literal(Literal::Pi(_)) => s.push_str(PI),
                 Obj::SetFormer(SetFormer::ListSet(x)) => s.push_str(&x.ir()),
                 Obj::SetFormer(SetFormer::SetBuilder(x)) => s.push_str(&x.ir()),
+                Obj::SetFormer(SetFormer::MappedSet(x)) => s.push_str(&x.ir()),
                 Obj::FunctionSpace(FunctionSpace::FnSet(x)) => s.push_str(&x.ir()),
                 Obj::FunctionSpace(FunctionSpace::AnonymousFn(x)) => s.push_str(&x.ir()),
                 Obj::LimitOperator(LimitOperator::Sequence(x)) => s.push_str(&x.ir()),
@@ -634,6 +635,24 @@ impl SetBuilder {
         out.push_str(&format!("{}", RIGHT_CURLY));
         out
     }
+}
+impl MappedSet {
+    pub fn ir(&self) -> ObjIR {
+        let inputs = self
+            .parameters
+            .groups
+            .iter()
+            .flat_map(|group| {
+                group
+                    .params
+                    .iter()
+                    .map(|param| format!("{} $in {}", param.ir_string(), group.param_type.ir()))
+            })
+            .collect::<Vec<_>>();
+        ObjIR(format!("{{{} for {}}}", self.body.ir(), inputs.join(", ")))
+    }
+
+    impl_display_pair!();
 }
 impl FnSet {
     pub fn ir(&self) -> ObjIR {

@@ -412,6 +412,20 @@ pub(super) fn expression(
                     }
                     format!(r"\left\{{{}\right\}}", items.join(", "))
                 }
+                SetFormer::MappedSet(set) => {
+                    let mut inputs = Vec::new();
+                    for group in &set.parameters.groups {
+                        let domain = o(&group.param_type)?;
+                        for param in &group.params {
+                            inputs.push(format!(r"{} \in {}", ident(&param.name), domain));
+                        }
+                    }
+                    format!(
+                        r"\left\{{{} \mid {}\right\}}",
+                        o(&set.body)?,
+                        inputs.join(", ")
+                    )
+                }
                 SetFormer::SetBuilder(x) => {
                     let mut facts = Vec::new();
                     for f in &x.facts {

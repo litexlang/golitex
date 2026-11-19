@@ -2260,6 +2260,14 @@ pub(super) fn project_atomic_builtin_rule(
             let _ = p;
             object_for(runtime, entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(
+            br::subset::SubsetFactSearchProofByBuiltinRule::MappedSetSubset(p),
+        ) => object_for(runtime, vec![
+            ("type", string("builtin_rule")),
+            ("family", string("SubsetFact")),
+            ("rule", string("MappedSetSubset")),
+            ("pointwise_membership", project_verify_fact(&p.pointwise_membership, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(br::subset::SubsetFactSearchProofByBuiltinRule::SetBuilderSubsetOfParamSet(p)) => {
             let entries = vec![
                 ("type", string("builtin_rule")),

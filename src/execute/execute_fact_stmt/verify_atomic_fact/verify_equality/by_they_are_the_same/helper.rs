@@ -279,6 +279,11 @@ fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, Identif
             Obj::FunctionSpace(FunctionSpace::FnSet(l)),
             Obj::FunctionSpace(FunctionSpace::FnSet(r)),
         ) => fn_sets_alpha_equal_under(l, r, map),
+        (Obj::SetFormer(SetFormer::MappedSet(l)), Obj::SetFormer(SetFormer::MappedSet(r))) => {
+            let mut local = map.clone();
+            set_bound_params_alpha_equal(&l.parameters, &r.parameters, &mut local)
+                && objs_alpha_equal(&l.body, &r.body, &local)
+        }
         (Obj::SetFormer(SetFormer::SetBuilder(l)), Obj::SetFormer(SetFormer::SetBuilder(r))) => {
             set_builders_alpha_equal_under(l, r, map)
         }

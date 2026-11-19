@@ -3,8 +3,8 @@ use std::collections::{HashMap, HashSet};
 
 use crate::ast::obj::{
     AnonymousFn, ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FnSet,
-    FunctionSpace, IdentifierObj, IntegerOperator, IteratedOperator, Literal, Obj, ProductShape,
-    SetBuilder, SetFormer, SetOperator, StructAndFieldAccessObj, TrigOperator,
+    FunctionSpace, IdentifierObj, IntegerOperator, IteratedOperator, Literal, MappedSet, Obj,
+    ProductShape, SetBuilder, SetFormer, SetOperator, StructAndFieldAccessObj, TrigOperator,
 };
 use crate::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::runtime::runtime_ids::IdentifierId;
@@ -252,6 +252,14 @@ pub fn collect_free_plain_ids(
             }
         }
         Obj::SetFormer(SetFormer::SetBuilder(sb)) => collect_free_in_set_builder(sb, bound, out),
+        Obj::SetFormer(SetFormer::MappedSet(set)) => {
+            for group in &set.parameters.groups {
+                collect_free_plain_ids(&group.param_type, bound, out);
+            }
+            let mut scoped = bound.clone();
+            scoped.extend(binder_ids_from_set_bound_parameters(&set.parameters));
+            collect_free_plain_ids(&set.body, &scoped, out);
+        }
         Obj::FunctionSpace(FunctionSpace::FnSet(fs)) => collect_free_in_fn_set(fs, bound, out),
         Obj::FunctionSpace(FunctionSpace::AnonymousFn(af)) => {
             collect_free_in_anonymous_fn(af, bound, out)
@@ -441,6 +449,26 @@ impl Runtime {
             }
         }
         substitution
+    }
+
+    pub(crate) fn inst_mapped_set(
+        &mut self,
+        set: &MappedSet,
+        substitution: &HashMap<IdentifierId, Obj>,
+    ) -> Result<MappedSet, InstError> {
+        let mut parameters = set.parameters.clone();
+        for group in &mut parameters.groups {
+            group.param_type = Box::new(self.inst_obj_rec(&group.param_type, substitution)?);
+        }
+        let body_substitution = self.capture_avoiding_binder_substitution(
+            parameters
+                .groups
+                .iter_mut()
+                .flat_map(|group| group.params.iter_mut()),
+            substitution,
+        );
+        let body = self.inst_obj_rec(&set.body, &body_substitution)?;
+        Ok(MappedSet::new(parameters, body))
     }
 
     pub(crate) fn inst_set_builder(

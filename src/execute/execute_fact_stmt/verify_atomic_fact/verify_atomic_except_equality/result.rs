@@ -238,6 +238,9 @@ pub enum BuiltinPropDefinitionProof {
     SequenceLiminf(BuiltinSequenceLiminfDefinitionProof),
     SequenceLimsup(BuiltinSequenceLimsupDefinitionProof),
     Subset(BuiltinSubsetDefinitionProof),
+    MappedSetMember(MappedSetMemberDefinitionProof),
+    MappedSetMemberFromInputs(MappedSetMemberFromInputsDefinitionProof),
+    MappedSetSubset(MappedSetSubsetDefinitionProof),
     Superset(BuiltinSupersetDefinitionProof),
     ProperSubset(BuiltinProperSubsetDefinitionProof),
     ProperSuperset(BuiltinProperSupersetDefinitionProof),
@@ -251,6 +254,22 @@ pub enum BuiltinPropDefinitionProof {
 }
 
 pub struct BuiltinSubsetDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct MappedSetMemberDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct MappedSetMemberFromInputsDefinitionProof {
+    pub witnesses: Vec<Obj>,
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct MappedSetSubsetDefinitionProof {
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }

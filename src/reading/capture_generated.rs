@@ -13878,6 +13878,11 @@ let fields = vec![("0", capture_ast__obj__IntervalObj(f0, capture, runtime))];
 let mut output = node("SetFormer", "IntervalObj", fields);
 output
 },
+crate::ast::SetFormer::MappedSet(f0) => {
+let fields = vec![("0", capture_ast__obj__MappedSet(f0, capture, runtime))];
+let mut output = node("SetFormer", "MappedSet", fields);
+output
+},
 };
 capture.subject_depth -= 1;
 capture.intern_evidence(output)
@@ -18077,6 +18082,19 @@ capture.subject_depth -= 1;
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_ast__obj__MappedSet(value: &crate::ast::obj::MappedSet, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::MappedSet { parameters: f0, body: f1 } => {
+let fields = vec![("parameters", capture_ast__param__SetBoundParameterList(f0, capture, runtime)), ("body", capture_ast__obj__Obj(f1, capture, runtime))];
+let mut output = node("MappedSet", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_ast__obj__Tuple(value: &crate::ast::obj::Tuple, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 capture.subject_depth += 1;
 let output = match value {
@@ -18702,6 +18720,13 @@ let rule_id = Some("infer.InferInFactResult::SetBuilder");
 let fields = vec![("0", capture_store_fact_and_infer__infer_result__infer_set_builder_membership_projection_result__InferSetBuilderMembershipProjectionResult(f0, capture, runtime))];
 let mut output = node("InferInFactResult", "SetBuilder", fields);
 if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "SetBuilder", ""); }
+output
+},
+crate::store_fact_and_infer::InferInFactResult::MappedSet(f0) => {
+let rule_id = Some("infer.InferInFactResult::MappedSet");
+let fields = vec![("0", capture_store_fact_and_infer__infer_result__infer_in_fact_result__InferMappedSetMembershipResult(f0, capture, runtime))];
+let mut output = node("InferInFactResult", "MappedSet", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MappedSet", ""); }
 output
 },
 crate::store_fact_and_infer::InferInFactResult::Preimage(f0) => {
@@ -23497,6 +23522,11 @@ let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results
 let mut output = node("FailToVerifySetFormerObjWellDefinedResult", "SetBuilder", fields);
 output
 },
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifySetFormerObjWellDefinedResult::MappedSet(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMappedSetObjWellDefined(f0, capture, runtime))];
+let mut output = node("FailToVerifySetFormerObjWellDefinedResult", "MappedSet", fields);
+output
+},
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifySetFormerObjWellDefinedResult::Range(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyRangeObjWellDefined(f0, capture, runtime))];
 let mut output = node("FailToVerifySetFormerObjWellDefinedResult", "Range", fields);
@@ -24902,6 +24932,17 @@ let output = match value {
 crate::store_fact_and_infer::InferSetBuilderMembershipProjectionResult { steps: f0 } => {
 let fields = vec![("steps", JsonValue::Array((f0).iter().map(|item| capture_store_fact_and_infer__infer_result__set_builder_membership_projection_step__SetBuilderMembershipProjectionStep(item, capture, runtime)).collect()))];
 let mut output = node("InferSetBuilderMembershipProjectionResult", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_store_fact_and_infer__infer_result__infer_in_fact_result__InferMappedSetMembershipResult(value: &crate::store_fact_and_infer::InferMappedSetMembershipResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::store_fact_and_infer::InferMappedSetMembershipResult { source_fact_id: f0, existence: f1 } => {
+let fields = vec![("source_fact_id", capture.fact_reference(f0, runtime)), ("existence", capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(f1, capture, runtime))];
+let mut output = node("InferMappedSetMembershipResult", "", fields);
 output
 },
 };
@@ -32576,6 +32617,14 @@ if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.
 if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::MappedSetSubset(f0) => {
+let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::MappedSetSubset");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__MappedSetSubsetBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("SubsetFactSearchProofByBuiltinRule", "MappedSetSubset", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
+output
+},
 };
 capture.intern_evidence(output)
 }
@@ -35337,6 +35386,21 @@ let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__
 let mut output = node("BuiltinPropDefinitionProof", "Subset", fields);
 output
 },
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::BuiltinPropDefinitionProof::MappedSetMember(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__MappedSetMemberDefinitionProof(f0, capture, runtime))];
+let mut output = node("BuiltinPropDefinitionProof", "MappedSetMember", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::BuiltinPropDefinitionProof::MappedSetMemberFromInputs(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__MappedSetMemberFromInputsDefinitionProof(f0, capture, runtime))];
+let mut output = node("BuiltinPropDefinitionProof", "MappedSetMemberFromInputs", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::BuiltinPropDefinitionProof::MappedSetSubset(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__MappedSetSubsetDefinitionProof(f0, capture, runtime))];
+let mut output = node("BuiltinPropDefinitionProof", "MappedSetSubset", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::BuiltinPropDefinitionProof::Superset(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__BuiltinSupersetDefinitionProof(f0, capture, runtime))];
 let mut output = node("BuiltinPropDefinitionProof", "Superset", fields);
@@ -36988,6 +37052,27 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyMappedSetObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMappedSetObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMappedSetObjWellDefined::Domain { index: f0, succeeded: f1, obj: f2, failed: f3 } => {
+let fields = vec![("index", JsonValue::String((f0).to_string())), ("succeeded", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("obj", capture_ast__obj__Obj(f2, capture, runtime)), ("failed", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f3, capture, runtime))];
+let mut output = node("FailToVerifyMappedSetObjWellDefined", "Domain", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMappedSetObjWellDefined::Body { domains: f0, obj: f1, failed: f2 } => {
+let fields = vec![("domains", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("obj", capture_ast__obj__Obj(f1, capture, runtime)), ("failed", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedResult(f2, capture, runtime))];
+let mut output = node("FailToVerifyMappedSetObjWellDefined", "Body", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyMappedSetObjWellDefined::Others(f0) => {
+let fields = vec![("0", JsonValue::String((f0).to_string()))];
+let mut output = node("FailToVerifyMappedSetObjWellDefined", "Others", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyRangeObjWellDefined(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyRangeObjWellDefined, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyRangeObjWellDefined(f0) => {
@@ -38159,6 +38244,11 @@ output
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::SetBuilder(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SetBuilderObjWellDefinedProof(f0, capture, runtime))];
 let mut output = node("SetFormerObjWellDefinedProofByDef", "SetBuilder", fields);
+output
+},
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::MappedSet(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MappedSetObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("SetFormerObjWellDefinedProofByDef", "MappedSet", fields);
 output
 },
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef::Range(f0) => {
@@ -45554,6 +45644,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__MappedSetSubsetBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::MappedSetSubsetBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::MappedSetSubsetBuiltinRuleProof { pointwise_membership: f0 } => {
+let fields = vec![("pointwise_membership", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("MappedSetSubsetBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__superset__StandardSetSupersetBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::superset::StandardSetSupersetBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::superset::StandardSetSupersetBuiltinRuleProof { left: f0, right: f1 } => {
@@ -47423,6 +47524,39 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__MappedSetMemberDefinitionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::MappedSetMemberDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::MappedSetMemberDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MappedSetMemberDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__MappedSetMemberFromInputsDefinitionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::MappedSetMemberFromInputsDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::MappedSetMemberFromInputsDefinitionProof { witnesses: f0, requirement_facts: f1, proof_of_requirement_facts: f2 } => {
+let fields = vec![("witnesses", JsonValue::Array((f0).iter().map(|item| capture_ast__obj__Obj(item, capture, runtime)).collect())), ("requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MappedSetMemberFromInputsDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__MappedSetSubsetDefinitionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::MappedSetSubsetDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::MappedSetSubsetDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MappedSetSubsetDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__BuiltinSupersetDefinitionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::BuiltinSupersetDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::BuiltinSupersetDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
@@ -48975,6 +49109,20 @@ let saved_scope = capture.enter_scope();
 capture.index_environment(f4, runtime);
 let fields = vec![("param_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("defined_params", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f1, capture, runtime)), ("auto_opened_struct_layers", match (f2).as_ref() { Some(item) => JsonValue::Array((item).iter().map(|item| capture_execute__release_one_struct_layer__ReleaseOneStructLayerProof(item, capture, runtime)).collect()), None => JsonValue::Null }), ("assumed_facts", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("local_env", capture.environment(f4, runtime))];
 let mut output = node("SetBuilderObjWellDefinedProof", "", fields);
+capture.leave_scope(saved_scope);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__MappedSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MappedSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MappedSetObjWellDefinedProof { domains: f0, defined_params: f1, auto_opened_struct_layers: f2, body: f3, local_env: f4 } => {
+let saved_scope = capture.enter_scope();
+capture.index_environment(f4, runtime);
+let fields = vec![("domains", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("defined_params", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f1, capture, runtime)), ("auto_opened_struct_layers", match (f2).as_ref() { Some(item) => JsonValue::Array((item).iter().map(|item| capture_execute__release_one_struct_layer__ReleaseOneStructLayerProof(item, capture, runtime)).collect()), None => JsonValue::Null }), ("body", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f3, capture, runtime)), ("local_env", capture.environment(f4, runtime))];
+let mut output = node("MappedSetObjWellDefinedProof", "", fields);
 capture.leave_scope(saved_scope);
 output
 },

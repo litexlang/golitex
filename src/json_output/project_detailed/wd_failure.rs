@@ -886,6 +886,21 @@ fn project_fail_to_verify_set_former_obj_well_defined_result(
         FailToVerifySetFormerObjWellDefinedResult::ListSet(p) => {
             node(rt, "ListSet", None, common(&p.0, rt))
         }
+        FailToVerifySetFormerObjWellDefinedResult::MappedSet(p) => {
+            let detail = match p {
+                FailToVerifyMappedSetObjWellDefined::Domain { index, failed, .. } => node(
+                    rt,
+                    "Domain",
+                    Some(*index),
+                    project_obj_wd_failure(failed, rt),
+                ),
+                FailToVerifyMappedSetObjWellDefined::Body { failed, .. } => {
+                    node(rt, "Body", None, project_obj_wd_failure(failed, rt))
+                }
+                FailToVerifyMappedSetObjWellDefined::Others(reason) => message(rt, reason),
+            };
+            node(rt, "MappedSet", None, detail)
+        }
         FailToVerifySetFormerObjWellDefinedResult::SetBuilder(p) => node(
             rt,
             "SetBuilder",

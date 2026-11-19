@@ -1025,6 +1025,20 @@ pub(super) fn project_obj_wd_by_def(
                 runtime,
             )
         }
+        ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::MappedSet(p)) => {
+            object_for(runtime, vec![
+                ("type", string("by_def")),
+                ("family", string("SetFormer")),
+                ("kind", string("MappedSet")),
+                ("obj", string(obj.readable_string())),
+                ("domains", JsonValue::Array(p.domains.iter()
+                    .map(|domain| project_obj_wd_proof(domain, runtime)).collect())),
+                ("defined_params", project_have_store_and_infer(&p.defined_params, runtime)),
+                ("auto_opened_struct_layers",
+                    super::verify::project_auto_opened_struct_layers(&p.auto_opened_struct_layers, runtime)),
+                ("body", project_obj_wd_proof(&p.body, runtime)),
+            ])
+        }
         ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(p)) => {
             object_for(
                 runtime,

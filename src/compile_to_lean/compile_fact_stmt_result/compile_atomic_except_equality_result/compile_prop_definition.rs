@@ -403,6 +403,11 @@ impl LitexToLeanCompiler {
                 AtomicFact::HasRiemannIntegralFact(f),
                 AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(BuiltinPropDefinitionProof::HasRiemannIntegral(p)),
             ) => self.compile_riemann_definition(f, wd, p, position),
+            (_, AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                BuiltinPropDefinitionProof::MappedSetMember(_)
+                | BuiltinPropDefinitionProof::MappedSetMemberFromInputs(_)
+                | BuiltinPropDefinitionProof::MappedSetSubset(_),
+            )) => Err(LeanCompileError::unsupported("MappedSet/Definition")),
             (_, AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(_)) => {
                 Err(LeanCompileError::unsupported("Prop/BuiltinDefinition"))
             }

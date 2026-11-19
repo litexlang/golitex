@@ -151,6 +151,7 @@ pub(super) fn obj_kind(value: &Obj) -> &'static str {
         Obj::SetFormer(value) => match value {
             SetFormer::ListSet(_) => "SetFormer.ListSet",
             SetFormer::SetBuilder(_) => "SetFormer.SetBuilder",
+            SetFormer::MappedSet(_) => "SetFormer.MappedSet",
             SetFormer::Range(_) => "SetFormer.Range",
             SetFormer::ClosedRange(_) => "SetFormer.ClosedRange",
             SetFormer::FiniteSeqSet(_) => "SetFormer.FiniteSeqSet",
@@ -438,6 +439,7 @@ pub(super) const OBJ_KINDS: &[&str] = &[
     "SetOperator.IndexCart",
     "SetFormer.ListSet",
     "SetFormer.SetBuilder",
+    "SetFormer.MappedSet",
     "SetFormer.Range",
     "SetFormer.ClosedRange",
     "SetFormer.FiniteSeqSet",

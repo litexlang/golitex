@@ -9,7 +9,7 @@ use super::fail_to_verify_obj_well_defined::*;
 use super::helper::set_bound_parameters_to_typed_parameter_list;
 use super::obj_well_defined_proof_by_def::*;
 use crate::ast::fact::{AtomicFact, InFact, QuantifierFreeFact};
-use crate::ast::obj::{AnonymousFn, FnSet, FunctionSpace, Obj, SetBuilder, SetFormer};
+use crate::ast::obj::{AnonymousFn, FnSet, FunctionSpace, MappedSet, Obj, SetBuilder, SetFormer};
 use crate::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
 use crate::execute::execute_fact_stmt::well_defined_results::well_defined_result::{
     FactWellDefinedProof, FailToVerifyFactWellDefinedResult, VerifyFactWellDefinedResult,
@@ -186,6 +186,79 @@ impl Runtime {
                 obj: Obj::SetFormer(SetFormer::SetBuilder(value.clone())),
                 reason: FailToVerifyObjWellDefinedResult::SetFormer(
                     FailToVerifySetFormerObjWellDefinedResult::SetBuilder(reason),
+                ),
+            }),
+        }
+    }
+
+    // `{a + b for a $in R, b $in R}`: verify domains, then the body under its binders.
+    pub(super) fn verify_mapped_set_obj_well_definedness(
+        &mut self,
+        value: &MappedSet,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyObjWellDefinedResult> {
+        use FailToVerifyMappedSetObjWellDefined as Failure;
+
+        let obj: Obj = value.clone().into();
+        let (result, local_env) = self.run_in_local_env_and_take_env(|rt| {
+            let domains = match rt.verify_set_bound_param_types_well_defined(
+                &value.parameters,
+                verify_state.clone(),
+            )? {
+                Ok(proofs) => proofs,
+                Err((index, succeeded, obj, failed)) => {
+                    return Ok(Err(Failure::Domain {
+                        index,
+                        succeeded,
+                        obj,
+                        failed: Box::new(failed),
+                    }));
+                }
+            };
+            let typed = set_bound_parameters_to_typed_parameter_list(&value.parameters);
+            let defined_params =
+                rt.define_typed_parameters_in_current_env(&typed, None, verify_state)?;
+            let auto_opened_struct_layers =
+                match rt.auto_open_struct_layers_for_typed_parameters(&typed, verify_state)? {
+                    Ok(opened) => opened,
+                    Err((_, failed)) => return Ok(Err(Failure::Others(failed.reason))),
+                };
+            match rt.verify_obj_well_definedness(&value.body, verify_state)? {
+                VerifyObjWellDefinedResult::Success(body) => Ok(Ok((
+                    domains,
+                    defined_params,
+                    auto_opened_struct_layers,
+                    body,
+                ))),
+                VerifyObjWellDefinedResult::Failed { obj, reason } => Ok(Err(Failure::Body {
+                    domains,
+                    obj,
+                    failed: Box::new(reason),
+                })),
+            }
+        })?;
+        match result {
+            Ok((domains, defined_params, auto_opened_struct_layers, body)) => self
+                .finish_binder_obj_success(
+                    obj,
+                    verify_state,
+                    |proof| {
+                        ObjWellDefinedProofByDef::SetFormer(
+                            SetFormerObjWellDefinedProofByDef::MappedSet(proof),
+                        )
+                    },
+                    MappedSetObjWellDefinedProof {
+                        domains,
+                        defined_params,
+                        auto_opened_struct_layers,
+                        body: Box::new(body),
+                        local_env,
+                    },
+                ),
+            Err(failed) => Ok(VerifyObjWellDefinedResult::Failed {
+                obj,
+                reason: FailToVerifyObjWellDefinedResult::SetFormer(
+                    FailToVerifySetFormerObjWellDefinedResult::MappedSet(failed),
                 ),
             }),
         }

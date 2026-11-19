@@ -42,6 +42,9 @@ impl LitexToLeanCompiler {
                 let right = self.compile_object_reference(&fact.right, position)?;
                 Ok(format!("(Litex.subsetOfSame {left} {left} {left} {right} (Eq.refl _) ({equal}) (Litex.subsetRefl {left}))"))
             }
+            SubsetFactSearchProofByBuiltinRule::MappedSetSubset(_) => {
+                Err(LeanCompileError::unsupported("MappedSet/Subset"))
+            }
             SubsetFactSearchProofByBuiltinRule::FunctionRangeInCodomain(p) => {
                 self.compile_function_range_subset(fact, p, position)
             }

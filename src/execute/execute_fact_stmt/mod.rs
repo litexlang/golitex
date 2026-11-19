@@ -15,6 +15,7 @@ pub(crate) mod function_signature_selection;
 mod helper;
 pub(crate) mod improper_integral;
 pub(crate) mod known_tuple;
+mod mapped_set;
 pub(crate) mod matrix_inverse_predicates;
 pub(crate) mod matrix_operations;
 pub(crate) mod multivariable;

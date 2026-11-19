@@ -164,6 +164,26 @@ fn induction_bound_from_obj(
             vec![&a.index_set, &a.family_set, &a.family_fn]
         }
         Obj::SetFormer(SetFormer::ListSet(a)) => a.list.iter().map(|o| o.as_ref()).collect(),
+        Obj::SetFormer(SetFormer::MappedSet(set)) => {
+            return set
+                .parameters
+                .groups
+                .iter()
+                .find_map(|group| induction_bound_from_obj(name, &group.param_type))
+                .or_else(|| {
+                    let shadowed = set
+                        .parameters
+                        .groups
+                        .iter()
+                        .flat_map(|group| &group.params)
+                        .any(|param| param.name == name);
+                    if shadowed {
+                        None
+                    } else {
+                        induction_bound_from_obj(name, &set.body)
+                    }
+                });
+        }
         Obj::SetFormer(SetFormer::SetBuilder(a)) => {
             return induction_bound_from_obj(name, &a.param_set).or_else(|| {
                 if a.param_binding.name == name {

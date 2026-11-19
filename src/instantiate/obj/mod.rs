@@ -303,6 +303,9 @@ impl Runtime {
             }
             Obj::SetFormer(SetFormer::SeqSet(a)) => self.inst_seq_set_obj(a, param_to_arg_map),
             Obj::FnObj(f) => self.inst_fn_obj(f, param_to_arg_map),
+            Obj::SetFormer(SetFormer::MappedSet(set)) => {
+                Ok(self.inst_mapped_set(set, param_to_arg_map)?.into())
+            }
             Obj::SetFormer(SetFormer::SetBuilder(sb)) => {
                 self.inst_set_builder_obj(sb, param_to_arg_map)
             }

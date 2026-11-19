@@ -6,7 +6,9 @@ use crate::ast::fact::{
     AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, QuantifierFreeFact,
 };
 use crate::ast::names::BoundName;
-use crate::ast::obj::{AnonymousFn, ArithmeticOperator, FnSet, FunctionSpace, IdentifierObj, Obj};
+use crate::ast::obj::{
+    AnonymousFn, ArithmeticOperator, FnSet, FunctionSpace, IdentifierObj, Obj, SetFormer,
+};
 use crate::ast::param::{
     ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup,
     TypedParameterList,
@@ -272,6 +274,10 @@ fn remap_obj(obj: &mut Obj, plan: &RemapPlan) -> Result<(), KbCodecError> {
     match obj {
         Obj::Identifier(id) => remap_identifier_obj(id, plan),
         Obj::Literal(_) | Obj::StandardSet(_) => Ok(()),
+        Obj::SetFormer(SetFormer::MappedSet(set)) => {
+            remap_set_bound_parameter_list(&mut set.parameters, plan)?;
+            remap_obj(&mut set.body, plan)
+        }
         Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)) => remap_fn_set(fn_set, plan),
         Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => remap_anonymous_fn(anon, plan),
         Obj::ArithmeticOperator(ArithmeticOperator::Add(add)) => {

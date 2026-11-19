@@ -33,6 +33,10 @@ impl SubsetFactSearchProofByBuiltinRule {
         match self {
             Self::ConvexIntervalHull(_) => BuiltinRuleText { rule_name: "ConvexIntervalHull".into(), message: "The closed segment joining two points of a real interval lies in that interval.".into() },
             Self::HomogeneousCartesianSequenceSubset(_) => BuiltinRuleText { rule_name: "HomogeneousCartesianSequenceSubset".into(), message: "A flat homogeneous Cartesian product is the finite sequence space of the same length.".into() },
+            Self::MappedSetSubset(_) => BuiltinRuleText {
+                rule_name: "MappedSetSubset".into(),
+                message: "Every output of the bounded expression lies in the target set.".into(),
+            },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
                 message: "The image lies in the certified return carrier.".into(),
@@ -70,6 +74,10 @@ impl SubsetFactSearchProofByBuiltinRule {
             Self::HomogeneousCartesianSequenceSubset(_) => BuiltinRuleText {
                 rule_name: "HomogeneousCartesianSequenceSubset".into(),
                 message: "同质的平坦笛卡尔积等于相同长度的有限数列空间。".into(),
+            },
+            Self::MappedSetSubset(_) => BuiltinRuleText {
+                rule_name: "MappedSetSubset".into(),
+                message: "有界表达式的每个结果都属于目标集合。".into(),
             },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
@@ -112,6 +120,10 @@ impl SubsetFactSearchProofByBuiltinRule {
                 rule_name: "HomogeneousCartesianSequenceSubset".into(),
                 message: "同質的平坦笛卡爾積等於相同長度的有限數列空間。".into(),
             },
+            Self::MappedSetSubset(_) => BuiltinRuleText {
+                rule_name: "MappedSetSubset".into(),
+                message: "有界表達式的每個結果都屬於目標集合。".into(),
+            },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
                 message: "函數的像包含於已證明的回傳集合。".into(),
@@ -147,6 +159,10 @@ impl SubsetFactSearchProofByBuiltinRule {
         match self {
             Self::ConvexIntervalHull(_) => BuiltinRuleText { rule_name: "ConvexIntervalHull".into(), message: "实区间中两点之间的闭线段包含于该区间。".into() },
             Self::HomogeneousCartesianSequenceSubset(_) => BuiltinRuleText { rule_name: "HomogeneousCartesianSequenceSubset".into(), message: "Un produit cartésien homogène plat est l’espace des suites finies de même longueur.".into() },
+            Self::MappedSetSubset(_) => BuiltinRuleText {
+                rule_name: "MappedSetSubset".into(),
+                message: "Chaque valeur de l’expression sur les domaines donnés appartient à l’ensemble cible.".into(),
+            },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
                 message: "L’image de la fonction est incluse dans l’ensemble de retour certifié."
@@ -183,6 +199,10 @@ impl SubsetFactSearchProofByBuiltinRule {
         match self {
             Self::ConvexIntervalHull(_) => BuiltinRuleText { rule_name: "ConvexIntervalHull".into(), message: "实区间中两点之间的闭线段包含于该区间。".into() },
             Self::HomogeneousCartesianSequenceSubset(_) => BuiltinRuleText { rule_name: "HomogeneousCartesianSequenceSubset".into(), message: "Однородное плоское декартово произведение равно пространству конечных последовательностей той же длины.".into() },
+            Self::MappedSetSubset(_) => BuiltinRuleText {
+                rule_name: "MappedSetSubset".into(),
+                message: "Каждое значение выражения на заданных областях принадлежит целевому множеству.".into(),
+            },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
                 message:
@@ -220,6 +240,10 @@ impl SubsetFactSearchProofByBuiltinRule {
         match self {
             Self::ConvexIntervalHull(_) => BuiltinRuleText { rule_name: "ConvexIntervalHull".into(), message: "实区间中两点之间的闭线段包含于该区间。".into() },
             Self::HomogeneousCartesianSequenceSubset(_) => BuiltinRuleText { rule_name: "HomogeneousCartesianSequenceSubset".into(), message: "Un producto cartesiano homogéneo plano es el espacio de sucesiones finitas de la misma longitud.".into() },
+            Self::MappedSetSubset(_) => BuiltinRuleText {
+                rule_name: "MappedSetSubset".into(),
+                message: "Cada valor de la expresión en los dominios dados pertenece al conjunto de destino.".into(),
+            },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
                 message:
@@ -257,6 +281,10 @@ impl SubsetFactSearchProofByBuiltinRule {
         match self {
             Self::ConvexIntervalHull(_) => BuiltinRuleText { rule_name: "ConvexIntervalHull".into(), message: "实区间中两点之间的闭线段包含于该区间。".into() },
             Self::HomogeneousCartesianSequenceSubset(_) => BuiltinRuleText { rule_name: "HomogeneousCartesianSequenceSubset".into(), message: "الجداء الديكارتي المتجانس المسطح يساوي فضاء المتتاليات المنتهية ذات الطول نفسه.".into() },
+            Self::MappedSetSubset(_) => BuiltinRuleText {
+                rule_name: "MappedSetSubset".into(),
+                message: "كل قيمة للتعبير على المجالات المعطاة تنتمي إلى المجموعة المستهدفة.".into(),
+            },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
                 message: "صورة الدالة محتواة في مجموعة القيم المثبتة.".into(),
@@ -298,6 +326,10 @@ impl SubsetFactSearchProofByBuiltinRule {
                 rule_name: "HomogeneousCartesianSequenceSubset".into(),
                 message: "平坦な同質の直積は同じ長さの有限列の空間に等しい。".into(),
             },
+            Self::MappedSetSubset(_) => BuiltinRuleText {
+                rule_name: "MappedSetSubset".into(),
+                message: "指定された定義域での式の値はすべて、対象の集合に属します。".into(),
+            },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
                 message: "関数の像は検証済みの戻り値集合に含まれます。".into(),
@@ -338,6 +370,10 @@ impl SubsetFactSearchProofByBuiltinRule {
             Self::HomogeneousCartesianSequenceSubset(_) => BuiltinRuleText {
                 rule_name: "HomogeneousCartesianSequenceSubset".into(),
                 message: "평탄한 동질 데카르트 곱은 같은 길이의 유한 수열 공간과 같습니다.".into(),
+            },
+            Self::MappedSetSubset(_) => BuiltinRuleText {
+                rule_name: "MappedSetSubset".into(),
+                message: "주어진 정의역에서 식의 모든 값은 대상 집합에 속합니다.".into(),
             },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
@@ -381,6 +417,11 @@ impl SubsetFactSearchProofByBuiltinRule {
                 message:
                     "Tích Descartes phẳng đồng nhất bằng không gian dãy hữu hạn có cùng độ dài."
                         .into(),
+            },
+            Self::MappedSetSubset(_) => BuiltinRuleText {
+                rule_name: "MappedSetSubset".into(),
+                message: "Mọi giá trị của biểu thức trên các miền đã cho đều thuộc tập đích."
+                    .into(),
             },
             Self::FunctionRangeInCodomain(_) => BuiltinRuleText {
                 rule_name: "FunctionRangeInCodomain".into(),
@@ -431,7 +472,7 @@ impl SubsetFactSearchProofByBuiltinRule {
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
             Self::ConvexIntervalHull(_) => None,
-            Self::FunctionRangeInCodomain(_) => None,
+            Self::FunctionRangeInCodomain(_) | Self::MappedSetSubset(_) => None,
             Self::StandardSetSubset(_) => None,
             Self::IntersectSubsetLeft(_) => None,
             Self::IntersectSubsetRight(_) => None,

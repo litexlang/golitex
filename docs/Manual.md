@@ -6167,6 +6167,27 @@ forall x {t R: t > 0}:
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality).
 
+### Preview Mapped set comprehensions
+
+`{expression for x $in A, y $in B}` forms the image of an expression over
+the given bounded inputs. Input sets are resolved in the surrounding scope.
+The input names bind within the expression, which must be well defined for
+every admitted input assignment.
+
+Membership means there is an input assignment whose value equals the member.
+Use `witness exist ... from ...` followed by `by def` to supply it explicitly.
+Storing membership exposes the bounded existential, which can be used with
+`obtain`. The image lies in `C` when the verifier can check every result in
+`C` under the input binders.
+
+```litex
+witness exist a {1}, b {2} st {3 = a + b} from 1, 2
+by def 3 $in {a + b for a $in {1}, b $in {2}}
+```
+
+See the [mapped-set example](../examples/wd/obj/mapped_set.lit) for
+two-input witness extraction and group left translation.
+
 ### O65. Half-open integer ranges
 
 **Public form:** `range(a, b)`.
@@ -7056,7 +7077,7 @@ forall p &Point:
 
 **Common native properties and proof routes.** The instance obtains the ordinary definition’s value or callable interface; release obj def and equality/application routes use that stored definition.
 
-**Nearest boundary.** Angle-bracket arguments specialize the family. Parenthesized arguments apply a fully specialized function.
+**Nearest boundary.** `\Name<arguments>` specializes the family. Parenthesized arguments apply a fully specialized function. The parser rejects `Name[arguments]`.
 
 **Checked example.**
 

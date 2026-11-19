@@ -1,6 +1,5 @@
 use super::super::keywords::{
-    COLON, COMMA, EQUIVALENT_SIGN, GREATER, LEFT_BRACKET, LEFT_PAREN, LESS, RIGHT_BRACKET,
-    STRATEGY, STRUCT, TEMPLATE,
+    COLON, COMMA, EQUIVALENT_SIGN, GREATER, LEFT_PAREN, LESS, STRATEGY, STRUCT, TEMPLATE,
 };
 use super::super::object::{is_simple_name, parse_obj};
 use crate::ast::fact::QuantifierFreeFact;
@@ -125,7 +124,7 @@ impl Runtime {
         )))
     }
 
-    // template[params [: dom…]]: / template<params [: dom…]>:
+    // template<params [: dom…]>:
     //     <one have / trust have / obtain body>
     // Name comes from the body definition, not the header.
     pub(in super::super) fn parse_def_template_stmt(
@@ -185,29 +184,24 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
     ) -> RuntimeResult<(TypedParameterList, Vec<QuantifierFreeFact>)> {
-        let (opening, closing) = match tb.peek() {
-            Some(LEFT_BRACKET) => (LEFT_BRACKET, RIGHT_BRACKET),
-            Some(LESS) => (LESS, GREATER),
-            _ => return Err(tb.parse_error("template parameters expect `[...]` or `<...>`")),
-        };
-        tb.expect(opening)?;
+        tb.expect(LESS)?;
         let mut groups = Vec::new();
-        while !tb.exceed_end_of_head() && tb.peek() != Some(closing) && tb.peek() != Some(COLON) {
+        while !tb.exceed_end_of_head() && tb.peek() != Some(GREATER) && tb.peek() != Some(COLON) {
             groups.push(self.parse_one_typed_param_group(tb)?);
             if tb.peek() == Some(COMMA) {
                 tb.advance()?;
             }
         }
         if groups.is_empty() {
-            return Err(tb.parse_error(format!(
-                "template header expects at least one parameter inside `{opening}...{closing}`"
-            )));
+            return Err(
+                tb.parse_error("template header expects at least one parameter inside `<...>`")
+            );
         }
 
         let mut template_arg_dom = Vec::new();
         if tb.peek() == Some(COLON) {
             tb.advance()?;
-            while !tb.exceed_end_of_head() && tb.peek() != Some(closing) {
+            while !tb.exceed_end_of_head() && tb.peek() != Some(GREATER) {
                 template_arg_dom.push(self.parse_quantifier_free_fact_inline(tb)?);
                 if tb.peek() == Some(COMMA) {
                     tb.advance()?;
@@ -216,7 +210,7 @@ impl Runtime {
                 }
             }
         }
-        tb.expect(closing)?;
+        tb.expect(GREATER)?;
         Ok((TypedParameterList { groups }, template_arg_dom))
     }
 

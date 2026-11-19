@@ -354,6 +354,7 @@ impl Runtime {
                     Err(failure) => Ok(Err(failure)),
                 }
             }
+            AtomicFact::InFact(f) => self.prove_mapped_set_member_by_definition(f, verify_state),
             AtomicFact::SubsetFact(f) => self.prove_subset_by_definition(f, verify_state),
             AtomicFact::SupersetFact(f) => self.prove_superset_by_definition(f, verify_state),
             AtomicFact::ProperSubsetFact(f) => {
@@ -375,12 +376,67 @@ impl Runtime {
         }
     }
 
+    // Membership in a mapped set is its bounded existential preimage.
+    fn prove_mapped_set_member_by_definition(
+        &mut self,
+        fact: &InFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
+        let Obj::SetFormer(SetFormer::MappedSet(set)) = &fact.set else {
+            return Ok(Err(DefinitionProofFailed::Unavailable));
+        };
+        let clause = self.mapped_set_membership_clause(set, fact)?;
+        let failed = match self.verify_definition_requirements(vec![clause], verify_state)? {
+            Ok((requirement_facts, proof_of_requirement_facts)) => {
+                return Ok(Ok(BuiltinPropDefinitionProof::MappedSetMember(
+                    super::result::MappedSetMemberDefinitionProof {
+                        requirement_facts,
+                        proof_of_requirement_facts,
+                    },
+                )));
+            }
+            Err(failed) => failed,
+        };
+
+        // A displayed instance such as u + v supplies candidates directly.
+        // The match alone proves nothing about their domains or the full body.
+        let Some((witnesses, requirements)) = self.mapped_set_displayed_witnesses(set, fact)?
+        else {
+            return Ok(Err(failed));
+        };
+        match self.verify_definition_requirements(requirements, verify_state)? {
+            Ok((requirement_facts, proof_of_requirement_facts)) => {
+                Ok(Ok(BuiltinPropDefinitionProof::MappedSetMemberFromInputs(
+                    super::result::MappedSetMemberFromInputsDefinitionProof {
+                        witnesses,
+                        requirement_facts,
+                        proof_of_requirement_facts,
+                    },
+                )))
+            }
+            Err(failed) => Ok(Err(failed)),
+        }
+    }
+
     // A $subset B  ⇔  forall x A: x $in B
     fn prove_subset_by_definition(
         &mut self,
         fact: &SubsetFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
+        if let Obj::SetFormer(SetFormer::MappedSet(set)) = &fact.left {
+            let clause = self.mapped_set_subset_clause(set, fact)?;
+            if let Ok((requirement_facts, proof_of_requirement_facts)) =
+                self.verify_definition_requirements(vec![clause], verify_state)?
+            {
+                return Ok(Ok(BuiltinPropDefinitionProof::MappedSetSubset(
+                    super::result::MappedSetSubsetDefinitionProof {
+                        requirement_facts,
+                        proof_of_requirement_facts,
+                    },
+                )));
+            }
+        }
         let x = self.fresh_internal_param();
         let x_obj = Obj::Identifier(IdentifierObj::from_bound_name(&x));
         let forall = Fact::ForallFact(ForallFact {

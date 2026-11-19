@@ -150,6 +150,9 @@ impl Runtime {
             Obj::FunctionSpace(FunctionSpace::AnonymousFn(value)) => {
                 return self.verify_anonymous_fn_obj_well_definedness(value, verify_state);
             }
+            Obj::SetFormer(SetFormer::MappedSet(value)) => {
+                return self.verify_mapped_set_obj_well_definedness(value, verify_state);
+            }
             Obj::SetFormer(SetFormer::SetBuilder(value)) => {
                 return self.verify_set_builder_obj_well_definedness(value, verify_state);
             }
@@ -358,6 +361,9 @@ impl Runtime {
             }
             Obj::SetFormer(SetFormer::ListSet(_)) => {
                 unreachable!("ListSet WD uses verify_list_set_obj_well_definedness")
+            }
+            Obj::SetFormer(SetFormer::MappedSet(_)) => {
+                unreachable!("mapped set WD uses a dedicated binder pipeline")
             }
             Obj::SetFormer(SetFormer::SetBuilder(_))
             | Obj::FunctionSpace(FunctionSpace::FnSet(_))

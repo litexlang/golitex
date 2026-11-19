@@ -303,6 +303,13 @@ fn object_uses_functions(object: &Obj) -> bool {
         Obj::SetFormer(SetFormer::ListSet(set)) => {
             set.list.iter().any(|item| object_uses_functions(item))
         }
+        Obj::SetFormer(SetFormer::MappedSet(set)) => {
+            set.parameters
+                .groups
+                .iter()
+                .any(|group| object_uses_functions(&group.param_type))
+                || object_uses_functions(&set.body)
+        }
         Obj::SetFormer(SetFormer::SetBuilder(set)) => {
             object_uses_functions(&set.param_set)
                 || set.facts.iter().any(|fact| {
@@ -649,6 +656,7 @@ fn object_uses_sets(object: &Obj) -> bool {
         Obj::SetFormer(
             SetFormer::ListSet(_)
             | SetFormer::SetBuilder(_)
+            | SetFormer::MappedSet(_)
             | SetFormer::Range(_)
             | SetFormer::ClosedRange(_)
             | SetFormer::IntervalObj(_)

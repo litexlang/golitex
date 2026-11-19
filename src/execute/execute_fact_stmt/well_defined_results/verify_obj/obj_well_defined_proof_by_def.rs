@@ -131,6 +131,7 @@ pub enum SetFormerObjWellDefinedProofByDef {
     MatrixSet(MatrixSetObjWellDefinedProof),
     ListSet(ListSetObjWellDefinedProof),
     SetBuilder(SetBuilderObjWellDefinedProof),
+    MappedSet(MappedSetObjWellDefinedProof),
     Range(RangeObjWellDefinedProof),
     ClosedRange(ClosedRangeObjWellDefinedProof),
     FiniteSeqSet(FiniteSeqSetObjWellDefinedProof),
@@ -938,6 +939,14 @@ pub struct SetBuilderObjWellDefinedProof {
     pub defined_params: StoreHaveObjAndInferResult,
     pub auto_opened_struct_layers: Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
     pub assumed_facts: Vec<AssumeDomFactResult>,
+    pub local_env: Box<ExecEnv>,
+}
+
+pub struct MappedSetObjWellDefinedProof {
+    pub domains: Vec<Box<ObjWellDefinedProof>>,
+    pub defined_params: StoreHaveObjAndInferResult,
+    pub auto_opened_struct_layers: Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
+    pub body: Box<ObjWellDefinedProof>,
     pub local_env: Box<ExecEnv>,
 }
 

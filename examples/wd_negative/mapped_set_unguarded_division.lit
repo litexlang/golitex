@@ -1,0 +1,3 @@
+# An input of zero violates the mapped expression's denominator requirement.
+# Run: target/release/litex -strict -f examples/wd_negative/mapped_set_unguarded_division.lit
+$is_set({1 / x for x $in R})

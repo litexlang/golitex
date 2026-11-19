@@ -785,6 +785,9 @@ impl LitexToLeanCompiler {
                     declarations
                         .extend(self.compile_natural_sign_inference(sign, seed, compiled, &prior)?);
                 }
+                InferInFactResult::MappedSet(_) => {
+                    return Err(LeanCompileError::unsupported("MappedSet/Infer"));
+                }
                 InferInFactResult::SetBuilder(proof) => {
                     declarations.extend(
                         self.compile_set_builder_projections(proof, seed, compiled, &prior)?,

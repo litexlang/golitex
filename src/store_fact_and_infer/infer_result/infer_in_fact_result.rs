@@ -17,6 +17,7 @@ pub enum InferInFactResult {
     MatrixExpand(super::InferInFactMatrixExpandResult),
     Template(super::InferTemplateMembershipResult),
     SetBuilder(InferSetBuilderMembershipProjectionResult),
+    MappedSet(InferMappedSetMembershipResult),
     Preimage(InferInFactPreimageResult),
     PreimageSet(InferInFactPreimageSetResult),
     PowerSet(InferPowerSetMembershipProjectionResult),
@@ -41,9 +42,15 @@ pub enum InferInFactResult {
     IndexCart(InferInFactIndexCartResult),
 }
 
+pub struct InferMappedSetMembershipResult {
+    pub source_fact_id: FactId,
+    pub existence: StoreInferredFactResult,
+}
+
 impl InferInFactResult {
     pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
         let mut stored = match self {
+            Self::MappedSet(p) => vec![&p.existence],
             Self::MatrixExpand(p) => vec![p.derived.as_ref()],
             Self::Template(p) => p
                 .stores

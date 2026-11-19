@@ -189,6 +189,27 @@ pub(super) fn project_store_and_infer(
         }
     }
     if let InferResult::AtomicFact(InferAtomicFactResult::InFact(rules)) = infer {
+        let mapped_sets = rules
+            .iter()
+            .filter_map(|rule| {
+                let InferInFactResult::MappedSet(proof) = rule else {
+                    return None;
+                };
+                Some(object_for(
+                    runtime,
+                    vec![
+                        ("source", fact_id_entry(runtime, proof.source_fact_id)),
+                        (
+                            "existence",
+                            project_inferred_store(&proof.existence, runtime),
+                        ),
+                    ],
+                ))
+            })
+            .collect::<Vec<_>>();
+        if !mapped_sets.is_empty() {
+            entries.push(("mapped_set_memberships", JsonValue::Array(mapped_sets)));
+        }
         let ranges = rules
             .iter()
             .filter_map(|r| {

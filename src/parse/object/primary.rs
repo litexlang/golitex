@@ -6,7 +6,7 @@ use crate::ast::obj::{
     FiniteSetSize, FiniteSetStat, Floor, FnObjHead, FnRange, FnSet, FunctionSpace, Gcd,
     IdentifierObj, ImaginaryPart, ImaginaryUnit, IndexCart, IndexIntersect, IndexUnion,
     InstantiatedTemplateObj, IntegerOperator, Intersect, IntervalObj, IntervalObjStruct,
-    IteratedOperator, Lcm, ListSet, Literal, Ln, Log, Max, Min, Number, Obj,
+    IteratedOperator, Lcm, ListSet, Literal, Ln, Log, MappedSet, Max, Min, Number, Obj,
     OneSideInfinityIntervalObj, OneSideInfinityIntervalObjStruct, Pi, PowerSet, Preimage,
     PreimageSet, Product, ProductOfFiniteSet, ProductShape, Quot, Range, RealPart, Reduce, SeqSet,
     SetBuilder, SetFormer, SetMinus, SetOperator, Sign, Sin, Sqrt, StandardSet,
@@ -174,12 +174,8 @@ fn parse_struct_view(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
     ))
 }
 
-// `Name[args]` / `\Name<args>` share the same template instance and name owner.
 fn parse_instantiated_template(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
-    let prefixed = tb.peek() == Some(TEMPLATE_INSTANCE_PREFIX);
-    if prefixed {
-        tb.advance()?;
-    }
+    tb.expect(TEMPLATE_INSTANCE_PREFIX)?;
     let name_tok = tb
         .peek()
         .ok_or_else(|| tb.parse_error("`\\` expects a template name"))?;
@@ -192,16 +188,10 @@ fn parse_instantiated_template(rt: &mut Runtime, tb: &mut TokenBlock) -> Runtime
         crate::runtime::RuntimeError::InternalBug(message) => tb.parse_error(message),
         other => other,
     })?;
-    let args = if prefixed {
-        if tb.peek() != Some(LESS) {
-            return Err(
-                tb.parse_error("template instance expects `<...>` arguments (e.g. `\\T<a>`)")
-            );
-        }
-        parse_obj_list_delimited(rt, tb, LESS, GREATER)?
-    } else {
-        parse_obj_list_delimited(rt, tb, LEFT_BRACKET, RIGHT_BRACKET)?
-    };
+    if tb.peek() != Some(LESS) {
+        return Err(tb.parse_error("template instance expects `<...>` arguments (e.g. `\\T<a>`)"));
+    }
+    let args = parse_obj_list_delimited(rt, tb, LESS, GREATER)?;
     Ok(Obj::InstantiatedTemplateObj(InstantiatedTemplateObj {
         template_name,
         args,
@@ -258,8 +248,10 @@ fn parse_list_set(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
         tb.advance()?;
         return Ok(Obj::SetFormer(SetFormer::ListSet(ListSet { list: vec![] })));
     }
-    if braced_content_has_top_level_colon(tb) {
-        return rt.parse_set_builder(tb);
+    match braced_content_separator(tb) {
+        Some((COLON, _)) => return rt.parse_set_builder(tb),
+        Some(("for", index)) => return rt.parse_mapped_set(tb, index),
+        _ => {}
     }
     let mut list = vec![Box::new(parse_obj(rt, tb)?)];
     while tb.peek() == Some(COMMA) {
@@ -271,6 +263,46 @@ fn parse_list_set(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
 }
 
 impl Runtime {
+    // The body is written first, but the input domains are outside its binder scope.
+    fn parse_mapped_set(&mut self, tb: &mut TokenBlock, separator: usize) -> RuntimeResult<Obj> {
+        let mut body_tokens = tb.header_slice(tb.parse_index..separator);
+        tb.parse_index = separator + 1;
+        let mut domains = Vec::new();
+        loop {
+            let name = tb.advance()?;
+            if !is_atom_name(&name) {
+                return Err(tb.parse_error(format!("invalid mapped set parameter name `{name}`")));
+            }
+            tb.expect("$")?;
+            tb.expect(crate::parse::keywords::IN)?;
+            domains.push((name, parse_obj(self, tb)?));
+            if tb.peek() != Some(COMMA) {
+                break;
+            }
+            tb.skip()?;
+        }
+        tb.expect(RIGHT_CURLY)?;
+
+        self.push_parse_scope();
+        let result = (|| {
+            let mut groups = Vec::with_capacity(domains.len());
+            for (name, domain) in domains {
+                let param = self.define_plain_atom_as_parse(tb, name)?;
+                groups.push(SetBoundParameterGroup {
+                    params: vec![param],
+                    param_type: Box::new(domain),
+                });
+            }
+            let body = parse_obj(self, &mut body_tokens)?;
+            if !body_tokens.exceed_end_of_head() {
+                return Err(body_tokens.parse_error("expected a single mapped set expression"));
+            }
+            Ok(MappedSet::new(SetBoundParameterList { groups }, body).into())
+        })();
+        self.pop_parse_scope();
+        result
+    }
+
     // `{` already consumed. Form: `{ x S : facts }`.
     fn parse_set_builder(&mut self, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
         self.push_parse_scope();
@@ -414,15 +446,24 @@ impl Runtime {
     }
 }
 
-fn braced_content_has_top_level_colon(tb: &TokenBlock) -> bool {
+fn braced_content_separator(tb: &TokenBlock) -> Option<(&str, usize)> {
     let mut depth: i32 = 0;
-    for tok in tb.header.iter().skip(tb.parse_index) {
+    for (index, tok) in tb.header.iter().enumerate().skip(tb.parse_index) {
         let t = tok.as_str();
         if depth == 0 && t == RIGHT_CURLY {
-            return false;
+            break;
         }
         if depth == 0 && t == COLON {
-            return true;
+            return Some((t, index));
+        }
+        // Keep `for` usable as an identifier, including in existing set literals.
+        if depth == 0
+            && t == "for"
+            && index > tb.parse_index
+            && tb.header.get(index + 2).is_some_and(|token| token == "$")
+            && tb.header.get(index + 3).is_some_and(|token| token == "in")
+        {
+            return Some((t, index));
         }
         if t == LEFT_CURLY || t == LEFT_PAREN || t == LEFT_BRACKET {
             depth += 1;
@@ -430,7 +471,7 @@ fn braced_content_has_top_level_colon(tb: &TokenBlock) -> bool {
             depth -= 1;
         }
     }
-    false
+    None
 }
 
 fn try_parse_keyword_primary(
@@ -1257,14 +1298,6 @@ fn parse_identifier_or_mod_or_standard_set(
     rt: &mut Runtime,
     tb: &mut TokenBlock,
 ) -> RuntimeResult<Obj> {
-    let mut name_end = 1;
-    while matches!(tb.peek_at(name_end), Some(MOD_SIGN | MOD_FLAT_SIGN)) {
-        name_end += 2;
-    }
-    if tb.peek_at(name_end) == Some(LEFT_BRACKET) {
-        return parse_instantiated_template(rt, tb);
-    }
-
     let name = tb.advance()?;
     if tb.peek() == Some(MOD_FLAT_SIGN) {
         tb.advance()?;

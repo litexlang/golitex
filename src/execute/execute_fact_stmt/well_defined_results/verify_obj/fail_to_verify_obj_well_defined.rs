@@ -123,6 +123,7 @@ pub enum FailToVerifySetFormerObjWellDefinedResult {
     MatrixSet(FailToVerifyMatrixSetObjWellDefined),
     ListSet(FailToVerifyListSetObjWellDefined),
     SetBuilder(FailToVerifySetBuilderObjWellDefined),
+    MappedSet(FailToVerifyMappedSetObjWellDefined),
     Range(FailToVerifyRangeObjWellDefined),
     ClosedRange(FailToVerifyClosedRangeObjWellDefined),
     FiniteSeqSet(FailToVerifyFiniteSeqSetObjWellDefined),
@@ -314,6 +315,21 @@ pub enum FailToVerifySetBuilderObjWellDefined {
         param_set_well_defined: Box<ObjWellDefinedProof>,
         succeeded: Vec<FactWellDefinedProof>,
         failed: Box<FailToVerifyFactWellDefinedResult>,
+    },
+    Others(String),
+}
+
+pub enum FailToVerifyMappedSetObjWellDefined {
+    Domain {
+        index: usize,
+        succeeded: Vec<Box<ObjWellDefinedProof>>,
+        obj: Obj,
+        failed: Box<FailToVerifyObjWellDefinedResult>,
+    },
+    Body {
+        domains: Vec<Box<ObjWellDefinedProof>>,
+        obj: Obj,
+        failed: Box<FailToVerifyObjWellDefinedResult>,
     },
     Others(String),
 }

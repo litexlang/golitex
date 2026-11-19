@@ -15,8 +15,8 @@ use crate::ast::line_file::SourceLine;
 use crate::ast::names::AtomicName;
 use crate::ast::names::BoundName;
 use crate::ast::obj::{
-    Add, AnonymousFn, ArithmeticOperator, Div, FnSet, FunctionSpace, IdentifierObj, Literal, Mul,
-    Neg, Number, Obj, StandardSet, Sub,
+    Add, AnonymousFn, ArithmeticOperator, Div, FnSet, FunctionSpace, IdentifierObj, Literal,
+    MappedSet, Mul, Neg, Number, Obj, SetFormer, StandardSet, Sub,
 };
 use crate::ast::param::{
     FiniteSet, NonemptySet, ParamType, Set, SetBoundParameterGroup, SetBoundParameterList,
@@ -623,6 +623,14 @@ pub(crate) fn encode_obj(obj: &Obj) -> Result<JsonValue, KbCodecError> {
             ("tag".into(), JsonValue::String("FnSet".into())),
             ("fn_set".into(), encode_fn_set(fn_set)?),
         ])),
+        Obj::SetFormer(SetFormer::MappedSet(set)) => Ok(JsonValue::object_from(vec![
+            ("tag".into(), JsonValue::String("MappedSet".into())),
+            (
+                "parameters".into(),
+                encode_set_bound_parameter_list(&set.parameters)?,
+            ),
+            ("body".into(), encode_obj(&set.body)?),
+        ])),
         Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left, right })) => {
             Ok(JsonValue::object_from(vec![
                 ("tag".into(), JsonValue::String("Add".into())),
@@ -682,6 +690,11 @@ pub(crate) fn decode_obj(value: &JsonValue) -> Result<Obj, KbCodecError> {
         "FnSet" => Ok(Obj::FunctionSpace(FunctionSpace::FnSet(decode_fn_set(
             JsonValue::get(map, "fn_set")?,
         )?))),
+        "MappedSet" => Ok(MappedSet::new(
+            decode_set_bound_parameter_list(JsonValue::get(map, "parameters")?)?,
+            decode_obj(JsonValue::get(map, "body")?)?,
+        )
+        .into()),
         "Add" => Ok(Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
             left: Box::new(decode_obj(JsonValue::get(map, "left")?)?),
             right: Box::new(decode_obj(JsonValue::get(map, "right")?)?),

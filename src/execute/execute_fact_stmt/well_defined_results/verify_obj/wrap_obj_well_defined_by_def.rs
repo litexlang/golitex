@@ -521,7 +521,7 @@ fn pack_success_by_def(
                 ListSetObjWellDefinedProof::from_stages(stages),
             ))
         }
-        Obj::SetFormer(SetFormer::SetBuilder(_))
+        Obj::SetFormer(SetFormer::SetBuilder(_) | SetFormer::MappedSet(_))
         | Obj::FunctionSpace(FunctionSpace::FnSet(_))
         | Obj::FunctionSpace(FunctionSpace::AnonymousFn(_)) => {
             unreachable!("binder object WD must use dedicated binder pipelines, not CommonStages")
@@ -1214,6 +1214,9 @@ pub(super) fn wrap_common_fail(
                 common,
             )),
         ),
+        Obj::SetFormer(SetFormer::MappedSet(_)) => {
+            unreachable!("mapped set WD uses a dedicated binder pipeline")
+        }
         Obj::SetFormer(SetFormer::SetBuilder(_)) => FailToVerifyObjWellDefinedResult::SetFormer(
             FailToVerifySetFormerObjWellDefinedResult::SetBuilder(
                 FailToVerifySetBuilderObjWellDefined::Others(match common {

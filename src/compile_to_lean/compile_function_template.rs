@@ -847,6 +847,9 @@ impl LitexToLeanCompiler {
                 expression(&value.cols)?,
                 expression(&value.set)?
             )),
+            Obj::SetFormer(SetFormer::MappedSet(_)) => {
+                Err(LeanCompileError::unsupported("MappedSet/RawValue"))
+            }
             Obj::SetFormer(SetFormer::SetBuilder(value)) => {
                 let bound = expression(&value.param_set)?;
                 let variable = format!("_raw_i{}", value.param_binding.id.value());

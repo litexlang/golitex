@@ -1307,6 +1307,21 @@ fn project_builtin_prop_def(proof: &BuiltinPropDefinitionProof, runtime: &Runtim
             &p.requirement_facts,
             &p.proof_of_requirement_facts,
         ),
+        BuiltinPropDefinitionProof::MappedSetMember(p) => (
+            "MappedSetMember",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
+        BuiltinPropDefinitionProof::MappedSetMemberFromInputs(p) => (
+            "MappedSetMemberFromInputs",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
+        BuiltinPropDefinitionProof::MappedSetSubset(p) => (
+            "MappedSetSubset",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
         BuiltinPropDefinitionProof::Subset(p) => (
             "subset",
             &p.requirement_facts,

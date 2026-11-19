@@ -57,6 +57,7 @@ impl LitexToLeanCompiler {
                 self.compile_matrix_set_wd(set, wd, position)
             }
             (SetFormer::MatrixSet(_), _) => Err(LeanCompileError::unsupported("Matrix/WDSubject")),
+            (SetFormer::MappedSet(_), _) => Err(LeanCompileError::unsupported("MappedSet/WD")),
         }
     }
 

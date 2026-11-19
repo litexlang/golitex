@@ -921,6 +921,13 @@ thm partial_sum_nondecreasing:
         =>:
             partial_sum(a,n)<=partial_sum(a,m)
     m>=n
+    claim:
+        ? forall idx Z:
+            idx>=n
+            =>:
+                idx $in N+
+        1<=n<=idx
+        idx $in N+
     by induc m from n:
         ? partial_sum(a,n)<=partial_sum(a,m)
         ? from m=n:
@@ -1285,18 +1292,24 @@ thm nonnegative_natural_power_le:
         =>:
             x^n<=y^n
     0<=y
-    n>=1
-    by induc n from 1:
+    by cases:
         ? x^n<=y^n
-        ? from n=1:
-            x^1=x<=y=y^1
-        ? induc:
-            n>=1
-            0<=y^n
-            x^(n+1)=x^n*x^1=x^n*x
-            y^(n+1)=y^n*y^1=y^n*y
-            x^n*x<=y^n*x<=y^n*y
-            x^(n+1)=x^n*x<=y^n*y=y^(n+1)
+        case x=0:
+            n>0
+            x^n=0^n=0
+            by cases:
+                ? 0<=y^n
+                case y=0:
+                    y^n=0^n=0
+                    0<=y^n
+                case y>0:
+                    0<y^n
+                    0<=y^n
+        case x>0:
+            0<x<=y
+            0<y
+            n>0
+            x^n<=y^n
 
 thm nonnegative_root_power:
     ? forall x R,n N+:
@@ -1613,11 +1626,24 @@ thm series_ratio_diverges:
             k>=m
             =>:
                 abs(a(m))<=abs(a(k))
+        claim:
+            ? forall idx Z:
+                idx>=m
+                =>:
+                    idx $in N+
+            1<=m<=idx
+            idx $in N+
         by induc k from m:
             ? abs(a(m))<=abs(a(k))
             ? from k=m:
                 abs(a(m))=abs(a(m))
             ? induc:
+                k>=m
+                1<=m<=k
+                1<=k
+                k $in N+
+                k $in N
+                k+1 $in N+
                 0<=abs(a(k))
                 abs(a(k))<=q*abs(a(k))<=abs(a(k+1))
                 abs(a(m))<=abs(a(k+1))
@@ -2241,11 +2267,24 @@ thm alternating_odd_partial_sums_nonincreasing:
             n<=m
             =>:
                 odds(m)<=odds(n)
+        claim:
+            ? forall idx Z:
+                idx>=n
+                =>:
+                    idx $in N+
+            1<=n<=idx
+            idx $in N+
         by induc m from n:
             ? odds(m)<=odds(n)
             ? from m=n:
                 odds(n)<=odds(n)
             ? induc:
+                m>=n
+                1<=n<=m
+                1<=m
+                m $in N+
+                m $in N
+                m+1 $in N+
                 have odd_index N+=2*m+1
                 2*m+1 $in N+
                 have first N+=2*m+2
@@ -2283,11 +2322,24 @@ thm alternating_even_partial_sums_nondecreasing:
             n<=m
             =>:
                 evens(n)<=evens(m)
+        claim:
+            ? forall idx Z:
+                idx>=n
+                =>:
+                    idx $in N+
+            1<=n<=idx
+            idx $in N+
         by induc m from n:
             ? evens(n)<=evens(m)
             ? from m=n:
                 evens(n)<=evens(n)
             ? induc:
+                m>=n
+                1<=n<=m
+                1<=m
+                m $in N+
+                m $in N
+                m+1 $in N+
                 have even_index N+=2*m
                 2*m $in N+
                 partial_sum(a,2*m) $in R

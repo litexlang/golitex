@@ -263,6 +263,9 @@ pub enum SetFormer {
 
     // Bounded real interval with open/closed endpoints. Example: `'[a, b]`, `'(a, b)`.
     IntervalObj(IntervalObj),
+
+    // Image of an expression over one or more bounded inputs.
+    MappedSet(MappedSet),
 }
 
 // Finite function values and Cartesian sets of such functions.
@@ -837,6 +840,27 @@ pub struct SetBuilder {
     pub param_binding: BoundName,
     pub param_set: Box<Obj>,
     pub facts: Vec<QuantifierFreeFact>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MappedSet {
+    pub parameters: SetBoundParameterList,
+    pub body: Box<Obj>,
+}
+
+impl MappedSet {
+    pub fn new(parameters: SetBoundParameterList, body: Obj) -> Self {
+        Self {
+            parameters,
+            body: Box::new(body),
+        }
+    }
+}
+
+impl From<MappedSet> for Obj {
+    fn from(value: MappedSet) -> Self {
+        Self::SetFormer(SetFormer::MappedSet(value))
+    }
 }
 
 // Function space `fn(x S, ...) T`. Parameters are SetBound only (`x S`), never `A set`.

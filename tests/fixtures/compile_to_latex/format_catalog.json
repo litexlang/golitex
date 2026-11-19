@@ -854,6 +854,11 @@
       "format": "\\{t\\in\\mathbb R\\mid t>0\\}"
     },
     {
+      "kind": "SetFormer.MappedSet",
+      "source": "let specimen = {left_input+right_input for left_input $in R, right_input $in R}",
+      "format": "\\{l+r\\mid l,r\\in\\mathbb R\\}"
+    },
+    {
       "kind": "SetFormer.Range",
       "source": "let specimen = range(a,b)",
       "format": "\\{i\\in\\mathbb Z\\mid a\\le i<b\\}"

@@ -125,6 +125,17 @@ impl Runtime {
         if let Some(rule) = self.infer_in_fact_preimage(in_fact, verify_state)? {
             rules.push(rule);
         }
+        if let Obj::SetFormer(SetFormer::MappedSet(set)) = &in_fact.set {
+            // Publish only the bounded existence, leaving witness names to obtain.
+            let clause = self.mapped_set_membership_clause(set, in_fact)?;
+            let existence = self.store_inferred_fact(&clause)?;
+            rules.push(InferInFactResult::MappedSet(
+                crate::store_fact_and_infer::InferMappedSetMembershipResult {
+                    source_fact_id: in_fact.fact_id,
+                    existence,
+                },
+            ));
+        }
         rules.extend(self.infer_in_fact_fn_rules(in_fact, verify_state)?);
         rules.extend(self.infer_in_fact_index_family_rules(in_fact, verify_state)?);
         Ok(rules)

@@ -1,0 +1,53 @@
+# Tracer: membership in the image of two bounded inputs.
+# Before, use the range of an explicit anonymous function.
+# fn_range(fn(a R, b R) R {a + b})
+# The function signature required the output carrier R.
+# Run: target/release/litex -strict -f examples/wd/obj/mapped_set.lit
+
+witness exist a {1}, b {2} st {3 = a + b} from 1, 2
+by def 3 $in {a + b for a $in {1}, b $in {2}}
+
+claim:
+    ? forall z {a + b for a $in R, b $in R}:
+        exist a R, b R st {z = a + b}
+    obtain u, v from exist a R, b R st {z = a + b}
+    u $in R
+    v $in R
+    z = u + v
+    witness exist a R, b R st {z = a + b} from u, v
+
+forall u, v R:
+    u + v $in {a + b for a $in R, b $in R}
+
+{a + b for a $in R, b $in R} $in power_set(R)
+{a + b for a $in R, b $in R} = {u + v for u $in R, v $in R}
+
+have point R = 2
+$is_set({|point - x| for x $in R})
+$is_set({{x} for x $in R})
+$is_set({1 / x for x $in {t R: t != 0}})
+
+# Same group interface and left-translation definition as std/algebra/group.lit.
+struct Group<A nonempty_set>:
+    mul fn(x, y A) A
+    one A
+    inv fn(x A) A
+    <=>:
+        forall x, y, z A:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+        forall x A:
+            mul(one, x) = x
+            mul(x, one) = x
+            mul(inv(x), x) = one
+            mul(x, inv(x)) = one
+
+# Before:
+# have fn left_translate_subset(g A, S power_set(A)) power_set(A) = fn_range(fn(x S) A {G.mul(g,x)})
+template<A nonempty_set, G &Group<A>>:
+    have fn left_translate_subset(g A, S power_set(A)) power_set(A) = {G.mul(g, x) for x $in S}
+
+forall A nonempty_set, G &Group<A>, g A, S power_set(A):
+    \left_translate_subset<A,G>(g,S) = {G.mul(g, x) for x $in S}
+
+# Boundary: the complete expression must be defined, including at zero when
+# zero belongs to an input domain. See wd_negative/mapped_set_unguarded_division.lit.

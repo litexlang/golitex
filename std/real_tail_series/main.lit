@@ -97,6 +97,14 @@ claim:
 thm real_tail_partial_sums_reindex:
     ? forall start Z,a fn(n {j Z:j>=start}) R,k N+:
         \real_tail_partial_sums<start,a>(start+k-1)=series::partial_sum(\rs::real_tail_reindex<start,a>,k)
+    claim:
+        ? forall idx Z:
+            idx>=1
+            =>:
+                idx $in N+
+                start+idx-1 $in {j Z:j>=start}
+        idx $in N+
+        release thm rs::real_tail_positive_index(start,idx)
     by induc k from 1:
         ? \real_tail_partial_sums<start,a>(start+k-1)=series::partial_sum(\rs::real_tail_reindex<start,a>,k)
         ? from k=1:
@@ -110,6 +118,9 @@ thm real_tail_partial_sums_reindex:
             series::partial_sum(\rs::real_tail_reindex<start,a>,1)=\rs::real_tail_reindex<start,a>(1)=a(start)
             \real_tail_partial_sums<start,a>(start+1-1)=series::partial_sum(\rs::real_tail_reindex<start,a>,1)
         ? induc:
+            k>=1
+            k $in N+
+            k+1 $in N+
             release thm rs::real_tail_positive_index(start,k)
             release thm rs::real_tail_positive_index(start,k+1)
             start+k-1>=start
@@ -465,11 +476,23 @@ thm adjacent_decreasing_real_tail_has_nonincreasing_reindex:
             p<=q
             =>:
                 \rs::real_tail_reindex<start,a>(q)<=\rs::real_tail_reindex<start,a>(p)
+        claim:
+            ? forall idx Z:
+                idx>=p
+                =>:
+                    idx $in N+
+            1<=p<=idx
+            idx $in N+
         by induc q from p:
             ? \rs::real_tail_reindex<start,a>(q)<=\rs::real_tail_reindex<start,a>(p)
             ? from q=p:
                 \rs::real_tail_reindex<start,a>(p)<=\rs::real_tail_reindex<start,a>(p)
             ? induc:
+                q>=p
+                1<=p<=q
+                q $in N+
+                q+1 $in N+
+                release thm rs::real_tail_positive_index(start,q)
                 start+q-1 $in {j Z:j>=start}
                 (start+q-1)+1 $in {j Z:j>=start}
                 a((start+q-1)+1)<=a(start+q-1)
