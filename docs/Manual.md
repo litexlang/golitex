@@ -657,6 +657,12 @@ Both spellings can be used together in one proof.
 | `set_sum(S,f)` | `finite_set_sum(S,f)` |
 | `set_prod(S,f)` | `finite_set_product(S,f)` |
 | `integ(x,a,b,E)` | `integral(fn(x '[min(a,b),max(a,b)]) R {E},a,b)` |
+| `sum_of(k,a,b,E)` | `sum(a,b,fn(k a...b) R {E})` |
+| `prod_of(k,a,b,E)` | `product(a,b,fn(k a...b) R {E})` |
+| `set_sum_of(k,S,E)` | `finite_set_sum(S,fn(k S) R {E})` |
+| `set_prod_of(k,S,E)` | `finite_set_product(S,fn(k S) R {E})` |
+| `lim_of(n,E)` | `lim(fn(n N+) R {E})` |
+| `fn_lim_of(x,D,x0,E)` | `fn_lim(fn(x D) R {E},x0)` |
 
 | Predicate short name | Canonical name |
 | --- | --- |
@@ -723,6 +729,27 @@ retain their separate contracts.
 
 The [runnable mixed-spelling example](../examples/wd/builtin_short_names.lit)
 also covers finite aggregates and explicit integral theorem selection.
+
+The aggregate and limit expression forms bind their first argument only in
+the final expression `E`. The parser resolves bounds, domains and approach
+points in the enclosing scope. As with an ordinary anonymous function, the
+binder needs a fresh name in that scope. The generated function returns
+values in `R`.
+
+```litex
+sum_of(k,1,3,k^2) = 14
+prod_of(k,1,4,k) = 24
+set_sum_of(k,{1,3,5},k^2) = 35
+set_prod_of(k,{2,3,5},k) = 30
+```
+
+Integer-range forms include both endpoints and require `a <= b`.
+Finite-set forms require a finite domain and use `0` and `1` for the empty
+sum and product. To choose a different scalar return carrier, pass an explicit
+function to the aggregate. The runnable examples prove the sum of squares,
+a product recurrence, a disjoint-union sum, and the cardinality laws for
+constant summands and nonzero constant factors.
+[Bound expression examples](../examples/wd/bound_expressions.lit)
 
 For integral predicates, `$has_integ(f,a,b,I)` specifies a candidate value,
 `$integrable(f,a,b)` states existence, and `integral(f,a,b)` selects the value.
@@ -824,6 +851,29 @@ domain remains real: `|i|` and `|{1, 2}|` are rejected, with complex modulus
 still written `C_abs(i)` and finite cardinality `finite_set_size({1, 2})`.
 These bars do not introduce a norm. See the maintained
 [absolute-value bars tracer](../examples/test_objs/absolute_value_bars.lit).
+
+### Backtick infix function calls (preview)
+
+Write ``x `f` y`` for `f(x, y)` or ``x `G.mul` y`` for `G.mul(x, y)`.
+The two backticks enclose the function name or field access. The parser
+builds the ordinary function application, with the same argument checks and
+canonical prefix display. Use `*` for numeric multiplication as usual.
+
+Existing object operators bind more tightly than a backtick call, and
+relations such as `=` and `$in` bind less tightly. Group chained backtick
+calls with parentheses. For example, ``a `f` b `f` c`` is a parse error,
+while ``a `f` (b `f` c)`` and ``(a `f` b) `f` c`` are both valid groupings.
+This rule applies to every chain, regardless of the names used.
+
+```litex
+have fn combine(x, y R) R = 10 * x + y
+1 `combine` 2 = 12
+1 + 2 `combine` 3 * 4 = combine(1 + 2, 3 * 4)
+1 `combine` (2 `combine` 3) = combine(1, combine(2, 3))
+1 `combine` 2 $in R
+```
+
+See the [group conjugation example](../examples/algebra/conjugation_laws/contracts/backtick_infix_calls.lit).
 
 ---
 
@@ -10279,8 +10329,8 @@ arbitrary function, supply the required existence or regularity facts.
 
 | Topic | Main interfaces | Reference |
 | --- | --- | --- |
-| Sequences | `$has_seq_limit(a,L)`, `lim(a)` | [Sequence limits](#calculus-sequence-limits) |
-| Function limits | `fn_lim`, `lim_left`, `lim_right`, `lim_pos_inf`, `lim_neg_inf` | [Function limits](#calculus-function-limits) |
+| Sequences | `$has_seq_limit(a,L)`, `lim(a)`, `lim_of(n,E)` | [Sequence limits](#calculus-sequence-limits) |
+| Function limits | `fn_lim`, `fn_lim_of`, `lim_left`, `lim_right`, `lim_pos_inf`, `lim_neg_inf` | [Function limits](#calculus-function-limits) |
 | Continuity | `$cont_at`, `$cont_left`, `$cont_right`, `$unif_cont` | [Continuity](#calculus-continuity) |
 | First derivatives | `deriv(f,x)`, `$diff_at(f,x)` | [Differentiation](#calculus-derivatives) |
 | Definite integrals and primitives | `integral(f,a,b)`, `$integrable`, `$antideriv_on` | [Integration](#calculus-integrals) |
@@ -10335,6 +10385,18 @@ existence is proved, `lim(a)` is a well-defined real object. WD consumes the
 proof. Establish the candidate before selecting the value. For explicit epsilon
 proofs and native limit laws, follow the sequence examples below.
 
+`lim_of(n,E)` selects the limit of `fn(n N+) R {E}`. It uses the same
+convergence evidence and backend route as the expanded expression.
+
+```litex
+$has_seq_limit(fn(n N+) R {1},1)
+lim_of(n,1) = 1
+```
+
+The rational sequence proof transfers convergence along pointwise equality
+to obtain `lim_of(n,n/(n+1)) = 1`.
+[Rational sequence example](../examples/wd/sequence_limit_common_proofs.lit)
+
 ```litex
 forall a seq(R), L R:
     $has_seq_limit(a,L)
@@ -10376,6 +10438,17 @@ points arbitrarily close to it in the chosen direction. WD requires the correspo
 `lim(a)` takes exactly one sequence argument. For a finite-point function
 limit, use `fn_lim(f,x0)` with exactly two arguments. Each name has one fixed
 mathematical and parameter contract.
+
+`fn_lim_of(x,D,x0,E)` selects the limit of `fn(x D) R {E}` at `x0`. The
+body must be well-defined on all of `D`. Specify a punctured domain such as
+`set_minus(X,{x0})` for a difference quotient that is undefined at the
+approach point. The canonical selector still checks accumulation and
+convergence. Backend support follows the underlying proof route.
+
+```litex
+$has_limit_at(fn(x R) R {x},0,0)
+fn_lim_of(x,R,0,x) = 0
+```
 
 ```litex
 forall f fn(x R) R, x0,L R:

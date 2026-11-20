@@ -36,6 +36,7 @@ def main(binary, output_dir):
     positives = {'source': ROOT/'std/algebra/group.lit',
                  'model-source': HERE.parent/'groups/noncommutative/main.lit',
                  'contracts': HERE/'contracts/main.lit',
+                 'backtick-infix': HERE/'contracts/backtick_infix_calls.lit',
                  'trivial': HERE/'trivial/main.lit',
                  'integers': HERE/'integers/main.lit',
                  'noncommutative': HERE/'noncommutative/main.lit',

@@ -1,0 +1,92 @@
+# Before:
+# have k Z = 2
+# set_sum({k}, fn(j {k}) R {j^2}) = 4
+# The finite-set sum required an explicit anonymous function.
+#
+# Now: k resolves in the enclosing scope. Only the expression binds j.
+have k Z = 2
+set_sum_of(j, {k}, j^2) = 4
+
+sum_of(j, 1, 3, j^2) = 14
+prod_of(j, 1, 4, j) = 24
+set_prod_of(j, {2, 3, 5}, j) = 30
+sum_of(j, 1, 3, set_sum_of(m, {j}, m+j)) = 12
+
+set_sum_of(j, 3...1, 7) = 0
+set_prod_of(j, 3...1, 7) = 1
+
+# A constant summand or factor reduces to the cardinality of the index set.
+forall S finite_set, c R:
+    set_sum_of(j, S, c) = finite_set_size(S)*c
+
+forall S finite_set, c R*:
+    set_prod_of(j, S, c) = c^finite_set_size(S)
+
+# Split a finite sum using the same weight on disjoint parts.
+claim:
+    ? forall A,B finite_set, weight fn(t union(A,B)) R:
+        intersect(A,B) = {}
+        =>:
+            set_sum_of(j, union(A,B), weight(j)) = set_sum_of(j, A, weight(j)) + set_sum_of(j, B, weight(j))
+    set_sum_of(j, union(A,B), weight(j)) = set_sum(union(A,B), weight)
+    by thm finite_set_sum_substitution(set_sum_of(j,A,weight(j)),set_sum(A,weight)) => set_sum_of(j,A,weight(j)) = set_sum(A,weight)
+    by thm finite_set_sum_substitution(set_sum_of(j,B,weight(j)),set_sum(B,weight)) => set_sum_of(j,B,weight(j)) = set_sum(B,weight)
+    set_sum(union(A,B), weight) = set_sum(A,weight) + set_sum(B,weight)
+    set_sum_of(j, union(A,B), weight(j)) = set_sum(union(A,B), weight) = set_sum(A,weight) + set_sum(B,weight) = set_sum_of(j, A, weight(j)) + set_sum_of(j, B, weight(j))
+
+# Reuse one function across upper bounds when applying a recurrence.
+have fn square_terms(t Z) R = t^2
+
+forall n N+:
+    sum_of(j, 1, n, j^2) = sum(1, n, square_terms)
+
+claim:
+    ? forall n N+:
+        sum_of(j, 1, n, j^2) = n*(n+1)*(2*n+1)/6
+    by induc m from 1:
+        ? sum(1, m, square_terms) = m*(m+1)*(2*m+1)/6
+        ? from m = 1:
+            square_terms(1) = 1
+            sum(1, m, square_terms) = sum(1, 1, square_terms) = square_terms(1) = 1
+            m*(m+1)*(2*m+1)/6 = 1
+        ? induc:
+            m >= 1
+            square_terms(m+1) = (m+1)^2
+            sum(1, m+1, square_terms) = sum(1, m, square_terms)+square_terms(m+1) = m*(m+1)*(2*m+1)/6+(m+1)^2 = (m+1)*((m+1)+1)*(2*(m+1)+1)/6
+    n $in Z
+    n >= 1
+    sum_of(j, 1, n, j^2) = sum(1, n, square_terms) = n*(n+1)*(2*n+1)/6
+
+claim:
+    ? forall n N+:
+        prod_of(j, 1, n+1, j^2) = prod_of(j, 1, n, j^2)*(n+1)^2
+    prod_of(j, 1, n+1, j^2) = product(1, n+1, square_terms)
+    prod_of(j, 1, n, j^2) = product(1, n, square_terms)
+    square_terms(n+1) = (n+1)^2
+    product(1, n+1, square_terms) = product(1, n, square_terms)*square_terms(n+1)
+    prod_of(j, 1, n+1, j^2) = product(1, n+1, square_terms) = product(1, n, square_terms)*square_terms(n+1) = prod_of(j, 1, n, j^2)*(n+1)^2
+
+$has_seq_limit(fn(n N+) R {1}, 1)
+lim_of(n, 1) = 1
+
+$has_limit_at(fn(x R) R {x}, 0, 0)
+fn_lim_of(x, R, 0, x) = 0
+
+claim:
+    ? forall center R:
+        fn_lim_of(x, R, center, (x+1)^2) = (center+1)^2
+    $has_limit_at(fn(x R) R {(x+1)^2}, center, (center+1)^2)
+
+forall L R:
+    $has_seq_limit(fn(n N+) R {n/(n+1)}, L)
+    =>:
+        lim_of(n, n/(n+1)) = L
+
+forall L R:
+    $has_limit_at(fn(x set_minus(R, {0})) R {x^2/x}, 0, L)
+    =>:
+        fn_lim_of(x, set_minus(R, {0}), 0, x^2/x) = L
+
+# Boundary: integer-range aggregates reject reversed bounds.
+# Limit selection still requires convergence evidence.
+# Run: target/release/litex -strict -lang en -f examples/wd/bound_expressions.lit

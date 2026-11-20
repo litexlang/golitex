@@ -486,8 +486,13 @@ Tracer: `examples/wd/fact/forall.lit`
 Precedence low → high:
 
 ```text
-∪   ∩   ×   + -   * / %   ...   unary-   ^   postfix . ( ) [ ]
+paired-backtick call   ∪   ∩   ×   ...   + -   * / %   ∘   unary-   ^   postfix
 ```
+
+`parse_obj` reads at most one backtick application at its current nesting
+level. Each operand uses the existing `∪` level, and a parenthesized operand
+re-enters `parse_obj`. The parser lowers ``x `G.mul` y`` to the same `FnObj`
+as `G.mul(x, y)` and reports a second ungrouped backtick at that level.
 
 ### Primaries
 
@@ -512,6 +517,8 @@ Nested returns use `fn(x A) fn(y B) C`. Logical implication still uses `=>`.
 | seq spaces | `seq(S)`, `finite_seq(S, n)` |
 | fn space | `fn(x A) B`, `fn(x A: x > 0) B` |
 | anonymous fn | `fn(x R) R {x + 1}` |
+| aggregate binders | `sum_of(k,a,b,E)`, `prod_of(k,a,b,E)`, `set_sum_of(k,S,E)`, `set_prod_of(k,S,E)` |
+| limit binders | `lim_of(n,E)`, `fn_lim_of(x,D,x0,E)` |
 | apply / field / bang | `f(a)`, `f(a)(b)`, `obj(i)`, `obj.field`, postfix `n!` (= `factorial(n)`) |
 | struct view | `&Point`, `&Pair<R>`, `&Lib::facts::Pair`, `&Lib::facts::Tagged<R>` |
 | template instance | `\Name<args>` (angles required) |
@@ -526,6 +533,10 @@ ordinary postfixes (`|x|^2` is `abs(x)^2`). Empty or unpaired bars and implicit
 multiplication such as `2|x|` are rejected. Canonical display remains `abs(...)`;
 the notation adds no complex modulus, norm or set-cardinality overload.
 The maintained tracer is [absolute_value_bars.lit](../../examples/test_objs/absolute_value_bars.lit).
+
+Aggregate and limit binders lower to their ordinary operation applied to
+an anonymous real-valued function. Only the final expression is parsed in the
+binder's scope. See [bound_expressions.lit](../../examples/wd/bound_expressions.lit).
 
 ### Keyword primaries that are **not** parse-wired yet
 

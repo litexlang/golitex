@@ -2,6 +2,7 @@
 //!
 //! Precedence (low → high): unicode ∪∩×, +-, */%, ..., unary -, ^, postfix (`!` / `.` / call / `[i]`), primary.
 
+mod bound_expression;
 mod expression;
 mod integral;
 mod primary;

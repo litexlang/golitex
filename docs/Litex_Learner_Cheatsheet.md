@@ -466,6 +466,12 @@ arguments use `integral(f,a,b)`. Open endpoint expression forms are
 `integ_pos_inf(x,a,E)` and `integ_neg_inf(x,b,E)`. They require local
 integrability and finite convergence of every relevant truncation limit.
 
+Use `sum_of(k,a,b,E)` and `prod_of(k,a,b,E)` for inclusive integer bounds,
+and `set_sum_of(k,S,E)` and `set_prod_of(k,S,E)` for finite sets.
+`lim_of(n,E)` uses positive integer indices. `fn_lim_of(x,D,x0,E)` uses the
+supplied domain `D` at the approach point `x0`. Each form binds its first
+argument only in `E` and uses a real-valued anonymous function.
+
 Integral candidates use `$has_integ(f,a,b,I)`, existence uses
 `$integrable(f,a,b)`, and the selected value is `integral(f,a,b)`. Integral
 theorems include `integ_pow`, `integ_const`, `integ_split`, `integ_subst`,
@@ -482,6 +488,10 @@ These are preferences, not parser restrictions. Keep `by thm ... => fact` for
 selection. `×` denotes Cartesian product; numerical multiplication is `*`.
 `⊂` is proper subset, while `⊆` is non-strict subset. Check the
 [alias reference](Manual.md#unicode-mathematical-input-aliases-preview).
+
+Write ``x `G.mul` y`` for `G.mul(x, y)`. Group chained backtick calls explicitly,
+as in ``x `G.mul` (y `G.mul` z)``. See the
+[precedence rules](Manual.md#backtick-infix-function-calls-preview).
 
 For ordinary mathematical examples, prefer `|x|`; `abs(x)` remains supported.
 Bars group a complete expression, with `|x|^2` meaning `abs(x)^2`.

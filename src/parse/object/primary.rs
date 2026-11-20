@@ -485,6 +485,9 @@ fn try_parse_keyword_primary(
     if let Some(integral) = super::integral::parse_integral(rt, tb, token)? {
         return Ok(Some(integral));
     }
+    if let Some(expression) = super::bound_expression::parse_bound_expression(rt, tb, token)? {
+        return Ok(Some(expression));
+    }
     let token = crate::parse::builtin_aliases::canonical_builtin_name(
         token,
         crate::parse::builtin_aliases::BuiltinAliasKind::Object,

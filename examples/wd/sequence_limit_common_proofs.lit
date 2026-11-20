@@ -143,6 +143,15 @@ $has_seq_limit(ratio,1)
 
 lim(ratio)=1
 
+# Transfer convergence to the anonymous sequence used by the binding form.
+forall n N+:
+    n >= 1
+    =>:
+        ratio(n) = n/(n+1) = fn(j N+) R {j/(j+1)}(n)
+
+by thm seq_limit_eventually_equal(ratio,fn(n N+) R {n/(n+1)},1,1) => $has_seq_limit(fn(n N+) R {n/(n+1)},1)
+lim_of(n, n/(n+1)) = 1
+
 # Quotient of convergent sequences.
 have fn numerator(k N+) R=one(k)+a(k)
 

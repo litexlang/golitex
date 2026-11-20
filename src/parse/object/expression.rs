@@ -1,6 +1,6 @@
 use super::primary::{fn_obj_head_from_obj, parse_primary};
 use crate::ast::obj::{
-    Add, ArithmeticOperator, Cart, ClosedRange, Div, Factorial, FieldAccess, FnObj,
+    Add, ArithmeticOperator, Cart, ClosedRange, Div, Factorial, FieldAccess, FnObj, FnObjHead,
     IntegerOperator, Intersect, Mod, Mul, Neg, Obj, Pow, ProductShape, SetFormer, SetOperator,
     StructAndFieldAccessObj, Sub, Union,
 };
@@ -12,11 +12,39 @@ use crate::runtime::{Runtime, RuntimeResult};
 use crate::tokenize::TokenBlock;
 
 pub fn parse_obj(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
-    let obj = parse_unicode_union(rt, tb)?;
+    let obj = parse_backtick_infix(rt, tb)?;
     if tb.peek() == Some("->") {
         return Err(tb.parse_error("function-set arrow `->` is removed; use `fn(x A) B`"));
     }
     Ok(obj)
+}
+
+fn parse_backtick_infix(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
+    let left = parse_unicode_union(rt, tb)?;
+    if tb.peek() != Some("`") {
+        return Ok(left);
+    }
+    tb.advance()?;
+
+    let head = FnObjHead::from_obj(parse_postfix(rt, tb)?);
+    if !matches!(head, FnObjHead::Identifier(_) | FnObjHead::FieldAccess(_)) {
+        return Err(tb.parse_error("expected a function name or field between backticks"));
+    }
+    if tb.peek() != Some("`") {
+        return Err(tb.parse_error("expected a closing backtick after the infix function"));
+    }
+    tb.advance()?;
+
+    // A parenthesized operand re-enters parse_obj and may contain another call.
+    let right = parse_unicode_union(rt, tb)?;
+    if tb.peek() == Some("`") {
+        return Err(tb.parse_error("use parentheses to group chained backtick infix calls"));
+    }
+
+    Ok(Obj::FnObj(FnObj {
+        head: Box::new(head),
+        body: vec![vec![Box::new(left), Box::new(right)]],
+    }))
 }
 
 fn parse_unicode_union(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {

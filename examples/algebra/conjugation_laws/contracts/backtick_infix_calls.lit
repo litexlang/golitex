@@ -1,0 +1,12 @@
+# Before, the conjugation product used nested prefix calls:
+# G.mul(G.mul(a,G.mul(x,y)),G.inv(a)) = G.mul(G.mul(G.mul(a,x),G.inv(a)),G.mul(G.mul(a,y),G.inv(a)))
+# A backtick in an object expression was rejected by the parser.
+
+# The infix statement lowers to the same formula proved in the standard library.
+thm backtick_conjugation_product:
+    ? forall A nonempty_set, G &Algebra::group::Group<A>, a, x, y A:
+        (a `G.mul` (x `G.mul` y)) `G.mul` G.inv(a) = ((a `G.mul` x) `G.mul` G.inv(a)) `G.mul` ((a `G.mul` y) `G.mul` G.inv(a))
+    release thm Algebra::group::conjugation_product(A, G, a, x, y)
+
+# Boundary: x `G.mul` y `G.mul` a requires parentheses around one of the calls.
+# Check: target/release/litex -lang en -strict -f examples/algebra/conjugation_laws/contracts/backtick_infix_calls.lit

@@ -60,6 +60,10 @@ mod retired_function_arrow_tests;
 mod absolute_value_bar_tests;
 
 #[cfg(test)]
+#[path = "../../tests/unit/parse/backtick_infix_calls.rs"]
+mod backtick_infix_call_tests;
+
+#[cfg(test)]
 #[path = "../../tests/unit/parse/cart_n.rs"]
 mod cart_n_tests;
 
