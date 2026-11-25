@@ -16,9 +16,22 @@ output and successful independent checking.
 
 Every new or revised Litex-related skill must state this identity near its
 entry and apply its specialized workflow in service of it. Follow the shared
-Project identity contract in `golitex-repository-policy`. The
-`assets/litex-agent-pipeline.png` diagram anchors the workflow from mathematical
-input through checked Litex source to multiple downstream outputs.
+Project identity contract in `golitex-repository-policy`. The [verification walkthrough](examples/proof_search/README.md) documents a
+checked example. Keep implemented output support separate from future backend
+directions.
+
+## Public documentation scope
+
+Public documentation describes implemented syntax, mathematical contracts,
+commands, examples and explicit support boundaries. Use direct technical
+language. Do not add slogans, metaphors, language analogies, personal invention
+narratives, speculative advantage claims or unfinished design proposals.
+Keep development plans, historical repair/audit records and comparison
+experiments in the ignored root `scripts/` workspace. Preserve their original
+contents locally when retiring public material. Keep mathematical source
+attribution and the assumptions, unsupported cases and limitations needed to
+interpret a result. A documentation cleanup must not conceal a verification
+failure or change the mathematics to make a claim appear stronger.
 
 ## Natural mathematical writing
 

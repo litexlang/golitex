@@ -35,4 +35,4 @@ The source is strict and trust-free, with no native or Rust change. Selection
 requires a proved bijection; inverse linearity additionally requires actual
 linearity. Finite-dimensional criteria retain their exact selected-value
 domains. No canonical basis/complement or isomorphism-existence construction
-is introduced. Direct sums and representation matrices remain future work.
+is introduced. Direct sums and representation matrices are not provided by this module.

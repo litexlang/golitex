@@ -2,7 +2,7 @@
 name = "litex-lang"
 version = "1.2.2-beta"
 edition = "2021"
-description = "The Language Where Mathematics Verifies Itself"
+description = "A high-level language for formal mathematics"
 license = "Apache-2.0"
 repository = "https://github.com/litexlang/golitex"
 homepage = "https://litexlang.com"

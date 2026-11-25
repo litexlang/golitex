@@ -73,10 +73,9 @@ of asking the integral selector to discover an integration technique.
 | Weighted cosine on `[-1,1]` | Nonmonotone substitution with equal image endpoints |
 | Weighted exponential on `[0,1]` | Known exponential integral → integration by parts → endpoint cancellation |
 
-This standalone module passes strict verification with no source `trust`,
+The recorded check on 2026-10-24 passed in strict mode with no source `trust`,
 user axioms, abstract predicates, or chapter imports. See the
-[dated verification receipt](../../verification_runs/2026-10-24-native-calculus.json)
-and [interface guide](math_collections.md).
+[interface guide](math_collections.md).
 Strict acceptance still relies on Litex's verifier and builtin mathematical
 rules; no Lean replay is claimed.
 

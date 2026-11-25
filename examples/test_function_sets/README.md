@@ -1,37 +1,12 @@
 # Function-set composition tests
 
-> **统一收尾入口：** [src收尾总清单.md](../../plan/src收尾总清单.md)（2026-10-04）。活动事项及跨来源去重在总清单维护；本页保留专项代码、决定和历史验收。新增进展应同步对应总清单ID，不能用旧快照覆盖新证据。
+This corpus checks function sets, template instantiation, callable struct
+fields, function-valued returns and failure diagnostics. `manifest.json`
+separates expected successes, expected rejections and capability observations.
 
-> **2026-10-06 当前契约：** 结构信息查找只消费声明和精确对象的 special_properties，不遍历等价类。正式套件 85/85 保持通过；T05 的原直写法现已接受，其余原片段仍独立观测。显式发布所需 body/签名/载体后再使用。实现和最新门禁 (historical task record; retired)。下方 2026-10-04 验收保留为历史。
-
-This standalone corpus checks function sets, template instantiation, callable
-struct fields, function-valued returns and template failure diagnostics.
-
-The current supported regression suite has **85 cases: 58 accepted positives
-and 27 correctly rejected negatives**, all matching in strict release mode.
-Nine formerly direct-only goals now use the checked explicit proof routes the
-user requested. Their original source and the exact field-premise attempt
-remain as **10 separate capability observations**. Rejection of a true direct
-claim is recorded as an observation, never as a passing mathematical negative.
-
-| Family | Accepted positives | Correctly rejected negatives |
-| --- | ---: | ---: |
-| Basic function sets | 5 | 3 |
-| Templates | 8 | 3 |
-| Struct fields | 9 | 4 |
-| Higher-order functions | 11 | 7 |
-| Explicit typing controls | 14 | 0 |
-| Exact function-body evaluation | 2 | 1 |
-| Explicit proof routes | 8 | 4 |
-| Fixed-signature parse boundaries | 0 | 3 |
-| Template diagnostics and obsolete signature | 1 | 2 |
-
-[acceptance.md](acceptance.md) contains the executed source and remaining
-boundaries; [todo.md](todo.md) records their disposition. Current receipts:
-[cleanup_2026-10-04.json](cleanup_2026-10-04.json),
-[capabilities_2026-10-04.json](capabilities_2026-10-04.json),
-[cleanup_tests_2026-10-04.json](cleanup_tests_2026-10-04.json) and
-[old_fn_set_2026-10-04.json](old_fn_set_2026-10-04.json).
+An unsupported direct assertion is recorded as a capability observation,
+not as proof that the asserted mathematical statement is false. The runner
+checks source and binary identities and records results for the selected files.
 
 From the repository root:
 
@@ -60,27 +35,7 @@ AST, Runtime/Env, search permissions or trust. Successful template output is
 unchanged; the old fn-set positive is replaced by a valid fixed-carrier family,
 with its invalid original signature retained as N27.
 
-Persistent strict REPL evidence is in
-proof_journals/cleanup_2026-10-04.json (historical task record; retired).
 The current CLI lacks `try:`, `-runner`, `-compact` and `-before`; session probes
 use discarded `sketch:` frames and clean gates check `run_result`,
-`session_terminated`, and `termination`.
-Both raw field-premise orderings are recorded separately. A typed local `&Box`
+`session_terminated`, and `termination`. A typed local `&Box`
 binding is still required for selected/returned struct field syntax.
-
-Historical receipts remain intact:
-[audit_2026-10-04.json](audit_2026-10-04.json) (initial 67 cases),
-[numeric_evaluation_2026-10-04.json](numeric_evaluation_2026-10-04.json) (70 cases),
-[numeric_evaluation_tests.json](numeric_evaluation_tests.json) (70 Rust tests),
-[explicit_proofs_2026-10-04.json](explicit_proofs_2026-10-04.json) (82 cases),
-[numeric_evaluation_checkpoint_2026-10-04.json](numeric_evaluation_checkpoint_2026-10-04.json)
-and [existing_regressions.json](existing_regressions.json). Their dated
-identities describe earlier observations, not current-version assertions.
-Earlier source attempts remain in
-proof_journals/2026-10-04.json (historical task record; retired),
-proof_journals/numeric_evaluation_2026-10-04.json (historical task record; retired)
-and proof_journals/explicit_bridges_2026-10-04.json (historical task record; retired).
-
-This suite certifies these CLI verification and well-definedness observations.
-It does not certify extracted programs, Lean output, performance, all examples
-or behavior outside the inventoried fixtures.

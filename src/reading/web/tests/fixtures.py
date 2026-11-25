@@ -1969,7 +1969,7 @@ LOGICAL_CASES = {
     'logic-contra-classified': ('examples/stmt_nodes/by/by_contra_classified_goals.lit', True),
     'logic-contra-compound': ('examples/stmt_nodes/by/by_contra_compound_impossible.lit', True),
     'logic-cases-scoped': ('examples/test_statements/release_basics/fixtures/P/cases-exhaustive.lit', True),
-    'logic-cases-absolute': ('examples/litex_vs_lean_speed/sources/declarations/cases_proof.lit', True),
+    'logic-cases-absolute': ('tests/fixtures/reading/absolute_value_cases.lit', True),
     'logic-claim': ('examples/test_statements/claim_stmt.lit', True),
     'logic-forall': ('examples/reading/homepage/problems/missing-premise-fixed.lit', True),
     'logic-cantor': ('examples/reading/lessons/en/cantor.lit', True),

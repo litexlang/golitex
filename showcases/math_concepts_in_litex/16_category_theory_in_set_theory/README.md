@@ -33,7 +33,7 @@ target/release/litex -strict -f showcases/math_concepts_in_litex/16_category_the
 target/release/litex -strict -r showcases/math_concepts_in_litex/16_category_theory_in_set_theory
 ```
 
-Run the handwritten Lean analogy with the repository's Lean toolchain:
+Run the handwritten handwritten Lean example with the repository's Lean toolchain:
 
 ```bash
 cd lean

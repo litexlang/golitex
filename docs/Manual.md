@@ -8,47 +8,31 @@ Read and run examples in the [online Manual](https://litexlang.com/doc/Manual).
 The maintained [Markdown source](https://github.com/litexlang/golitex/blob/main/docs/Manual.md)
 is the single home for the language guide and detailed reference.
 
-> **Litex is an experimental hobby project still in beta. Expect rough edges.**
+> Litex is beta software. Interfaces and coverage are described for the current version.
 
 <a id="math-is-code"></a>
 
-## Mathematics as source code
+## Mathematical statements and verification
 
-**Write math, get formalized code: because the math already is.**
+Litex is a high-level language for formal mathematics. Source files use defined
+syntax to express objects, definitions, propositions and proof steps.
 
-Litex makes mathematical objects, definitions and facts part of the formal
-source itself. In the [example below](#the-core-reading-model), `x + 1 = 3`
-is both the mathematical claim and the statement submitted for checking.
+Authors supply premises, intermediate conclusions, witnesses, cases and
+induction steps. The checker verifies expression domains and other
+well-definedness conditions before checking propositions against facts in the
+current scope and supported rules. Search is bounded and can require additional
+explicit proof steps.
 
-Mathematical writing already carries logical structure. A statement's form
-and context identify the objects in scope, the available premises and the
-conclusion that needs justification. Litex is designed to make these
-relationships executable.
-
-Authors provide the ideas, conditions and meaningful proof steps. Writing an
-ordinary fact asks the executor to check its conditions and find grounds for
-it in the current mathematical context. The author can focus on which facts
-to establish, while the system recovers the supported inferences connecting
-them. Accepted facts become knowledge for later steps.
-
-[Built-in verification rules](#builtin-verification-rules) provide reusable
-mathematical reasoning patterns. Contextual search connects a goal to known
-facts and applicable universal statements; [inference rules](#builtin-inference)
-also record supported direct consequences of accepted facts. Together, these
-mechanisms make the relationships among mathematical statements available to
-subsequent checking. Their use respects scope, conditions and search limits.
-
-This division of work lets humans and AI write mathematical steps without
-spelling out every formal derivation. Authors still choose key intermediate
-facts, witnesses, cases or induction when needed. This manual gives the
-precise syntax, supported checks and boundaries. Supported Lean compilation
-is a further use of the source and its verification evidence.
+Accepted declarations and facts are available to subsequent statements. This
+manual specifies syntax, interfaces, checking rules and limitations. The Lean
+compiler replays supported proof routes; generating Lean source and checking it
+with Lean are separate steps.
 
 <a id="mathematical-reading"></a>
 
 ### Everyday mathematical sentences and their formal roles
 
-Litex asks: can we write mathematics and obtain formal code directly? Familiar phrases already say which objects are in scope, which premises may be used, and what must be justified. The correspondence is between these mathematical responsibilities and precise source forms.
+The table maps common mathematical statements to Litex syntax and describes the checks performed for each form.
 
 | Mathematical wording | Corresponding Litex | Logical responsibility |
 | --- | --- | --- |
@@ -85,7 +69,7 @@ identity may need the defining equation as an explicit bridge.
 
 | Part | Read it to | Start here |
 |---|---|---|
-| Core idea | Understand the division of work between author and executor | [Mathematics as source code](#math-is-code) |
+| Core idea | Understand the division of work between author and executor | [Mathematical statements and verification](#math-is-code) |
 | Design principles | Understand the mathematical object model and checking contracts | [Principles](#design-principles), [core model](#the-core-reading-model) |
 | System pipeline | Follow source input through the complete system and identify each owner's job | [Pipeline and component map](#system-pipeline) |
 | Project organization | Select dependencies/exports and understand names and load order | [Projects](#project-organization) |
@@ -97,7 +81,7 @@ identity may need the defining equation as an explicit bridge.
 | Native rules and inference | Find extra guarded laws, calculation limits and inference triggers | [Verification rules](#builtin-verification-rules), [inference](#builtin-inference) |
 | Execution and extraction | Run algorithms/eval and inspect Python/C extraction boundaries | [Executable path](#execution-and-extraction) |
 | Compatibility and evidence | Interpret removed forms, assumptions and verification records | [Compatibility](#removed-and-renamed-public-forms), [coverage](#verification-and-coverage), [appendix](#appendix) |
-| Design context and references | Understand design influences, mathematical sources and related work | [References](#design-context-and-references) |
+| Technical references | Find implementation modules and mathematical background | [References](#design-context-and-references) |
 
 The native inventory has **52 public statement forms, 93 active object leaves,
 20 builtin atomic families with their negative forms, and two native certificate
@@ -178,9 +162,7 @@ in both views.
 
 The [Learner Cheatsheet](Litex_Learner_Cheatsheet.md) supplies compact learning
 developments; [examples](../examples/README.md) supply longer runnable files.
-The [Blueprint](Litex_Blueprint.md) and
-[Lean–Litex comparisons](Representative_Lean_Litex_Example_Comparisons.md)
-cover rationale and comparisons. Installation and command flags belong in
+Installation and command flags belong in
 the [CLI reference](cli.md).
 
 ### Supported syntax and recommended source style
@@ -13229,419 +13211,27 @@ user assumptions remain distinct throughout the entries.
 
 <a id="litex-reliability"></a>
 
-## Reliability of Litex
-
-Litex's reliability is strengthened through testing, code review and independent proof checking. The project has around 4,000 examples and over 3,000 test functions. Before each release, the maintainer also uses the frontier language models available to review the source code and look for bugs.
-
-Compilation to Lean provides an additional check: supported Litex proofs can be reconstructed as Lean proofs and checked by Lean's kernel. This coverage continues to expand.
-
-## Design context and references
-
-Litex brings familiar programming-language ideas into a language for checked
-mathematics. The references below connect particular design choices to their
-sources. Design influences reflect the author's stated inspirations;
-mathematical sources guide definitions and foundations; related work places
-Litex alongside earlier approaches to readable formal mathematics.
-
-### Language design influences
-
-| Reference | Connection to Litex |
-|---|---|
-| [Python](https://docs.python.org/3/reference/lexical_analysis.html#indentation) and [Lisp](https://www.lispworks.com/documentation/HyperSpec/Body/02_a.htm) | Litex's syntax draws on both languages. Python is a reference for readable indentation-based blocks; Lisp is a reference for simplicity and compositional expression. Lisp's elegance is an aspiration for the language as a whole. |
-| [Go](https://go.dev/ref/spec) | Go influenced Litex's syntax and its preference for a small, consistent set of mechanisms. Inspired by Go's emphasis on simplicity and predictable composition, Litex aims to provide one sufficiently good way to serve each purpose and keep it as the single mechanism wherever possible. This reduces competing choices and helps the system remain consistent. Rob Pike's [Simplicity is Complicated](https://go.dev/talks/2015/simplicity-is-complicated.slide) discusses the value of fewer ways to do things and features that interact predictably. |
-| [Lua](https://www.lua.org/manual/5.4/manual.html#pdf-require) | Lua's module-loading approach influenced the import system. Litex declares dependencies in its project manifest; see [project organization](#project-organization) for its loading and naming contracts. |
-| Mathematical textbooks | Textbooks inspired both knowledge ordering and theorem/proof organization. Later material cites definitions and results established earlier; Litex similarly gives later statements access to accepted earlier context and runs project exports in declared order. The mathematical idea of stating a theorem and proving it inspired `claim` and `thm`; see [basic proof-writing decisions](#basic-decisions-before-writing-a-proof). |
-| [C++ templates](https://eel.is/c++draft/temp) and [Go interfaces](https://go.dev/ref/spec#Interface_types) | C++ inspired parameterization and instantiation in Litex's `template` interfaces: one definition can produce objects or functions for different arguments. Go interfaces also influenced the idea that template parameters must satisfy specified properties. The actual mathematical contract is described under [template interfaces](#template-interfaces). |
-| [C/C++ structs](https://eel.is/c++draft/class) | Named fields grouped into a structured value inspired Litex's `struct` interface. Litex applies that organization to mathematical objects, with the conditions and facts described under [advanced interface details](#advanced-interface-details). |
-| [JavaScript anonymous functions](https://tc39.es/ecma262/multipage/ecmascript-language-functions-and-classes.html#sec-arrow-function-definitions) | JavaScript inspired the ability to write a function directly as an expression, without first giving it a name. Litex's anonymous functions carry mathematical domains and well-definedness obligations; see [O80](#o80-anonymous-functions). |
-| Ctrl+F, [grep](https://www.gnu.org/software/grep/manual/) and [sed](https://www.gnu.org/software/sed/manual/) | Familiar search and substitution tools inspired the proof-search model: find an applicable fact in the available context, match its structure, and reuse it with permitted substitutions. The analogy concerns the workflow; Litex searches structured mathematical facts and checks the relevant conditions. See [verification rules](#builtin-verification-rules) and [inference](#builtin-inference). |
-| [TeX](https://www-cs-faculty.stanford.edu/~knuth/abcde.html) | TeX supplies notation for many familiar mathematical objects. That vocabulary strongly influenced the selection of Litex's builtin objects: the aim is to cover much of the everyday mathematics that already has familiar TeX notation. Litex gives those objects domains, definitions and checking rules; their current coverage is recorded in the [object dictionary](#object-dictionary). |
-
-Litex aims for Lisp's elegance and TeX's broad practical usefulness: a language
-that people across mathematics can use routinely. These aspirations guide
-language design and everyday usability.
-The implementation is written in [Rust](https://rust-lang.org/); the
-implementation language and the influences on Litex's surface language have
-different roles.
-
-### Interpreter architecture references
-
-Litex's interpreter architecture draws on the following books. The design aim
-is a straightforward implementation whose path from source text to results is
-easy to follow: tokenize input, parse a statement, dispatch its execution, check
-its obligations, and record accepted information. The [system pipeline](#system-pipeline)
-describes the current components and their responsibilities.
-
-- Harold Abelson and Gerald Jay Sussman, with Julie Sussman,
-  [*Structure and Interpretation of Computer Programs* (SICP)](https://mitpress.mit.edu/9780262510875/structure-and-interpretation-of-computer-programs/),
-  second edition, MIT Press, 1996. Its treatment of abstraction, environments
-  and evaluators provides a conceptual reference for organizing an interpreter
-  from understandable parts; [Chapter 4](https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/6515/sicp.zip/full-text/book/book-Z-H-26.html)
-  develops an evaluator explicitly.
-- Thorsten Ball, [*Writing An Interpreter In Go*](https://interpreterbook.com/).
-  Its step-by-step construction of the Monkey interpreter connects tokens,
-  parsing, an abstract syntax tree, evaluation and a REPL. It is a practical
-  reference for making the source-to-result path visible in working code.
-- Alfred V. Aho and Jeffrey D. Ullman, *Foundations of Computer Science with C*,
-  W. H. Freeman/Computer Science Press, 1995
-  ([author's bibliography](https://www.cs.columbia.edu/~aho/books.html)). This is
-  the C edition of *Foundations of Computer Science*, originally published in
-  1992. It supplies foundational computer-science background for the architecture.
-- Robert Nystrom, [*Crafting Interpreters*](https://craftinginterpreters.com/).
-  Its [tree-walk interpreter](https://craftinginterpreters.com/contents.html)
-  presents scanning, parsing and evaluation as explicit implementation stages;
-  the book also develops a bytecode virtual machine. The relevant architectural
-  reference here is its clear explanation of how the interpreter's parts fit
-  together.
-
-### Mathematical sources
-
-The presentation of Litex's set-theoretic foundations draws on Terence Tao's
-[*Analysis I*](https://terrytao.wordpress.com/books/analysis-i/) and Hao Zhaokuan
-and Yang Yue's *Set Theory: An Exploration of the Concept of Infinity*
-(*集合论：对无穷概念的探索*, Fudan University Press, 2014; listed on
-[Hao's university page](https://philosophy.fudan.edu.cn/64/96/c14253a222358/page.htm)).
-They are references for mathematical definitions, constructions and foundational
-exposition. See [trust boundary](#trust-boundary) for Litex's implemented
-foundation and checking assumptions.
-
-### Related work in formal mathematics
-
-#### Litex as a mathematical source language
-
-Litex is a mathematical formal language with an independent native verifier.
-Its abstract syntax distinguishes **object**, **fact**, and **statement**,
-abbreviated `Obj`, `Fact`, and `Stmt` in the implementation and documentation.
-These are syntactic categories with different semantic roles, rather than
-three keywords that must be written in source.
-
-| Category | Meaning | Examples |
-| --- | --- | --- |
-| **Object (对象), `Obj`** | A mathematical value, or an expression denoting one when well-defined. It can occur as an operand, argument, or component of a larger expression. | `a`, `R`, `a + 1`, `{1, 2}`, `f(a)` |
-| **Fact (事实), `Fact`** | A proposition about objects, formed from relations, predicates, logical connectives, and quantifiers. Its truth must be established in a context. | `a + 1 = 3`, `a $in R`, a universally quantified implication |
-| **Statement (语句), `Stmt`** | An executable unit that introduces objects, defines vocabulary, checks facts, organizes proof steps, or invokes a session command. Execution may extend the mathematical context. | `have a R = 2`, a bare fact in statement position, a function definition, a proof block |
-
-In particular, `Fact` names the proposition category; it does not mean that
-every expression in that category is already proved. A successfully checked
-fact becomes available as known information. An object expression such as
-`a + 1` denotes a value without asserting a proposition, while a declaration
-such as `have a R = 2` introduces a name and has a contextual effect.
-
-```litex
-have a R = 2
-a + 1 = 3
-```
-
-The first line is a statement introducing the object `a` with its membership
-and defining equality. Within the second line, `a + 1` is an object expression
-and `a + 1 = 3` is a fact. Placing that fact as the complete line embeds it in
-statement position (`Stmt::Fact(F)` in the AST): it requests verification of
-`F`. The executor checks well-definedness, searches for supported grounds in
-the current context, and commits the accepted fact and its consequences.
-Thus a proposition and the action of checking it remain distinct, while many
-controlled forms of everyday mathematical writing are executable formal source.
-
-Readability and accessible mathematical authoring are shared concerns of Lean,
-Rocq (formerly Coq), Isabelle/Isar, and Mizar. These goals do not determine a
-common object model, elaboration discipline, proof interface, or verification
-architecture. The comparison below concerns those technical choices and the work they expose to
-the author. Wiedijk's collection compares a common mathematical proof across
-several proof languages [Compare06]; here we distinguish object representation,
-expression admissibility, proof interfaces, and evidence construction.
-
-Litex's source model is set-based: numbers, sets, function values, and function
-spaces share one mathematical object carrier; membership is a proposition
-between objects. Propositions use the `Fact` category; they are not values in a
-source-level universe of proposition objects. The meta-level object carrier is
-not an internal universal set, and set comprehension is bounded. Expression
-admissibility includes mathematical side conditions: forming a guarded
-application requires evidence of parameter membership and the instantiated
-domain predicates. This is a well-definedness obligation, not merely a
-syntactic or name-resolution check.
-
-```litex
-have fn reciprocal(x R: x != 0) R = 1 / x
-reciprocal(2) = 1 / 2
-```
-
-The condition belongs to the function's callable contract. A statement using
-`reciprocal(0)` fails well-definedness even when its proposed conclusion is
-reflexive. Ordinary fact checking combines contextual retrieval, permitted
-instantiation, calculation, native rules, and explicit proof steps where
-needed. It produces a typed intermediate representation (IR) of verification
-evidence, including applicable well-definedness and premise records. Authors
-supply the mathematical route; the supported local search handles routine
-justification and retrieval.
-
-<a id="litex-theoretical-positioning"></a>
-
-#### Theoretical positioning: language, knowledge, and foundations
-
-**Litex is a fact-oriented mathematical verification language with context-driven incremental checking. Its native engine operates as a mathematics-specialized deductive knowledge base; supported verification evidence can also be reconstructed as Lean proofs.** This describes a language and system architecture, rather than introducing a new foundational calculus.
-
-| Layer | Litex's role |
-| --- | --- |
-| Source language | Mathematical objects, propositions and context-changing actions have explicit interfaces through `Obj`, `Fact` and `Stmt`. |
-| Execution architecture | Scoped facts and definitions are indexed, retrieved and checked; successful statements publish reusable knowledge and typed execution evidence. |
-| Mathematical semantics | The current native language adopts a pure-set object model and specific domain, equality and inference contracts. |
-| Independent rechecking | The supported Lean backend reconstructs proofs under an explicit semantic interface; it is an additional consumer of native evidence. |
-
-The preceding `have a R = 2` example illustrates the knowledge cycle: establish an object and its facts, use those records to justify `a + 1 = 3`, then retain the accepted conclusion. A proved `forall` supplies a reusable conditional contract for later instances. This is a deductive knowledge-base architecture, not mere lookup: candidate premises still require checked matching, substitution and side conditions. Deductive databases already study facts, rules and derived answers [Deductive84]; Metamath also organizes axioms, theorems and proofs as databases for multiple foundations [MetamathDB]. Litex's contribution must therefore be assessed through its particular mathematical interfaces, checking behavior and evidence flow, rather than the database metaphor alone.
-
-At the native syntax and execution layer, numerals, addition and summation have direct constructors such as `Number`, `Add` and `Sum` ([object AST](../src/ast/obj.rs)). [Closed arithmetic checking](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/calculate_closed_equal_fact.rs) need not replay a construction of numerals from successor operations or set encodings. This is a choice of semantic and implementation level. The primitives still need a mathematical interpretation and justified checking rules. SMT-LIB's interpreted integer and real arithmetic gives an established example of specifying numerals and operations through their intended models [SMTTheory]. `Obj`/`Fact`/`Stmt` are syntactic categories, not a claim to have eliminated primitive structure or logical assumptions.
-
-ITP and ATP chiefly describe the organization and automation of proving; they do not identify a mathematical foundation. The TPTP workflow presents automatic search for consequences of a supplied problem [ATPProcess], while Isabelle combines interactive proof development, automation and multiple object logics [IsabelleGeneric]. In broad terminology, Litex can serve as a proof assistant and contains automated reasoning. Its distinguishing default interface is the incremental checking and reuse of mathematical statements; those broad labels do not fully describe that design.
-
-<a id="mathematical-expression-and-reasoning"></a>
-
-**Closeness to ordinary mathematical writing has two complementary aspects: expression structure and reasoning structure.** The first concerns how mathematics is written; the second concerns how known facts support new steps.
-
-| Aspect | Structure already present in mathematical writing | Litex's corresponding design |
-| --- | --- | --- |
-| **Expression structure: how mathematics is written** | Objects, sets, functions and relations, together with ways of organizing statements such as “for every”, “there exists” and “assume”. | Represent these structures through native objects, facts and statements, with explicit meanings, conditions of use, quantification and scope. |
-| **Reasoning structure: how mathematics is established step by step** | Connections by which known facts justify a next step: substitution, calculation, applying general laws, splitting into cases and choosing witnesses. | Authors write meaningful mathematical steps; the system searches the current context, definitions, user-proved general facts and builtin rules for supported justifications, and records the evidence. |
-
-Syntax and semantics run through both aspects. Syntax specifies how constructs are written; semantics specifies the meanings of objects and claims, and how actions affect the context. “Assume” introduces a local premise with a scope of validity; “therefore” proposes a conclusion that needs justification. Explicit case splits and witness choices also express reasoning structure in source code. That structure concerns the dependencies and justification between steps, including both the author's proof actions and the verifier's use of rules.
-
-An ordinary mathematical passage connects the two aspects:
-
-> Let $x$ be a positive real number. Set $y = 1/x$. Then $xy = 1$.
-
-- **Expression structure** identifies the objects $x$ and $y$, the range and condition on $x$, the definition of $y$, and the final equality being asserted.
-- **Reasoning structure** connects those statements: positivity gives $x \ne 0$, which makes the reciprocal well-defined; the definition, substitution and arithmetic rules then justify $xy = 1$.
-
-Authors or AI supply the key constructions and proof route. Litex makes supported connections in that route executable through contextual retrieval and checking. Its proximity to mathematical writing therefore concerns both the expression interface and the allocation of reasoning work, a design dimension that the ITP/ATP labels alone do not capture.
-
-**Litex makes the structure already present in mathematical writing executable.**
-
-Litex's choice of author-visible granularity is a further dimension. Familiar mathematical objects, relations, statements and proof actions are native constructs, so the author can define a function, use a finite sum or split into cases at the abstraction level of ordinary mathematics. Here “semantic primitives” means units available through the authoring interface; they can still have parameters and internal structure. These source-visible constructs are **only part of Litex's native semantics**, which also includes domain and well-definedness conditions, scope, context updates and reuse of accepted facts.
-
-Builtin verification rules have a different role: they are **kernel mechanisms that justify those source steps**. Authors regularly see and write objects and statements, while ordinary proof source need not enumerate the rules the verifier will select. When a rule is actually used, the corresponding verification evidence can expose that selected rule and its cited premises. For `let a = 1` followed by `a + 2 = 3`, the source contains the alias and proposed equality; the retained evidence cites `a = 1` and records substitution followed by closed calculation. The native source vocabulary and the kernel's rule inventory are therefore distinct layers of the interface.
-
-Lean may expose everyday mathematics through notation, library definitions, elaboration and tactics, without the same surface correspondence or native granularity as Litex. Those layers nevertheless lead to precisely defined terms and kernel-checkable inferences [Lean21], [LeanElab]. This provides a target for interpreting Litex's constructs and reconstructing its recorded reasoning: supported compilation needs a semantic interpretation and corresponding Lean proofs for the rules actually used. The two languages need not have matching surface sentences for that correspondence to be defined. Supported Lean reconstruction is the implemented route; the statement does not extend its coverage to every native construct or rule.
-
-Separating this methodology from a particular encoding suggests a research direction for other foundations. It does not establish that the current implementation supports arbitrary foundations. A port must supply the new interpretation, expression-formation conditions and justified inference rules. Foundation independence is itself a substantive contract, as illustrated by MMT [MMT]. Litex currently has a concrete set-based source model; its [Lean semantic API](../lean/Litex.lean) and [proof-reconstruction compiler](../src/compile_to_lean/README.md) give a supported interpretation route, not a completed soundness proof for the entire native engine.
-
-The research claim is that mathematical constructors and domain contracts, scoped deductive storage, automatic reuse of user-proved facts, and inspectable execution evidence can form a coherent authoring interface with less explicit proof orchestration. A theoretical account should connect denotational semantics, the operational semantics of context updates, and relative soundness: accepted steps preserve truth under the specified interpretation and assumptions. These are obligations for the account, not results established by this positioning paragraph. Usability and reductions in authoring work likewise require evaluation.
-
-#### Comparison with Lean
-
-[Lean's elaborator](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/)
-translates source expressions into terms in a dependent type theory, and its
-kernel checks theorem proof terms. Direct terms, declarative constructions,
-and tactics are different authoring interfaces to this proof representation;
-the extensible architecture also supports user-defined elaboration and
-metaprogramming [Lean21], [LeanElab].
-
-Litex separates mathematical expressions, propositions, and context actions at
-the source level. Set membership and domain conditions remain facts available
-to the verifier. For a restricted-input Lean interface, one can encode the
-argument as a subtype and apply the function to a value packaged with evidence,
-such as `f ⟨x, hx⟩`; Litex writes `f(x)` and checks the condition in context.
-Lean can also use proof arguments, inferred coercions, and automation
-[LeanCoercions]. The observable advantage of Litex's native interface is reduced
-explicit evidence packaging for these calls and reduced method annotation for supported ordinary
-facts. A mathematical equality chain can remain the visible proof route without
-requiring a separate tactic invocation at each routine step.
-
-This is a difference in representation and default verification responsibility,
-not an expressiveness separation. Lean automation can produce very short
-proofs, while dependent types provide abstractions beyond the source model
-described here. Litex's native verification evidence is also distinct from a
-Lean proof term: supported Lean compilation reconstructs proofs from that
-evidence. Source generation and successful Lean kernel checking are separate
-gates; see [the compiler guide](Litex_To_Lean_Compiler_Guide.md).
-
-#### Comparison with Rocq (formerly Coq)
-
-[Rocq](https://rocq-prover.org/) provides a dependent specification and
-programming language, Gallina, over the Calculus of Inductive Constructions
-(CIC). Notation and elaboration translate user expressions into core terms;
-tactics incrementally construct proof terms for kernel checking. Commands that
-manage declarations, term expressions, and tactic languages are distinct parts
-of its authoring environment [RocqCore], [RocqElab], [RocqProof]. Their separation
-does not coincide with Litex's `Obj`/`Fact`/`Stmt` semantic categories: Rocq
-represents propositions and their proofs within the typed term language.
-
-Rocq also supports implicit side-condition handling. For subset interfaces such
-as `{x : A | P x}`, `Program` can insert subset coercions, generate proof
-obligations, and invoke an obligation tactic automatically. These obligations
-must be discharged to produce the final complete term. This elaboration route
-is described by Sozeau's subset-coercion work and the maintained `Program`
-reference [Sozeau07], [RocqProgram]. SSReflect further supplies structured proof
-commands and reflection-based mathematical reasoning [SSReflect10].
-
-Litex's advantage for the mathematical interfaces illustrated here is a uniform
-ordinary-statement contract: introduce mathematical objects or state facts, check the
-required domain predicates in context, and commit the accepted information with
-native verification evidence. A guarded `f(x)` obtains its obligations directly
-from the source-level callable contract; their native representation does not
-pass through Gallina subset terms or `Program` elaboration. The distinction
-is where obligations are represented and discharged, and how a mathematical
-step becomes available in context. Rocq's dependent specifications, inductive
-programming, and proof-term kernel support a different range of abstractions;
-automatic side-condition discharge alone is not a distinguishing Litex feature.
-
-#### Comparison with Isabelle/Isar
-
-[Isar](https://isabelle.in.tum.de/website-Isabelle2026-RC0/dist/library/Doc/Isar_Ref/Framework.html)
-is a structured proof language that manages local facts, goals, and proof
-methods over Isabelle's generic logical framework. Its object logic supplies
-the underlying expressions and inference principles. The common Isabelle/HOL
-configuration uses typed higher-order logic; Isabelle also supports other
-object logics, including ZF. Isar already offers readable declarative proofs,
-so that description alone does not distinguish Litex. Wenzel's original
-account specifies an operational interpretation of proof documents, not only
-a presentation notation [Isar99, §4.2][Isar99], [IsarRef].
-
-Litex integrates a mathematical vocabulary, domain-sensitive expression
-formation, and ordinary fact checking in one source language. These contracts
-can also be constructed by users. A proved `forall` fact stored in the visible
-context supplies a reusable logical contract: when a later goal matches a
-supported conclusion, the verifier determines a parameter substitution, checks
-the parameter carriers and antecedents, and cites that universal fact. Ordinary
-fact checking therefore uses contracts established by the user's own proofs,
-without requiring a theorem name, an explicit instantiation command, or separate
-rule registration for this reuse.
-
-```litex
-prop even_integer(n Z):
-    exist k Z st {n = 2 * k}
-
-claim:
-    ? forall n Z:
-        $even_integer(2 * n)
-    witness exist k Z st {2 * n = 2 * k} from n
-    by def $even_integer(2 * n)
-
-have a Z
-$even_integer(2 * a)
-```
-
-The `prop` introduces vocabulary; the `claim` proves the universal fact by
-constructing an existential witness and folding the predicate definition.
-The last line then uses that stored universal fact, instantiated with `n = a`.
-It does not reconstruct the witness proof. In this sense, proving mathematics
-extends the contracts available to subsequent checking through the same native
-verification mechanism. Retrieval is on demand, within the current scope and
-supported local matching and premise checks. This extension by proved facts is
-part of the default statement semantics, alongside the native mathematical
-contracts, and reduces explicit orchestration of routine proof steps.
-
-Litex's native set-based objects also differ from HOL's typed terms and typed
-sets. Moreover,
-[HOL functions are total](https://www.isabelle.in.tum.de/library/Doc/Functions/Functions.html):
-a well-typed application denotes a value even when a separately specified
-domain predicate is unavailable [HOLFunctions]. Litex's guarded applications require the
-domain conditions at well-definedness checking. This gives authors a native
-way to enforce the convention that an expression may be used only after its
-mathematical prerequisites are established. For supported facts, default
-checking also reduces explicit orchestration of fact flow and proof methods.
-These advantages concern the chosen mathematical interface; Isabelle's generic
-framework and extensible proof infrastructure serve broader purposes.
-
-#### Comparison with Mizar
-
-[Mizar](https://mizar.uwb.edu.pl/cicm_tutorial/mizar.pdf) is the closest comparison
-in mathematical vernacular and forward declarative proof. It uses classical
-first-order reasoning and schematic constructions. Its MML is based on set
-theory, and its [soft types](https://www.cs.ru.nl/~freek/mizar/miztype.pdf)
-classify expressions over an untyped set-theoretic foundation. It already
-supports structured mathematical statements and equality chains. The system
-survey and soft-type account describe these mechanisms [Mizar15], [Wiedijk07]. Consequently,
-neither set-based objects nor readable fact statements establish a distinction
-on their own.
-
-There is a concrete difference in application admissibility. Mizar's usual
-function-value operation is defined in
-[`FUNCT_1:def 2`](https://mizar.uwb.edu.pl/version/current/html/funct_1.html):
-`f.x` is the corresponding value inside `dom f` and the empty set outside it
-[MizarApply].
-Litex's guarded call requires its declared domain conditions before the
-application can be used. For authors who want missing domain hypotheses to
-prevent expression use, this is a direct semantic advantage.
-
-There is also a difference in routine premise retrieval. Mizar's basic `by`
-inference checks a conclusion against referenced premises, with additional
-automatic facilities such as typing registrations; its grammar also permits
-omitted justifications [MizarChecker], [MizarGrammar]. Litex's ordinary verification path can retrieve visible
-universal facts by conclusion structure, instantiate them, and check their
-conditions. In supported cases, authors can state the next fact with fewer
-labels and explicit premise references. This compares default interfaces, not
-an absence of automation in Mizar. See the
-[Mizar checker account](https://www.cs.ru.nl/~freek/mizar/by.pdf) and
-[justification grammar](https://mizar.uwb.edu.pl/language/pages/justification.html).
-
-#### The language-design question
-
-The contribution under investigation is the combination of a small conceptual
-interface, native mathematical contracts, and contextual verification. The
-`Obj`/`Fact`/`Stmt` separation is a semantic organization for authors and the
-implementation; three category names alone do not establish novelty or a
-minimal calculus. The relevant hypothesis is that this organization reduces
-the representation, justification, and repair work needed to construct and
-reuse checked mathematics. The examples demonstrate particular reductions in
-explicit authoring operations; general learning-cost and productivity claims
-require comparative evaluation. Exact expression and verification coverage
-belongs to the language dictionaries and [trust boundary](#trust-boundary).
-
-#### Selected technical references
-
-These sources define the mechanisms being compared. Litex-specific behavior is
-specified by this manual and illustrated above; the comparative implications
-are interface analysis, not results reported by the cited authors.
-
-| Key | Primary reference | Use in this comparison |
-| --- | --- | --- |
-| [Deductive84] | Hervé Gallaire, Jack Minker, Jean-Marie Nicolas. *Logic and Databases: A Deductive Approach*. ACM Computing Surveys 16(2), pp. 153–185, 1984. | Facts, rules, derived answers and the established deductive-database research context. |
-| [MetamathDB] | Metamath project. *Home Page and Mini FAQ*. official project description. | Proof databases, multiple foundations and explicit proof verification. |
-| [SMTTheory] | SMT-LIB Initiative / Cesare Tinelli. *Reals_Ints*. SMT-LIB 2.7 theory declaration, updated 2024-07-21. | Numerals and arithmetic operations specified through their intended interpretations. |
-| [ATPProcess] | Geoff Sutcliffe / TPTP project. *The ATP Process*. TPTP World Tutorial. | Problem specification, automatic consequence search and proof verification as distinct tasks. |
-| [IsabelleGeneric] | Isabelle project. *Overview*. official project description. | Interactive proving, automation, Isabelle/Pure and multiple object logics. |
-| [MMT] | Florian Rabe and Michael Kohlhase. *A Scalable Module System*. research paper. | Foundation-independent mathematical knowledge representation and its semantic contracts. |
-| [Compare06] | Freek Wiedijk (ed.). *The Seventeen Provers of the World*. LNCS 3600, 2006; author-hosted comparison manuscript. | A shared mathematical example exposes differences in proof language and presentation. |
-| [Lean21] | Leonardo de Moura and Sebastian Ullrich. *The Lean 4 Theorem Prover and Programming Language*. CADE 2021, LNCS 12699, pp. 625–635. | System architecture and extensible elaboration, tactics, and metaprogramming. |
-| [LeanElab] | Lean project. *Lean Language Reference: Elaboration and Compilation*. official reference. | The source-to-core path and distinction between elaboration and checking. |
-| [LeanCoercions] | Lean project. *Lean Language Reference: Coercions*. official reference. | Inferred coercions and their limits; authors do not write every representation conversion. |
-| [RocqCore] | Rocq Development Team. *Rocq Reference Manual: Core language*. version 9.1.0. | CIC, proof terms, the kernel, and its separation from elaboration and tactics. |
-| [RocqElab] | Rocq Development Team. *Rocq Reference Manual: Command level processing*. version 9.1.0. | Notation, interpretation, and preprocessing before core type checking. |
-| [RocqProof] | Rocq Development Team. *Rocq Reference Manual: Proof mode*. version 9.1.0. | Proof states, local contexts, and incremental proof-term construction. |
-| [RocqProgram] | Rocq Development Team. *Rocq Reference Manual: Program*. version 9.1.0. | Predicate subtyping, generated obligations, and automatic obligation tactics. |
-| [Sozeau07] | Matthieu Sozeau. *Subset Coercions in Coq*. TYPES 2006, LNCS 4502, pp. 237–252, published 2007. | Elaborating rich subset specifications into CIC using coercions and proof obligations. |
-| [SSReflect10] | Georges Gonthier and Assia Mahboubi. *An introduction to small scale reflection in Coq*. Journal of Formalized Reasoning 3(2), pp. 95–152, 2010. | A structured proof-language extension and reflection-based mathematical reasoning. |
-| [Isar99] | Markus Wenzel. *Isar — a Generic Interpretative Approach to Readable Formal Proof Documents*. TPHOLs 1999, LNCS 1690. | Readable formal proof documents and the operational interpretation of Isar (§4.2). |
-| [IsarRef] | Isabelle project. *Isabelle/Isar Reference Manual: The Isabelle/Isar Framework*. Isabelle2026-RC0 documentation. | Generic framework, object logics, structured facts, and proof methods. |
-| [HOLFunctions] | Alexander Krauss / Isabelle project. *Isabelle function tutorial: Partiality and domain predicates*. official function-package tutorial. | HOL total functions and the role of domain predicates in partial-function packages. |
-| [Mizar15] | Grzegorz Bancerek et al. *Mizar: State-of-the-Art and Beyond*. CICM 2015, LNCS 9150, pp. 261–279. | Mathematical vernacular, system facilities, and implicit registration mechanisms. |
-| [Wiedijk07] | Freek Wiedijk. *Mizar’s Soft Type System*. TPHOLs 2007, LNCS 4732, pp. 383–399. | Soft types as expression classifications over untyped set theory. |
-| [MizarChecker] | Andrzej Trybulec; compiled by Freek Wiedijk. *CHECKER*. technical account. | Referenced premises and the basic by inference; a mechanism account, not a current-version benchmark. |
-| [MizarApply] | Czesław Byliński / Mizar Mathematical Library. *Functions and Their Basic Properties: FUNCT_1:def 2*. library definition. | The exact out-of-domain value convention for ordinary f.x. |
-| [MizarGrammar] | Mizar project. *Mizar language: Justification*. official grammar. | Optional straightforward justifications; prevents the claim that every sentence needs by. |
-
-[Deductive84]: https://rg1-teaching.mpi-inf.mpg.de/old-ag2/logik-datenbanken/LogicAndDatabasesDeductiveApproach.pdf
-[MetamathDB]: https://us.metamath.org/
-[SMTTheory]: https://smt-lib.org/theories-Reals_Ints.shtml
-[ATPProcess]: https://tptp.org/UserDocs/TPTPWorldTutorial/ATPProcess.html
-[IsabelleGeneric]: https://www.isabelle.in.tum.de/overview.html
-[MMT]: https://www.kwarc.info/people/frabe/Research/mmt.pdf
-[Compare06]: https://www.cs.ru.nl/~freek/comparison/comparison.pdf
-[Lean21]: https://www.microsoft.com/en-us/research/publication/the-lean-4-theorem-prover-and-programming-language/
-[LeanElab]: https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/
-[LeanCoercions]: https://lean-lang.org/doc/reference/latest/Coercions/
-[RocqCore]: https://rocq-prover.org/doc/V9.1.0/refman/language/core/index.html
-[RocqElab]: https://rocq-prover.org/doc/V9.1.0/refman/language/extensions/compil-steps.html
-[RocqProof]: https://rocq-prover.org/doc/V9.1.0/refman/proofs/writing-proofs/proof-mode.html
-[RocqProgram]: https://rocq-prover.org/doc/V9.1.0/refman/addendum/program.html
-[Sozeau07]: https://sozeau.gitlabpages.inria.fr/www/research/publications/Subset_Coercions_in_Coq.pdf
-[SSReflect10]: https://jfr.unibo.it/article/view/1979
-[Isar99]: https://wwwbroy.in.tum.de/~wenzelm/papers/Isar-TPHOLs99.pdf
-[IsarRef]: https://isabelle.in.tum.de/website-Isabelle2026-RC0/dist/library/Doc/Isar_Ref/Framework.html
-[HOLFunctions]: https://www.isabelle.in.tum.de/library/Doc/Functions/Functions.html
-[Mizar15]: https://mizar.uwb.edu.pl/people/romat/mizar-cicm2015.pdf
-[Wiedijk07]: https://www.cs.ru.nl/~freek/mizar/miztype.pdf
-[MizarChecker]: https://www.cs.ru.nl/~freek/mizar/by.pdf
-[MizarApply]: https://mizar.uwb.edu.pl/version/current/html/funct_1.html
-[MizarGrammar]: https://mizar.uwb.edu.pl/language/pages/justification.html
+## Checking results and trust boundary
+
+Native acceptance depends on the current checker, builtin mathematical rules
+and explicit assumptions used by the source. Restrictions on user assumptions
+in strict mode are described under [trust and strict mode](#trust-and-strict-mode).
+Supported proof routes can additionally be generated as Lean source and checked
+with Lean; a successful native run does not establish that this step occurred.
+
+<a id="design-context-and-references"></a>
+
+## Technical references
+
+The entries in this manual specify syntax, mathematical interfaces and checking
+conditions. The [source guide](../src/README.md) identifies implementation
+modules and their responsibilities. The [compiler guide](Litex_To_Lean_Compiler_Guide.md)
+specifies supported Lean output and its boundaries.
+
+Background mathematical references include Terence Tao's *Analysis I* and
+Hao Zhaokuan and Yang Yue's *Set Theory: An Exploration of the Concept of Infinity*.
+These provide mathematical background; the implemented foundations and
+assumptions are described under [trust boundary](#trust-boundary).
 
 ## Appendix
 

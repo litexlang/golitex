@@ -56,7 +56,7 @@ requirements. The 2026-10-14 source repair repeats the functor arrow-closure
 clauses inside the natural-transformation predicate so nested calls can check
 their domains; the existing constructor proves these clauses from its original
 functor premises. All 17 original named theorems and both finite constructions
-remain present; no trust or axioms were added. The handwritten Lean analogy
+remain present; no trust or axioms were added. The handwritten handwritten Lean example
 was not revalidated in this proof-completion round.
 
 Limits, colimits, adjunctions, Yoneda, universes, and a general functor category

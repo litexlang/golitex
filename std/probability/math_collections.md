@@ -80,7 +80,7 @@ independence, inclusion and positive-evidence premises.
 
 The generated Lean pairs cover one-bound finite intersections and complement
 event typing, not the full probability structures. Complete probability Lean
-compilation remains future work.
+compilation is not provided by this module.
 
 Finite image distributions are now delivered below. Downstream work includes
 expectation transport, random-variable independence and statistical inference. Countable and measure

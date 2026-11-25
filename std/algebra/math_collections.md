@@ -880,7 +880,7 @@ view. These are signature, definition, well-definedness and proof edges.
 The README records 27 source theorems, the 33-declaration strict gate, 58 full
 std-imported consumer statements and five focused source refusals. The
 noncommutative concrete model is still deferred proof debt, not checked
-coverage; quotient and polynomial constructions remain future work.
+coverage; quotient and polynomial constructions are not provided by this module.
 
 ## Scalar spaces and inherited-space correspondence
 

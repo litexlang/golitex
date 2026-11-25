@@ -7,8 +7,8 @@ The release binary SHA-256 was `10c5e5c8adac38794e6c49b7a29a8d161580675199fc85be
 All five inequalities, all nine miniF2F files, IMO 1972 P5 and two representative
 geometry targets were checked at their new paths: **9 strict passes and 8 failures**.
 The other **13 geometry solution packages were not rerun** in this organization task.
-Their source bytes and export order are unchanged; earlier strict verification is
-documented in the [historical showcase repair report](../../showcases/verification_runs/2026-10-14-showcase-repair.md).
+Their source bytes and export order were unchanged in that organization task.
+The table below reports only the checks performed on 2026-10-25.
 
 ## Current checks
 

@@ -71,7 +71,7 @@ and [12](https://geocoq.github.io/GeoCoq/html/GeoCoq.Tarski_dev.Ch12_parallel.ht
 This is a minimal usable interface and theorem spine, not a claim of theorem
 parity with all ten GeoCoq chapters.
 
-`same_math_in_lean.lean` gives a no-import, handwritten Lean analogy. It uses
+`same_math_in_lean.lean` gives a no-import, handwritten handwritten Lean example. It uses
 explicit structures for the same assumption bundles, defines the same Chapters
 2–12 relations, and independently proves I.5, exact SAS, SSS-to-angle, the
 reflection and parallel interfaces, and the same algebraic theorem families

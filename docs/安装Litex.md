@@ -1,6 +1,6 @@
 # 安装 Litex
 
-Litex 是一个处于 beta 阶段的实验性业余项目，使用中可能遇到不完善之处。
+Litex 目前处于 beta 阶段。接口与覆盖范围以当前版本的文档为准。
 
 如果希望免安装试用 Litex，可以使用[在线 playground](https://litexlang.com)。
 

@@ -134,7 +134,7 @@ target conclusion, while injectivity is not required for compact images.
 The additional source below supplies subspace topology, closed compact-subset
 theorems in Hausdorff spaces and the full compact-to-Hausdorff continuous-
 bijection theorem. Product and quotient topology, generated metric topology
-and path foundations remain future work. The original lecture is unchanged.
+and path foundations are not provided by this module. The original lecture is unchanged.
 
 ## Compact sets, closed maps and continuous inverses
 

@@ -43,7 +43,6 @@ target/release/litex -strict -lean -f lean/examples/one_equals_itself/statement.
 
 ## 从几十组实际例子开始
 
-[证明语句对应与验收](Litex_To_Lean_Proof_Commands.md)按主题列出复合反证、集合／函数外延、强归纳、有限枚举和中点几何的源码／生成 Lean 对，并说明各适配器当前支持的范围。
 
 最短的源码／生成证明／Adapter／Final 完整讲解见
 [加零示例 README](examples/litex_to_lean/add_zero/README.md)。

@@ -206,12 +206,9 @@ The internal [finite-set induction regression](../_internal/regression/finite_se
 
 The [witness evidence tracer](witness/witness_detailed_evidence.lit) checks an
 atomic predicate with a local proof, dependent witness types, nonempty-set
-membership, explicit unique witnesses, and a real function-space member.
-Detailed retains the actual successful argument/WD/type/proof/body checks,
+membership, explicit unique witnesses, and a real function-space member. Detailed retains the actual successful argument/WD/type/proof/body checks,
 and the actual nonempty failure stage and child. Normal and execution verdicts
-are unchanged; local_env remains omitted. The source-owned note (historical task record; retired)
-records the strict file gate, focused tests and deliberate exclusion of the
-legacy wrong-witness function-space shortcut.
+are unchanged; local_env remains omitted. The legacy wrong-witness function-space shortcut is outside this example's supported route.
 
 `proof_block/wd_failure_diagnostics.lit` demonstrates guarded expressions whose
 unguarded forms now expose the actual WD obligation. Its Rust companion

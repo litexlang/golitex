@@ -127,7 +127,7 @@ up to a multiple of 15.
 
 This is the two-modulus coprime CRT. A compatible noncoprime pair is outside
 the selected function's domain. General noncoprime CRT, arbitrary finite
-systems, quotient rings and prime factorization remain future work. Bezout
+systems, quotient rings and prime factorization are not provided by this module. Bezout
 coefficients exist but no particular coefficient algorithm or complexity bound
 is claimed.
 

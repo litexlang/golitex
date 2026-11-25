@@ -1,4 +1,0 @@
-forall A,B power_set(R):
-    A $subset B
-    =>:
-        union(A,B) = B

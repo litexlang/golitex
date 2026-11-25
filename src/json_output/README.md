@@ -736,7 +736,6 @@ Detailed evidence distinguishes `closed_decimal`, `rational` and
 can cite `alpha_endpoints`, with its original FactId, orientation and both
 endpoint identity proofs. This does not change stored IR keys.
 
-
 ## Statement boundary evidence
 
 Detailed finite enumeration includes `assignments`: parameter WD and binding
@@ -882,7 +881,6 @@ Ordinary Direct lookup no longer searches graph-wide alpha endpoints/paths.
 Explicit selected-theorem endpoint comparisons can still emit `alpha_endpoints`;
 the existing `alpha_paths` representation remains readable.
 The typed Direct search entries return `None` for a miss, which is not a proof.
-
 
 ## Direct structural membership
 
@@ -1084,65 +1082,41 @@ applicable. Enclosing equality WD still owns integer/nonzero modulus evidence.
 The [local guard regression](../../examples/proof_nodes/equal/by_builtin_rule/nested_mod_integer_multiple.lit)
 checks fractional-multiplier rejection and preserves signed integer multiples.
 
-
 Detailed atomic witness success projects the already checked predicate arguments,
 projected existential, ambient WD/type results, local proof steps and body/unique
 obligations in execution order. Nonempty witness failure projects exactly the
 owned ObjWd, SetWd, ProofBody or Membership result; ProofBody retains its step
-index. Neither exposes local_env. The [witness evidence tracer](../../examples/stmt_nodes/witness/witness_detailed_evidence.lit)
-and focused evidence note (historical task record; retired)
-record the local consumer repair; execution and Normal contracts stay unchanged.
-
+index. Neither exposes local_env. See the [witness evidence tracer](../../examples/stmt_nodes/witness/witness_detailed_evidence.lit). Execution and Normal contracts are unchanged.
 
 Detailed ProductComponentNonzero projects `product_nonzero_proof` from the
 verifier-owned AtomicExceptEqualityFactKnownProof: its actual fact and selected
-known-source searched proof. The [dedicated reflection tracer](../../examples/proof_nodes/atomic/by_builtin_rule/zero_nonzero_reflection_evidence.lit)
-and source evidence note (historical task record; retired)
-record exact source-ID tests in English and Chinese. Normal projection and
+known-source searched proof. See the [reflection tracer](../../examples/proof_nodes/atomic/by_builtin_rule/zero_nonzero_reflection_evidence.lit) for source-citation cases. Normal projection and
 locale key maps are unchanged; independent certificate replay is unverified.
-
 
 Detailed `FactorialMonotone` projects the actual `argument_order` verification;
 `FactorialStrictMonotone` projects `positive_smaller`, then `argument_order`
-in producer order. Either order spelling retains its actual source citation.
-The four new factorial/lcm typed winning leaves own ten language selectors.
-`LcmLeftAbsDivisibility` and `LcmRightAbsDivisibility` are separate unconditional
-identities under checked parent WD; no nonexistent source premise is projected.
-The enclosing equality owns integer and nonzero-modulus evidence. Existing
+in producer order. Either order spelling retains its actual source citation. The four new factorial/lcm typed winning leaves own ten language selectors. `LcmLeftAbsDivisibility` and `LcmRightAbsDivisibility` are separate unconditional
+identities under checked parent WD; no nonexistent source premise is projected. The enclosing equality owns integer and nonzero-modulus evidence. Existing
 `PositiveIntegerInNPos` retains `integer_proof` and the actual `positive_proof`
-for either x>0 or 0<x; its payload and projector shape are unchanged.
-The leaf evidence record (historical task record; retired)
-links source-ID, permission, negative and selected consumer gates. Independent
+for either x>0 or 0<x; its payload and projector shape are unchanged. Independent
 certificate replay and Lean compilation remain outside this verification scope.
 
-
 Exp/Ln strict/weak forward leaves project actual `argument_order` verification;
-their order-reflection leaves project actual `image_order`, including its WD.
-Eight typed owners supply ten localized name/guard-message selectors. Reverse
-written source premises retain their real citations and inherited ceilings.
-The exp/ln consumer record (historical task record; retired)
-links current-source Detailed/language gates and the still-pending nested-ln
-predicate-domain WD consumer. Warm ln-sign KnownEqualObjSubstitution consumes
-a real earlier ln(1)=0 and the native order leaf; it is not a known-forall proof.
-Independent certificate replay and Lean compilation are outside these gates.
+their order-reflection leaves project actual `image_order`, including its WD. Eight typed owners supply ten localized name/guard-message selectors. Reverse
+written source premises retain their real citations and inherited ceilings. Warm ln-sign KnownEqualObjSubstitution consumes
+a real earlier ln(1)=0 and the native order leaf; it is not a known-forall proof. Independent certificate replay and Lean compilation are outside these gates.
 
-
-LnAsEulerLog and ExpAsEulerPower each own ten guarded language texts and a separate Detailed identity leaf. They consume no searched premise and fabricate no child; enclosing equality retains actual exp/ln/log/power WD. The fixed-base record (historical task record; retired) links actual typed owner gates and valid prior-forall citations. Full release/Lean/replay remains outside this local contract gate.
-
+LnAsEulerLog and ExpAsEulerPower each own ten guarded language texts and a separate Detailed identity leaf. They consume no searched premise and fabricate no child; enclosing equality retains actual exp/ln/log/power WD. Full release/Lean/replay remains outside this local contract gate.
 
 The four rounding bounds and TanQuotientDefinition, CotQuotientDefinition and
 GcdEuclideanStep each retain a distinct Detailed builtin leaf and ten localized
 Normal explanations. Their enclosing verification retains the original object
 WD guards. Structural finite-extremum membership uses intrinsic
 `finite_set_max` / `finite_set_min` real codomains; `known_subset` retains both
-actual `member_proof` and `subset_proof` citations. The
-source-owned acceptance record (historical task record; retired)
-checks the actual executed leaves through Detailed and Normal consumers. Normal
+actual `member_proof` and `subset_proof` citations. Normal
 continues to summarize a whole forall with its compound proof label.
 
-
-Detailed LogStrictDecreasing and LogWeakDecreasing each retain nested `guards` with four mandatory actual producer fields: `base_positive_proof`, `base_lt_one_proof`, `left_arg_positive_proof`, `right_arg_positive_proof`, followed by actual `argument_order`. Reverse written guards/comparisons cite the actual known facts. Two typed leaves own ten guarded localized outputs; existing increasing log paths remain first. Source evidence (historical task record; retired) records actual English/Chinese citations and selected language/Detailed gates; shared search ceilings and independent replay are not broadened.
-
+Detailed LogStrictDecreasing and LogWeakDecreasing each retain nested `guards` with four mandatory actual producer fields: `base_positive_proof`, `base_lt_one_proof`, `left_arg_positive_proof`, `right_arg_positive_proof`, followed by actual `argument_order`. Reverse written guards/comparisons cite the actual known facts. Two typed leaves own ten guarded localized outputs; existing increasing log paths remain first. These changes do not broaden shared search ceilings or independent replay support.
 
 FnRange WD and FnRangeOfEmptyDomain retain checked complete-domain sources.
 FnRangeOfConstantAnonymousFn now retains an inhabited-domain certificate,
@@ -1157,7 +1131,6 @@ each finite Cartesian factor. seq and finite_seq project their actual input
 signature and constructive return witness. Closed integer range membership
 projects the original range, exact scalar value and both endpoint values;
 it keeps the existing closed-calculation route and localized keys.
-
 
 CartMembership builtin and strategy evidence now retains the checked complete
 function-domain match followed by each coordinate requirement proof. It no
@@ -1180,8 +1153,7 @@ AnonymousFn WD projects its return-bound choice explicitly. A checked ordinary b
 
 The predicate-signature failure reason retired_builtin identifies a legacy shape predicate payload rejected by WD. It preserves the already-checked argument children and predicate name in all localized profiles; no unsupported predicate is published as a current builtin. Parser retirement remains a separate `session_terminated` / `termination` boundary.
 
-
-LogProduct, LogQuotient, LogReciprocal and LogArgPower project their named mandatory argument proofs after `base_proof`. The selected LogAlgebraBaseProof is `greater_than_one` with `greater_than_one_proof`, `below_one` with `positive_proof` and `less_than_one_proof`, or `positive_nonunit` with `positive_proof` and `nonunit_proof`. Actual Runtime leaf fixtures retain ten localized Normal explanations and EN/ZH FactId citations; these four leaves no longer use a generic `proof_of_requirement_facts` array. Acceptance evidence (historical task record; retired) retains inherited permissions and remaining WD cases.
+LogProduct, LogQuotient, LogReciprocal and LogArgPower project their named mandatory argument proofs after `base_proof`. The selected LogAlgebraBaseProof is `greater_than_one` with `greater_than_one_proof`, `below_one` with `positive_proof` and `less_than_one_proof`, or `positive_nonunit` with `positive_proof` and `nonunit_proof`. Actual Runtime leaf fixtures retain ten localized Normal explanations and EN/ZH FactId citations; these four leaves no longer use a generic `proof_of_requirement_facts` array.
 
 The real-power WD extension retains actual positive-base/real-exponent or
 nonnegative-base/positive-exponent requirements. The existing carrier leaf is
@@ -1189,9 +1161,7 @@ now `RealPower` with unchanged `base_in_real_proof`; its parent keeps the
 selected WD domain. `ExpAsEulerPower` retains the two-field Detailed identity
 leaf and describes real arguments in all ten languages. Former
 `RealIntegerPower` and `ExpAsEulerIntegerPower` rule names are superseded; this
-changes those rule labels without changing their evidence field shapes. See
-acceptance (historical task record; retired).
-
+changes those rule labels without changing their evidence field shapes.
 
 Whole-forall replay compares nested universal conditions recursively, while keeping existential polarity, complete carriers and free identities exact. Detailed retains the existing `well_defined`, `cite_fact_id` and outer `parameter_renamings`; no new result label or schema is introduced. Ten-language executed tests check the actual source citation in [the nested unique-source tracer](../../examples/proof_nodes/forall/known_source_nested_unique.lit). A structural match still obeys the caller's WD ceiling.
 
@@ -1204,7 +1174,6 @@ Runtime fixtures check the leaves and successful stored-forall reuse; the
 [product](../../examples/proof_nodes/equal/by_builtin_rule/tan_cot_product.lit)
 and [square](../../examples/proof_nodes/equal/by_builtin_rule/tan_square_reciprocal_cosine.lit)
 tracers retain their partial-operation guards.
-
 
 Fixed trigonometric interval consumers retain the actual written Less/Greater or weak bound result and its source citation for (-pi)/2, -(pi/2), 0-pi/2 and (-1)*(pi/2). Inverse requirement order remains lower then upper; sine-order and raw nonzero evidence keep their existing named fields. There is no new result label or schema.
 
@@ -1236,7 +1205,6 @@ single-citation summary is empty for these two-source rules; both citations
 remain in their children. Sixteen actual typed leaves execute across ten
 languages. See [strict order](../../examples/proof_nodes/atomic/by_builtin_rule/negative_common_factor_order.lit).
 
-
 The additional trigonometric interval builtin leaves project actual
 `lower_bound` and `upper_bound` verify results, and `argument_order` for
 monotonicity. Their rule-specific variants keep the chosen comparison direction
@@ -1244,7 +1212,6 @@ and strictness instead of relabeling a strict source as a weak premise. Parent
 WD remains a separate result; tangent/cotangent nonzero citations appear there.
 The source/citation and Normal/Detailed/ten-language producer contract is
 `trig_additional_interval_order_tests`.
-
 
 The local scalar migration rules retain dedicated IDs for negative integer reciprocal powers, symbolic complex modulus/quotient coordinates, intrinsic exp/factorial nonzero values, sign and binary extrema. `NegativeIntegerPowerReciprocal` exposes `base_numeric`, `exponent_integer`, and `base_nonzero`. Sign reflection retains its actual equality/nonzero citation and real-domain evidence. Weak monotonicity exposes each argument order; a fixed argument is `same_argument`, while an unequal pair projects its actual checked order. Intrinsic formula/nonzero leaves rely on the enclosing fact's WD certificate, rather than fabricating premise citations. The focused `legacy_six_simple_bt_tests` producer/consumer gate checks these fields and the actual extremum-order premise evidence.
 

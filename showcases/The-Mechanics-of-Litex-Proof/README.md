@@ -105,6 +105,3 @@ mathematics while letting later statements cite the same mathematical values.
 The relation lesson defines `\equivalence_class<X, a>` as
 `{b X: $rel(a, b)}`. The template retains the representative's carrier and
 lets the symmetry/transitivity proof reuse one class value on each side.
-
-The [2026-10-14 source repair and fresh CLI acceptance](../verification_runs/2026-10-14-showcase-repair.md)
-records the current module check and per-file repair evidence.

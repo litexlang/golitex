@@ -1,1 +1,0 @@
-witness $is_nonempty_set({x R:x>0}) from 1

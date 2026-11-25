@@ -50,7 +50,7 @@ formation and truth from its checked source and genuine applicability
 conditions. Direct storage never calls conclusion WD or inference. Premise
 checks run with inference disabled. An explicit later statement may check a
 stored conclusion and use it as a new seed. See the
-[one-step contract](../one_step_acceptance.md).
+[storage and inference contract](../README.md).
 
 `stored_conclusions()` and `stored_fact_ids()` are computed views over the
 actual captured stores, preserving their execution order and original IDs.

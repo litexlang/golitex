@@ -3,7 +3,7 @@
 This showcase develops higher-order reasoning and constructed arithmetic from
 Boolean truth values. Start with [the original standalone example](../../examples/hol_embedding.lit)
 provided by **chegnxuan huang**, or run [v3](main.lit), the importable
-version with faster proof checking.
+version used by this module.
 
 The local caller imports v3 through `validation/litex.config`.
 
@@ -62,12 +62,6 @@ target/release/litex -strict -lang en -f examples/hol_embedding.lit
 target/release/litex -strict -lang en -f showcases/hol/main.lit
 target/release/litex -strict -lang en -f showcases/hol/validation/main.lit
 ```
-
-In the five-round repeat on the same Litex release, the median strict
-full-file check was **1.39 s** with top-level demonstrations and **1.33 s**
-with sketches. Both runs include the demonstration checks. Checking just the
-prefix before the sketches took **1.21 s** in a separate measurement
-within those rounds. That prefix has a smaller workload.
 
 The [acceptance check](validation/acceptance.json) records the strict runs,
 the local sketch steps, and the independent caller. The [negative cases](validation/negative_cases.json)

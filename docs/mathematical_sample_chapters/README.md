@@ -36,8 +36,8 @@ answers are mathematical extensions; unless explicitly included in a runnable
 block, they are not presented as additional formalized theorems.
 
 The selected sources are public examples and original lectures. The linear
-algebra lecture draws inspiration from Sheldon Axler's *Linear Algebra Done
-Right*; the geometry construction treats the mathematical content of Euclid
+algebra lecture uses Sheldon Axler's *Linear Algebra Done Right* as a background
+reference; the geometry construction treats the mathematical content of Euclid
 I.1 in an analytic plane. These chapters are not reproductions or complete
 formalizations of either book. The plane-geometry library used for further
 reading is maintained by Jiachen Shen and Keyao Zhu.

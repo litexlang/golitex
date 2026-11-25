@@ -1252,8 +1252,7 @@ rejected uploads with 64 KiB bodies, alongside normal uploads and strict policy.
 
 Rule descriptions are shown when authored metadata
 is available; a catalogue entry alone is not a complete mathematical rule
-specification. [DESIGN.md](DESIGN.md) records the full target and acceptance
-boundaries; this first implementation does not establish every target there.
+specification. The implemented interfaces and their boundaries are described below.
 
 ## Website embedding
 

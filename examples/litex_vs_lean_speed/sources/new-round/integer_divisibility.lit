@@ -1,2 +1,0 @@
-forall a Z,c Z*:
-    $dvd(a*c,c)

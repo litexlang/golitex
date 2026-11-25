@@ -159,33 +159,3 @@ needs `CRATES_IO_TOKEN`, `HOMEBREW_TAP_TOKEN`, `SCOOP_BUCKET_TOKEN`, and the
 Docker currently sets `LITEX_STD_PATH=/usr/share/litex/std` in its image and
 checks the published amd64 image. Actual arm64 Docker execution remains a
 separate gate. Intel macOS is outside the current artifact matrix.
-
-## Historical audit records
-
-The following observations apply to their named earlier snapshots, not the
-current automatic-discovery and mandatory-MSI implementation.
-
-On 2026-10-08 the local release audit passed Rust formatting, nine Python
-preflight tests, 1,260 release-mode Rust tests at the 1.0.2-beta source snapshot,
-native 1.0.2-beta archive checks with an invalid inherited std path,
-installed-layout smoke with an explicit std path, five prerelease-tag cases,
-YAML parsing, Bash syntax checks, and generated Ruby syntax checks. Package listing
-contained no `scripts/`, `tmp/`, `private/`, or `todo/` paths. Removing the std
-environment variable in an unrelated directory reproduced an import failure.
-GitHub CLI was not authenticated; Docker daemon access was denied. Windows,
-Linux runtime, remote secrets, and actual publishing were not verified locally.
-Scoop updates skip an empty commit on rerun. Prerelease detection handles any
-SemVer prerelease suffix, and ignores hyphens in build metadata.
-Other work changed `src/prelude.rs` and `lean/Litex.lean` after the Rust test
-gate. Those changes are outside this audit's acceptance; formatting was checked
-again successfully. Run the quality gates against the final commit before tagging.
-
-MSI linkage repair: the local 12-test Python suite passed on 2026-10-08.
-The generated fragment includes all four currently shipped std files. Actual
-WiX linking and MSI installation were not run on this macOS host; validate
-the repaired workflow on Windows before calling the installer accepted.
-Package boundary and diff whitespace checks passed. The current worktree's
-broader release checks are not green: formatting reports pre-existing Rust
-edits, and Rust compilation reports `EvalRational::zero()` as unavailable in
-`src/compile_to_lean/compile_run.rs:309`. These files were already modified
-before the MSI repair and were not edited as part of it.

@@ -66,7 +66,7 @@ litex -lang en -strict -f first.lit
 
 成功的批量检查在 JSON 结果里有 `"run_result": "success"`、`"session_terminated": false` 且 `"termination": null`。网站可能把结果呈现得更简单。交互式命令行 REPL 对每一轮（成功或失败）都打印同一份 Normal run JSON（`target: "repl"`）。第 6 部分会更仔细地读失败结果。
 
-想直观看到 Litex 如何检查一条事实，可以看 [Litex 验证流程图](https://litexlang.com/assets/diagrams/litex-verification-pipeline-v1.png)。
+想直观看到 Litex 如何检查一条事实，可以看 [验证流程说明](../examples/proof_search/README.md)。
 
 **试一试：** 把第二行改成 `2 * (3 + 5) = 16`。运行前先预测结果。再故意把右边改成 `15`。
 
@@ -632,7 +632,7 @@ smallest repair. Finish with a clean whole-file check and its result.
 
 循环就是你已练习过的：提出陈述或证明步骤，检查，读反馈，修复，在同一个 `-session` 中保留已接受工作。普通交互失败会保留先前成功。保存源码，让新进程能复现完整结果。
 
-[Litex Agent 协作流程图](https://litexlang.com/assets/diagrams/litex-agent-pipeline-v1.png) 展示了人、AI 与验证器之间的这一协作循环。
+[智能体指南](Litex智能体指南.md)说明逐句提交、失败处理和重放方式。
 
 检查器不决定 agent 是否形式化了你真正想要的问题。在把成功运行当作原问题的答案之前，复查定义、定义域、假设与结论。更长的 agent 会话与重放纪律，见 [Agent Guide](Litex智能体指南.md)。
 
@@ -1026,7 +1026,6 @@ forall x R:
 | 找合适的声明或证明动作 | [Learner Cheatsheet](Litex学习速查表.md) |
 | 查阅精确语法、语义或证明模式 | [Manual](Litex手册.md) |
 | 安装 Litex 或理解 CLI 反馈 | [Setup](安装Litex.md) 与 [CLI](Litex命令行参考.md) |
-| 理解语言的研究方向 | [Litex 蓝图](Litex中文蓝图.md) |
 | 搭建可复现的 agent 工作流 | [Agent Guide](Litex智能体指南.md) |
 
 对你的下一份文件，选一个你能在纸上解出的小问题。先写对象与合法输入，精确陈述要证明什么，再一步步按有用的数学动作增长已检查源码。

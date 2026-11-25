@@ -11,7 +11,7 @@ Read this page online: https://litexlang.com/doc/cli
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/cli.md
 
-> **Litex is an experimental hobby project still in beta. Expect rough edges.**
+> **Litex is beta software. Interfaces and coverage are described for the current version.**
 
 ## Before You Start
 

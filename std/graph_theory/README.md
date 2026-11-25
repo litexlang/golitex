@@ -212,5 +212,5 @@ Odd-degree vertex parity is further mathematics, not inferred as a library
 interface from the current equation alone.
 
 Paths and connectedness, trees, cycles, colorings, graph isomorphisms, directed
-graphs and multigraphs remain future work. This is not a complete graph course.
+graphs and multigraphs are not provided by this module. This is not a complete graph course.
 See [the mathematical spine](math_collections.md) for the proof dependencies.

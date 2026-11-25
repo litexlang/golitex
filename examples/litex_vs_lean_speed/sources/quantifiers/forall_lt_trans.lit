@@ -1,5 +1,0 @@
-forall a,b,c R:
-    a < b
-    b < c
-    =>:
-        a < c

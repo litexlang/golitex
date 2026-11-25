@@ -152,11 +152,7 @@ Set `CHROME_EXECUTABLE` if using an installed Chromium-family browser instead of
 Playwright's bundled browser. Browser dependencies are needed only for export;
 the checked-in figures and interactive viewer need none. The PNG image dimensions
 correspond to 600 dpi at the figure's 183-mm width. SVG and PDF retain text as
-text. The layout follows the sans-serif lettering, lower-case panel labels,
-editable vector text and restrained decoration described by the
-[Nature figure specifications](https://research-figure-guide.nature.com/figures/preparing-figures-our-specifications/)
-and [panel/export guide](https://research-figure-guide.nature.com/figures/building-and-exporting-figure-panels/).
-It is Nature-inspired artwork, not an affiliation or a guarantee of acceptance.
+text.
 
 ## Implementation anchors
 

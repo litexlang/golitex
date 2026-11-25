@@ -102,7 +102,7 @@ alone does not make an arbitrary map bijective.
 The source reuses native image cardinality, inclusion bounds, strict-subset
 cardinality and finite difference/union rules. surjection_size_ge already
 closes by its native rule. General indexed inclusion-exclusion,
-recurrence solving and generating functions remain future work. The original
+recurrence solving and generating functions are not provided by this module. The original
 discrete showcase is unchanged. No full course coverage is claimed.
 
 ## Natural binomial coefficients

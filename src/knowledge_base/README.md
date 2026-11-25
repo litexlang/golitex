@@ -241,13 +241,12 @@ White-box tests: `tests/unit/knowledge_base/` (loaded via
 | `exec_env_from_mounted_export` | Build finished-export `ExecEnv` for record |
 | `remap_definition_memory` / `RemapPlan` | Id rewrite |
 
-### Codec roadmap
+### Implemented codecs
 
 | Priority | Kind | Status |
 |----------|------|--------|
 | 1–6 | prop / abstract_prop / thm / identifiers / axiom / struct | done (see subset limits) |
 | 7 | mount + import hook | done (always on) |
-| next | more have-fn tags; template; fuller Obj/Fact; optional full ExecEnv | planned |
 
 ---
 

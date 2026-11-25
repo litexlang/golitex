@@ -28,9 +28,6 @@ and the [rational-map walkthrough](../../docs/Litex_To_Lean_Compiler_Guide.md#tw
 The [compiler guide](../../docs/Litex_To_Lean_Compiler_Guide.md) covers detailed
 usage; [CLI documentation](../../docs/cli.md#lean-compiler-boundary) owns command
 syntax and stdout/error behavior.
-The [coverage inventory and phase plan](../../docs/Litex_To_Lean_Coverage_Plan.md)
-tracks remaining statement, object and builtin-theorem entrypoints separately
-and records which new routes have passed Lean.
 
 ## The complete path
 
@@ -473,16 +470,14 @@ compiles the return and coordinate proofs, then emits the ordered stores. Its
 [finite-function membership adapter](compile_finite_function_membership.rs)
 connects these checked premises to proved laws in `Litex.lean`.
 [Source/generated pairs](../../lean/examples/released_tuple_coordinates/) show
-this path; [coverage notes](../../docs/Litex_To_Lean_Coverage_Plan.md#tuple-definition-release-2026-10-24)
-record the checked cases and remaining boundaries.
+this path.
 
 [Cartesian release](compile_release_cart_def_result.rs) reuses the ordinary
 equality compiler on its captured verification. The selected definition adapter
 checks the exact finite domain and coordinate conditions, then applies the Core
 membership equivalence. It publishes the original equality FactId after the
 verification stages. [Examples](../../lean/examples/released_cartesian_definition/)
-include subsequent citations; the [coverage notes](../../docs/Litex_To_Lean_Coverage_Plan.md#cartesian-definition-release-2026-10-24)
-also cover empty products and arbitrary set parameters.
+include subsequent citations.
 
 Finite-coordinate return proofs retain the original complete index domain.
 `HomogeneousTupleCoordinate` replays the recorded carrier equality for every
@@ -889,8 +884,7 @@ the exact recorded uniqueness citation. Choice constructs a function graph;
 Zorn applies Mathlib's bounded-chain theorem to the semantic members of a set.
 The choice and Zorn results retain each premise's verification and WD/store pair,
 so the compiler can reuse its FactId without repeating proof search. Their local
-proof blocks do not export helper facts. See the [six checked examples and current
-boundaries](../../docs/Litex_To_Lean_Coverage_Plan.md#explicit-assumptions-and-foundation-releases-2026-10-25).
+proof blocks do not export helper facts.
 
 The current consumers cover selected numeric, set, formula-function, predicate,
 quantifier and theorem-reuse routes. Recursion is bounded to the reviewed unary

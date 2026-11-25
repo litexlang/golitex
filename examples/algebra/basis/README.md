@@ -43,6 +43,6 @@ Every negative passes its valid prefix and rejects only its last statement:
 The checker also verifies the full migrated lecture, actual archive/shared-data
 std layouts and complete source/WiX payload equality. No source trust, native
 rule, arity/type overload or dimension selector is introduced. General basis
-existence/exchange and length invariance remain future work. Exact interfaces
+existence/exchange and length invariance are not provided by this module. Exact interfaces
 are documented in [std/algebra](../../../std/algebra/README.md) and their proof
 roles in [math_collections.md](math_collections.md).

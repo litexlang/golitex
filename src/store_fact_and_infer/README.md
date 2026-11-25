@@ -29,11 +29,6 @@ The strict acceptance file is
 It covers exact and mutual FnRange cycles, growing builder elements and the
 explicit next-seed boundary.
 
-The [acceptance checkpoint](one_step_acceptance.md) records the passing gates
-and any remaining verification work. The former derived-WD failure-policy
-question is superseded by named-rule direct storage.
-The [post-migration loop recheck](loop_recheck.md) records the current call-path
-audit, additional cycle/growth controls and the remaining finite chain cost.
 
 [`infer_result/`](infer_result/README.md) owns the typed result tree:
 `InferResult` mirrors `Fact`, `InferAtomicFactResult` mirrors every atomic
@@ -162,8 +157,6 @@ Focused release coverage for this boundary and its recursive consumers:
 cargo test --release --lib -- store_fact_and_infer:: function_preimages native_scalar_codomain finite_set_cardinality_rule chain_fact mixed_equality_order_chain
 ```
 
-The [2026-10-11 call audit](optional_premise_audit.md) records the complete
-optional/construction classification and the executed positive/negative gates.
 
 **Other atomics**
 

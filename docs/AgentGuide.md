@@ -10,7 +10,7 @@
 > already accepted in that Session. Correct only the failed statement and
 > submit it to the same process, then continue from the accepted context.**
 
-**Litex is well suited to interactive work with AI.** An agent can propose one
+An agent can submit one
 mathematical statement, inspect verification feedback, and revise its next
 input while the Session keeps accepted definitions and facts available. This
 gives the agent a repeated propose, check, revise, and continue loop.
@@ -66,15 +66,6 @@ Keep the live Session for the inner loop instead.
 
 A long textbook prefix follows the same rule as `a = 2`. Save the accepted
 source outside the process so it can be replayed after a restart.
-
-**For dependent reasoning, rerunning a growing prefix accumulates quadratic
-work.** With `N` dependent steps taking approximately `t` each, the inner-loop
-time is `Nt` in one live Session, versus
-`t(1 + 2 + … + N) = tN(N + 1) / 2` when every new step reruns the complete
-prefix. The cumulative time ratio is approximately `(N + 1) / 2` under equal
-per-step costs. This assumes one submission per step and an unchanged prefix,
-excluding initial loading, separate checkpoint/final gates and necessary
-restart/replay.
 
 ## Use the Session as the proof-writing loop
 
@@ -172,7 +163,7 @@ strict file check. Omit the rejected candidate from that saved file. Reserve
 | --- | --- |
 | Language, domains, proof commands and mathematical recipes | [Manual](Manual.md) |
 | First-contact authoring choices | [Learner Cheatsheet](Litex_Learner_Cheatsheet.md) |
-| The prompt that teaches an agent Litex cheaply, and how to tune it | [Prompt Authoring](Agent_Prompt_Authoring.md), [Agent Primer](Litex_Agent_Primer.md) |
+| Compact syntax and proof-writing reference for an agent | [Agent Primer](Litex_Agent_Primer.md) |
 | Small runnable examples and their assumptions | [Examples](../examples/README.md) |
 | Module interfaces and chapter dependencies | The owning module's `README.md`, `math_collections.md`, and `litex.config` |
 | Repository authorization and local-only boundaries | [AGENTS.md](../AGENTS.md) and the applicable repository policy skill |

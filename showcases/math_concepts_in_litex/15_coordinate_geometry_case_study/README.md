@@ -38,5 +38,5 @@ That library preserves the geometry statements and includes explicit named
 coordinate bridges in the proofs. The earlier incomplete draft observation
 remains in its dated migration evidence; it does not describe this file.
 
-Litex release checks do not require a Lean analogy file. This library has no
+Litex release checks do not require a handwritten Lean example file. This library has no
 `same_math_in_lean.lean`, and no Lean verification is claimed here.

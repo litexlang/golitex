@@ -105,7 +105,7 @@ interactive command-line REPL prints the same Normal run JSON for every turn
 We will read a failed result more carefully in Part 6.
 
 For a visual overview of how Litex checks a fact, see the
-[Litex Verification Pipeline](https://litexlang.com/assets/diagrams/litex-verification-pipeline-v1.png).
+[verification walkthrough](../examples/proof_search/README.md).
 
 **Try:** Change the second line to `2 * (3 + 5) = 16`. Predict the result before
 running it. Then deliberately change the right-hand side to `15`.
@@ -854,8 +854,7 @@ check it, read the feedback, repair it, and retain accepted work in the same
 `-session`. Normal interactive failures preserve earlier successes. Save the
 source so a fresh process can reproduce the complete result.
 
-The [Litex Agent Pipeline](https://litexlang.com/assets/diagrams/litex-agent-pipeline-v1.png)
-shows this collaboration loop between people, AI, and the verifier.
+The [Agent Guide](AgentGuide.md) describes statement submission, failure handling and replay.
 
 The checker does not decide whether the agent formalized the problem you
 actually meant. Review the definition, domain, hypotheses, and conclusion
@@ -1261,7 +1260,6 @@ Applying the theorem at $3$ gives the candidate slope $6$. The final identity gi
 | Find the right declaration or proof action | [Learner Cheatsheet](Litex_Learner_Cheatsheet.md) |
 | Look up precise syntax, semantics, or a proof pattern | [Manual](Manual.md) |
 | Install Litex or understand CLI feedback | [Setup](setup.md) and [CLI](cli.md) |
-| Understand the language's research direction | [Litex Blueprint](Litex_Blueprint.md) |
 | Build a reproducible agent workflow | [Agent Guide](AgentGuide.md) |
 
 For your next file, choose one small problem you can solve on paper. Write its

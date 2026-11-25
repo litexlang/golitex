@@ -132,8 +132,8 @@ name/arity, native rule, strategy, AST, Env/Runtime, parser, verifier, compiler,
 Lean bridge, trust or axiom was introduced. Public operation names retain one
 fixed mathematical contract.
 
-## Planned, not delivered
+## Unsupported boundaries
 
-The native polynomial-function bridge, exact polynomial degree, polynomial
-root count and complete FTA. This dependency checkpoint alone accepts no
-additional LADR catalogue ID.
+This module does not establish a native polynomial-function bridge, exact
+polynomial degree, polynomial root counts or the full fundamental theorem of
+algebra.

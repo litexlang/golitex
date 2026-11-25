@@ -1,2 +1,0 @@
-forall n N:
-    factorial(n)>0

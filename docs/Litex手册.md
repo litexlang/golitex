@@ -8,31 +8,23 @@
 
 在[在线手册](https://litexlang.com/doc/Manual)中阅读并运行示例。持续维护的 [Markdown 源码](https://github.com/litexlang/golitex/blob/main/docs/Manual.md)是语言指南与详细参考的统一维护位置。
 
-> **Litex 是一个仍处于 beta 阶段的实验性业余项目，使用中可能遇到不完善之处。**
+> Litex 目前处于 beta 阶段。接口与覆盖范围以当前版本的文档为准。
 
 <a id="math-is-code"></a>
 
-## 数学本身就是源码
+## 数学语句与检查
 
-**Write math, get formalized code: because the math already is.**
+Litex 是一门用于形式化数学的高级语言。源码使用规定的语法表示对象、定义、命题和证明步骤。
 
-写下数学，得到形式化代码：因为写下的数学本身就是代码。
+作者给出所需的前提、中间结论、见证、分情形或归纳步骤。检查器先核对表达式的定义域和其他良定义条件，再使用当前作用域内的事实及受支持的规则检查命题。搜索受固定范围限制，可能需要作者补充显式证明步骤。
 
-Litex 让数学对象、定义和事实直接成为形式化源码的一部分。在[下方例子](#the-core-reading-model)中，`x + 1 = 3` 既是数学断言，也是提交给系统检查的语句。
-
-数学写作本身就承载着逻辑结构。语句的形式及其上下文确定了讨论中的对象、可用的前提，以及需要得到支持的结论。Litex 的设计，是让这些联系成为可以执行的推理。
-
-作者提供数学想法、条件和有意义的证明步骤。写下一个普通事实，就是请求执行器检查其条件，并从当前数学上下文中寻找依据。作者可以着重思考需要建立哪些事实，系统则恢复支持范围内连接这些事实的推理。通过检查的事实成为后续步骤可用的知识。
-
-[内置验证规则](#builtin-verification-rules)提供可复用的数学推理模式。上下文搜索把目标与已知事实、适用的全称陈述连接起来；[推导规则](#builtin-inference)还会记录已接受事实的受支持直接后果。这些机制共同让数学语句之间的联系参与后续检查，并遵守作用域、适用条件和搜索边界。
-
-这种分工让人和 AI 可以书写数学步骤，无需逐一写出所有形式推导。需要时，作者仍要选择关键中间事实、见证、分情形或归纳。本手册给出明确的语法、受支持的检查和边界。受支持的 Lean 编译，则进一步使用源码和验证证据。
+已接受的声明和事实可供后续语句使用。本手册列出语法、接口、检查规则及其限制。Lean 编译器只重放当前支持的证明路径；生成 Lean 源码和通过 Lean 检查是两个步骤。
 
 <a id="mathematical-reading"></a>
 
 ### 日常数学句子及其形式化职责
 
-Litex 围绕这样一个问题展开：能不能写下数学，直接得到形式化代码？熟悉的数学用语已经说明了讨论哪些对象、可以使用哪些前提，以及需要证明什么。这里对应的是这些数学职责与明确的源码形式。
+下表列出常见数学表达对应的 Litex 语法，以及检查器对这些语法执行的检查。
 
 | 日常数学表达 | 对应的 Litex | 逻辑职责 |
 | --- | --- | --- |
@@ -65,7 +57,7 @@ forall x R:
 
 |部分|阅读目的|从这里开始|
 |---|---|---|
-|核心观点|理解作者与执行器的分工|[数学本身就是源码](#math-is-code)|
+|核心观点|理解作者与执行器的分工|[数学语句与检查](#math-is-code)|
 |设计原则|理解数学对象模型和检查契约|[原理](#design-principles), [核心模型](#the-core-reading-model)|
 |系统流水线|跟随源码输入经过完整系统，识别各部分的职责|[流水线与组件图](#system-pipeline)|
 |项目组织|选择依赖项/导出并了解名称并加载序|[项目](#project-organization)|
@@ -76,7 +68,7 @@ forall x R:
 |原生规则与推导|查找额外的带保护条件的规律、计算限制和推导触发器|[验证规则](#builtin-verification-rules)、[推导](#builtin-inference)|
 |执行和提取|运行算法/eval，了解 Python/C 提取边界|[可执行路径](#execution-and-extraction)|
 |兼容性和证据|理解已移除形式、假设和验证记录|[兼容性](#removed-and-renamed-public-forms)、[覆盖范围](#verification-and-coverage)、[附录](#appendix)|
-|设计背景和参考|了解设计影响、数学来源和相关工作|[参考文献](#design-context-and-references)|
+|技术参考|查找实现模块及数学背景|[技术参考](#design-context-and-references)|
 
 原生库存有 **52 个公共语句形式、93 个活动对象叶子、20 个内置原子族及其否定形式、两个原生证书谓词**，以及 32 个保留的原生定理接口。稳定的 S/O/F/C 标识符在合并后仍然存在。此清单列出了公共原生语言，而不是每个导入的定理或每个单独的内核重写。
 
@@ -138,7 +130,7 @@ x = 0
 
 最后的技术章节继续[高级接口](#advanced-interface-details)、[原生规则](#builtin-verification-rules) 和 [推导](#builtin-inference)，然后是[执行/提取](#execution-and-extraction)。每个深度注释都链接回其字典条目；定义域、事实和作用域在两种视图中具有相同的含义。
 
-[学习者速查表](Litex学习速查表.md) 提供紧凑的学习进展； [示例](../examples/README.md) 提供更长的可运行文件。 [蓝图](Litex中文蓝图.md) 和 [Lean–Litex 比较](Lean与Litex示例对比.md) 涵盖了基本原理和比较。安装和命令标志属于 [CLI 参考](Litex命令行参考.md)。
+[学习者速查表](Litex学习速查表.md) 提供紧凑的学习进展；[示例](../examples/README.md) 提供更长的可运行文件。安装和命令标志属于 [CLI 参考](Litex命令行参考.md)。
 
 <a id="supported-syntax-and-recommended-source-style"></a>
 
@@ -11140,260 +11132,19 @@ eval sum(1, 3, fn(k Z) Z {k})
 
 <a id="litex-reliability"></a>
 
-## Litex 的可靠性
+## 检查结果与信任边界
 
-Litex 通过持续测试、代码审阅和独立证明复核来提高可靠性。项目目前有约 4,000 个示例和 3,000 多个测试函数；每次发布前，维护者还会使用能用到的前沿大模型审阅源码、排查 bug。
-
-Lean 编译提供了另一层检查：受支持的 Litex 证明可以重建为 Lean 证明，交由 Lean 内核独立复核。这一覆盖范围仍在持续扩大。
+原生检查结果依赖当前检查器、内置数学规则以及源码中显式使用的假设。
+严格模式对用户假设的限制见[trust 与严格模式](#trust-and-strict-mode)。
+对于受支持的证明路径，可以另外生成 Lean 源码并用 Lean 检查；原生检查成功不表示这一步已经执行。
 
 <a id="design-context-and-references"></a>
 
-## 设计背景与参考
+## 技术参考
 
-Litex 将熟悉的编程语言思想引入到用于检查数学的语言中。下面的参考文献将特定的设计选择与其来源联系起来。设计影响反映了作者所说的灵感；数学资源指南定义和基础；相关工作将 Litex 与早期的可读形式数学方法放在一起。
+语法、数学接口和检查条件见本手册各条目。实现模块及其职责见[源码指南](../src/README.md)，Lean 输出的接口和支持范围见[编译器指南](Litex到Lean编译器指南.md)。
 
-<a id="language-design-influences"></a>
-
-### 语言设计来源
-
-|参考|连接到 Litex|
-|---|---|
-|[Python](https://docs.python.org/3/reference/lexical_analysis.html#indentation) 和 [Lisp](https://www.lispworks.com/documentation/HyperSpec/Body/02_a.htm)|Litex 的语法借鉴了这两种语言。 Python 是基于缩进的可读块的参考； Lisp 是简单性和组合性的参考表达式。 Lisp 的优雅是对整个语言的向往。|
-|[Go](https://go.dev/ref/spec)|Go 影响了 Litex 的语法及其对小型、一致的集合机制的偏好。受 Go 强调简单性和可预测性复合的启发，Litex 旨在提供一种足够好的方法来服务于每个目的，并尽可能将其保持为单一机制。这减少了竞争选择并有助于系统保持一致。 Rob Pike 的 [简单即复杂](https://go.dev/talks/2015/simplicity-is-complicated.slide) 讨论了更少的做事方式和可预测交互的功能的价值。|
-|[Lua](https://www.lua.org/manual/5.4/manual.html#pdf-require)|Lua 的模块加载方法影响了导入系统。 Litex 在其项目清单中声明依赖项；请参阅 [项目组织](#project-organization) 了解其加载和命名契约。|
-|数学教材|教科书启发了知识排序和定理/证明组织。后来的材料引用了之前建立的定义和结果；同样，Litex 允许稍后的语句访问已接受的早期上下文，并在声明的序中运行项目导出。陈述定理并证明它的数学思想启发了 `claim` 和 `thm`；请参阅[基本证明-书写决定](#basic-decisions-before-writing-a-proof)。|
-|[C++ 模板](https://eel.is/c++draft/temp) 和 [Go 接口](https://go.dev/ref/spec#Interface_types)|Litex 的 `template` 接口中受 C++ 启发的参数化和实例化：一个定义可以为不同的参数生成对象或函数。 Go 接口还影响了 template 参数必须满足指定的性质的想法。实际数学契约在 [template 接口](#template-interfaces) 下描述。|
-|[C/C++ 结构](https://eel.is/c++draft/class)|命名字段分组为结构化值，这启发了 Litex 的 `struct` 接口。 Litex 将该组织应用于数学对象，以及[高级接口详细信息](#advanced-interface-details) 中描述的条件和事实。|
-|[JavaScript 匿名函数](https://tc39.es/ecma262/multipage/ecmascript-language-functions-and-classes.html#sec-arrow-function-definitions)|JavaScript 激发了将书写和函数直接转换为表达式的能力，而无需先为其命名。 Litex 的匿名函数承担数学定义域和良定义性义务；请参阅 [O80](#o80-anonymous-functions)。|
-|Ctrl+F、[grep](https://www.gnu.org/software/grep/manual/) 和 [sed](https://www.gnu.org/software/sed/manual/)|熟悉的搜索和代换工具启发了证明-搜索模型：在可用上下文中找到适用的事实，匹配其结构，并通过允许的替换重新使用它。这个类比涉及工作流程； Litex 搜索结构化数学事实并检查相关的条件。请参阅[验证规则](#builtin-verification-rules) 和 [推导](#builtin-inference)。|
-|[TeX](https://www-cs-faculty.stanford.edu/~knuth/abcde.html)|TeX 为许多熟悉的数学对象提供符号。该词汇强烈影响了 Litex 的内置对象的选择：目标是涵盖已经具有熟悉的 TeX 表示法的大部分日常数学。 Litex 给出那些对象定义域、定义并检查规则；他们当前的覆盖范围记录在 [对象字典](#object-dictionary) 中。|
-
-Litex 的目标是 Lisp 的优雅和 TeX 的广泛实用性：一种数学领域的人们可以日常使用的语言。这些愿望指导着语言设计和日常可用性。实现是用[Rust](https://rust-lang.org/)编写的；实现语言和对Litex表面语言的影响有不同的作用。
-
-<a id="interpreter-architecture-references"></a>
-
-### 解释器架构参考
-
-Litex 的解释器架构借鉴了以下书籍。设计目标是一个简单的实现，其从源码文本到结果的路径很容易遵循：分词输入，解析语句，分派其执行，检查其义务，并记录接受的信息。 [系统流水线](#system-pipeline) 描述了当前的组件及其职责。
-
-- Harold Abelson 和 Gerald Jay Sussman 与 Julie Sussman，[*计算机程序的结构和解释* (SICP)](https://mitpress.mit.edu/9780262510875/structure-and-interpretation-of-computer-programs/)，第二版，MIT Press，1996 年。它对抽象、环境和评估器的处理为从可理解的部分中组织解释器提供了概念参考； [第 4 章](https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/6515/sicp.zip/full-text/book/book-Z-H-26.html) 明确开发了一个评估器。
-- Thorsten Ball，[*书写 Go 中的解释器*](https://interpreterbook.com/)。   Monkey解释器的逐步构建连接了token、解析、抽象语法树、求值和REPL。它是使源码-to-结果路径在工作代码中可见的实用参考。
-- Alfred V. Aho 和 Jeffrey D. Ullman，*Foundations of Computer Science with C*，W. H. Freeman/Computer Science Press，1995（[作者参考书目](https://www.cs.columbia.edu/~aho/books.html)）。这是《计算机科学基础》的 C 版本，最初为已发布，位于
-  1992. 它为该架构提供了基础计算机科学背景。
-- Robert Nystrom，[*制作解释器*](https://craftinginterpreters.com/)。其[tree-walk解释器](https://craftinginterpreters.com/contents.html)将扫描、解析和评估呈现为显式的实现阶段；本书还开发了一个字节码虚拟机。这里的相关架构参考是对解释器的部分如何组合在一起的清晰解释。
-
-<a id="mathematical-sources"></a>
-
-### 数学来源
-
-Litex 的集合理论基础的介绍借鉴了陶哲轩的 [*分析 I*](https://terrytao.wordpress.com/books/analysis-i/) 以及郝兆宽和杨越的 *集合理论：无穷大概念的探索* (*集合论：对无穷概念的探索*，复旦大学出版社，2014 年；列在[郝的大学页面](https://philosophy.fudan.edu.cn/64/96/c14253a222358/page.htm))。它们是数学定义、构造和基础阐述的参考。请参阅 [信任边界](#trust-boundary) 了解 Litex 的实现基础并检查假设。
-
-<a id="related-work-in-formal-mathematics"></a>
-
-### 形式化数学相关工作
-
-<a id="litex-as-a-mathematical-source-language"></a>
-
-#### Litex 作为数学源码语言
-
-Litex 是一门具有独立原生验证器的数学形式语言。其抽象语法区分 **object（对象）**、**fact（事实）** 和 **statement（语句）**，在实现与文档中分别简称 `Obj`、`Fact` 和 `Stmt`。这三个名称表示具有不同语义职责的语法类别，不是要求逐字写入源码的三个关键字。
-
-| 类别 | 含义 | 例子 |
-| --- | --- | --- |
-| **Object（对象），`Obj`** | 数学值，或在良定义时指称数学值的表达式；可以作为运算对象、函数参数或更大表达式的组成部分。 | `a`、`R`、`a + 1`、`{1, 2}`、`f(a)` |
-| **Fact（事实），`Fact`** | 关于对象的命题，由关系、谓词、逻辑联结词与量词构成；是否成立需要在上下文中建立。 | `a + 1 = 3`、`a $in R`、带全称量词的蕴含命题 |
-| **Statement（语句），`Stmt`** | 可执行的单位，用于引入对象、定义数学词汇、检查事实、组织证明步骤或调用会话命令；执行可以扩展数学上下文。 | `have a R = 2`、放在语句位置的事实、函数定义、证明块 |
-
-这里 `Fact` 是命题的语法类别，不表示其中每个表达式都已经得到证明。成功检查的事实会作为已知信息供后续语句使用。`a + 1` 这样的对象表达式指称一个值，本身没有断言命题；`have a R = 2` 这样的声明则会引入名称并影响上下文。
-
-```litex
-have a R = 2
-a + 1 = 3
-```
-
-第一行是语句，引入对象 `a`，并建立其成员关系与定义等式。第二行内部的 `a + 1` 是对象表达式，`a + 1 = 3` 是事实；把该事实写成完整的一行，就将它嵌入语句位置（AST 中的 `Stmt::Fact(F)`），请求验证 `F`。执行器检查良定义性，在当前上下文中寻找受支持的成立依据，并提交已接受的事实及其推论。因此，命题本身与检查命题的动作仍有明确区别，同时许多受约束的日常数学句式本身就是可执行的形式化源码。
-
-可读性和数学写作的易用性，也是 Lean、Rocq（原 Coq）、Isabelle/Isar 和 Mizar 共同关注的问题。共同目标并不意味着相同的对象模型、详化机制、证明接口或验证架构。下面比较这些技术选择，以及它们要求作者显式承担的工作。Wiedijk 的比较文集让同一数学证明以多种语言呈现 [Compare06]；本文进一步区分对象表示、表达式可接受性、证明接口与证据构造。
-
-Litex 的源码对象模型以集合为基础：数、集合、函数值和函数空间共享同一个数学对象载体；成员关系是对象之间的命题。命题由 `Fact` 类别表示，而不是源码中命题对象宇宙的值。元层的对象载体不是语言内部的全集，集合概括采用有界构造。表达式的可接受性还包含数学侧条件：构成带条件的函数调用，需要建立参数成员关系和实例化后的定义域谓词。这是良定义性义务，而不只是语法或名称解析检查。
-
-```litex
-have fn reciprocal(x R: x != 0) R = 1 / x
-reciprocal(2) = 1 / 2
-```
-
-非零条件属于函数的可调用契约。使用 `reciprocal(0)` 的语句即使提出自反等式，也会在良定义性阶段失败。普通事实验证结合上下文检索、受允许的实例化、计算、原生规则，以及必要时的显式证明步骤，产生带类型的验证证据（验证结果 IR），其中包括相应的良定义性和前提记录。作者给出数学路线；受支持的局部搜索承担例行论证和依据查找。
-
-<a id="litex-theoretical-positioning"></a>
-
-#### 理论定位：语言、演绎知识库与数学基础
-
-**Litex 是一门以数学事实为中心、由上下文驱动的增量验证语言（fact-oriented mathematical verification language）。其原生引擎是一套数学特化的演绎知识库；受支持的验证证据还可以重建为 Lean 证明。** 这个定位描述的是语言与系统架构，不是在提出一套新的基础逻辑演算。
-
-| 层次 | Litex 的职责 |
-| --- | --- |
-| 源码语言 | 通过 `Obj`、`Fact`、`Stmt`，为数学对象、命题和改变上下文的操作提供明确接口。 |
-| 执行架构 | 对作用域内的事实和定义建立索引、检索并检查；成功语句发布可复用知识及带类型的执行证据。 |
-| 数学语义 | 当前原生语言采用纯集合式对象模型，并具有具体的定义域、等式及推理契约。 |
-| 独立复核 | 受支持的 Lean 后端在明确的语义接口下重建证明，是原生验证证据的另一个使用者。 |
-
-前面的 `have a R = 2` 例子体现了知识循环：建立对象与事实，利用这些记录检查 `a + 1 = 3`，再保留已接受的结论。用户证明的 `forall` 则为后续实例提供可复用的条件契约。这里的演绎知识库不只是查找记录：候选前提仍须经过匹配、代换及侧条件检查。演绎数据库早已研究事实、规则和派生查询结果 [Deductive84]；Metamath 也将不同数学基础下的公理、定理与证明组织为数据库 [MetamathDB]。因此，应从 Litex 的具体数学接口、检查行为和证据流评价其贡献，数据库类比本身不能建立首创性。
-
-在原生语法和执行层，数值、加法、连加有 `Number`、`Add`、`Sum` 等直接构造（见[对象 AST](../src/ast/obj.rs)）。[封闭算术检查](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/calculate_closed_equal_fact.rs)不必在每次计算时重放从后继运算或集合编码构造数的过程。这是语义与实现层次的选择；这些原生构造仍需要确定的数学解释及成立的检查规则。SMT-LIB 的整数与实数理论就是通过预期模型规定数值和运算含义的既有例子 [SMTTheory]。`Obj`、`Fact`、`Stmt` 是语法类别，不能据此声称语言没有原子结构或逻辑假设。
-
-ITP 与 ATP 主要描述证明工作的组织和自动化方式，并不指定数学基础。TPTP 的典型工作流是在给定问题中自动寻找逻辑后果 [ATPProcess]；Isabelle 同时具有交互证明、自动化和多种对象逻辑 [IsabelleGeneric]。按广义术语，Litex 可以作为证明助手，也包含自动推理。它有辨识度的默认接口，是逐条检查数学语句并积累可复用知识；仅凭 ITP 或 ATP 标签不足以刻画这一设计。
-
-<a id="mathematical-expression-and-reasoning"></a>
-
-**贴近日常数学写作，可以区分为表达结构与推理结构两个相互配合的层面。** 前者关注数学怎样被写下来，后者关注已有事实怎样支持新的证明步骤。
-
-| 层面 | 日常数学中已有的结构 | Litex 的对应设计 |
-| --- | --- | --- |
-| **表达结构：数学如何被写下来** | 对象、集合、函数、关系，以及“任意”“存在”“假设”等组织语句的方式。 | 以原生对象、事实和语句表达这些结构，明确其含义、使用条件、量词约束和作用域。 |
-| **推理结构：数学如何一步步建立** | 已知事实支持下一步的联系：代入、计算、应用一般规律、分情况、选择见证等。 | 作者写出有意义的数学步骤；系统利用当前上下文、定义、用户已证明的一般规律和内置规则，寻找受支持的成立依据，并记录验证证据。 |
-
-语法与语义贯穿这两层：语法规定构造如何书写，语义规定对象和命题的含义，以及操作对上下文的影响。“假设……”引入局部前提及其有效范围；“因此……”提出需要得到支持的结论。显式的分情况和选择见证，也是在源码中表达推理结构。这一结构关注证明步骤之间的依赖与成立依据，既包括作者写出的证明动作，也包括验证器使用规则的过程。
-
-一段日常数学可以把这两层接起来：
-
-> 设 $x$ 是正实数。令 $y = 1/x$。于是 $xy = 1$。
-
-- **表达结构**确定对象 $x$、$y$，$x$ 的取值范围与条件，$y$ 的定义，以及最后断言的等式。
-- **推理结构**连接这些信息：由正性得到 $x \ne 0$，确认倒数有定义，再利用定义、代入和运算规则支持 $xy = 1$。
-
-关键构造和证明路线由作者或 AI 提供，Litex 通过上下文检索与检查，使这条路线中受支持的联系能够执行。因此，贴近日常数学写作既涉及表达接口，也涉及推理工作的分配；仅凭 ITP／ATP 标签，无法完整刻画这一设计维度。
-
-**Litex 让数学写作中原本就存在的逻辑与结构，成为可以执行的东西。**
-
-作者日常操作的原生抽象层，是另一个需要单独说明的维度。Litex 把熟悉的数学对象、关系、语句和证明动作直接作为原生构造，让作者在日常数学的抽象层上定义函数、使用连加或分情形讨论。这里的“语义原语”指写作接口中可以整体使用的数学单位；它们仍可以有参数和内部结构。这些用户在源码里直接看到和书写的构造，**只是 Litex 原生语义的一部分**；原生语义还包括定义域与良定义性条件、作用域、上下文更新及已接受事实的复用。
-
-内置验证规则承担另一层职责：**它们是内核中为这些源码步骤提供依据的机制**。对象和语句是作者日常看见、写出的组成部分；普通证明源码则不必逐条列出验证器将采用哪些内置规则。当某条规则确实参与了一次验证，相应的验证证据可以展示本次选用的规则及其引用的前提。例如，源码写下 `let a = 1` 和 `a + 2 = 3`；保留的依据则引用 `a = 1`，记录先代换、再封闭计算的路线。因此，原生源码词汇与内核规则库是接口中不同的层次。
-
-Lean 中的日常数学表达可能经过记号、库定义、详化和策略等层次，未必具有与 Litex 相同的表面对应形式或原生粒度；但这些层次最终仍通向有明确含义的项及可由内核检查的推理 [Lean21]、[LeanElab]。这为解释 Litex 的构造、重建其记录的推理提供了目标：对受支持的编译路径，需要给出语义解释，并为实际使用的规则构造相应的 Lean 证明。两个语言不必具有相同的表面句式，仍然可以建立这样的对应。受支持的 Lean 证明重建已经实现；这里并不把这一覆盖范围扩大为全部原生构造和规则。
-
-将这种方法与某一种底层编码分开，可以提出迁移到其他数学基础的研究方向，但不能直接推出当前实现已支持任意基础。迁移仍须提供新的语义解释、表达式形成条件及成立的推理规则。基础无关性本身是一项实质契约，MMT 的工作展示了这一层问题 [MMT]。Litex 当前有具体的集合式源码模型；其 [Lean 语义 API](../lean/Litex.lean) 与[证明重建编译器](../src/compile_to_lean/README.md)提供了受支持的解释路线，不构成整个原生验证器的完整可靠性证明。
-
-这里的研究主张，是把数学构造与定义域契约、具有作用域的演绎存储、用户已证明事实的自动复用，以及可检查的执行依据组合成连贯的写作接口，减少显式证明编排。理论描述需要连接指称语义、上下文更新的操作语义与相对可靠性（relative soundness）：在指定解释与假设下，检查接受的步骤保持真值。这些是理论描述需要承担的证明义务，并非本段已经建立的元定理；易用性及写作工作量的降低也仍需评价。
-
-<a id="comparison-with-lean"></a>
-
-#### 与 Lean 比较
-
-[Lean 的详化器](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/)将源码表达式转换为依赖类型论中的项，由内核检查定理的证明项。直接项、声明式构造和证明策略，是通往这一证明表示的不同写作接口；其可扩展架构还支持用户定义的详化与元编程 [Lean21]、[LeanElab]。
-
-Litex 在源码层区分数学表达式、命题与上下文操作，集合成员关系和定义域条件作为事实供验证器使用。Lean 的一种受限输入接口通过子类型编码参数，调用时将值与证据包装为 `f ⟨x, hx⟩`；Litex 写成 `f(x)`，在上下文中检查条件。Lean 也可以使用证明参数、推断的强制转换与自动化 [LeanCoercions]。Litex 原生接口的可观察优势，是减少此类调用中的显式证据传递，以及受支持普通事实所需的方法标注；数学等式链可以直接保留为可见的证明路线，不必为每个例行步骤另写一次证明策略调用。
-
-这属于表示和默认验证责任的差异，而非表达能力的分离。Lean 自动化可以产生很短的证明，依赖类型也提供了超出上述源码模型的抽象能力。Litex 的原生验证证据同样不同于 Lean 证明项：受支持的 Lean 编译从这些证据重建证明。生成源码与实际通过 Lean 内核检查是两个步骤，见[编译器指南](Litex到Lean编译器指南.md)。
-
-<a id="comparison-with-rocq-formerly-coq"></a>
-
-#### 与 Rocq（原 Coq）比较
-
-[Rocq](https://rocq-prover.org/) 在归纳构造演算（Calculus of Inductive Constructions，CIC）上提供依赖规格与程序语言 Gallina。记号与详化机制将用户表达式转换为核心项，策略逐步构造由内核检查的证明项。管理声明的命令、项表达式与策略语言，是其写作环境中的不同部分 [RocqCore]、[RocqElab]、[RocqProof]。这种分层不等于 Litex 的 `Obj`／`Fact`／`Stmt` 语义分类：Rocq 将命题及其证明放在有类型项语言中表示。
-
-Rocq 也支持侧条件的隐式处理。对于 `{x : A | P x}` 这样的子集接口，`Program` 可以插入子集转换、生成证明义务，并自动调用 obligation tactic；这些义务需要得到解决，才能产生最终的完整项。Sozeau 的子集转换研究与维护中的 `Program` 文档说明了这条详化路线 [Sozeau07]、[RocqProgram]。SSReflect 还提供结构化证明命令和基于反射的数学推理 [SSReflect10]。
-
-对本文展示的数学接口，Litex 的优势是统一的普通语句契约：引入数学对象或陈述事实，在上下文中检查所需定义域谓词，再连同原生验证证据提交已接受的信息。带条件的 `f(x)` 所需义务直接来自源码中的可调用契约；其原生表示不经由 Gallina 子集项或 `Program` 详化。区别在于义务在哪里表示和解决，以及一个数学步骤如何成为上下文中的可用知识。Rocq 的依赖规格、归纳程序设计与证明项内核支持另一类抽象能力；自动解决侧条件本身不能单独构成 Litex 的区别。
-
-<a id="comparison-with-isabelleisar"></a>
-
-#### 与 Isabelle/Isar 比较
-
-[Isar](https://isabelle.in.tum.de/website-Isabelle2026-RC0/dist/library/Doc/Isar_Ref/Framework.html) 是建立在 Isabelle 通用逻辑框架上的结构化证明语言，管理局部事实、证明目标和证明方法；底层表达式与推理原则由对象逻辑提供。常用的 Isabelle/HOL 配置采用有类型高阶逻辑，Isabelle 也支持 ZF 等其他对象逻辑。Isar 已经能够书写可读的声明式证明，因此这一描述本身不足以区分 Litex。Wenzel 的原始论文规定了证明文档的操作解释语义，而不只是展示记号 [Isar99, §4.2][Isar99]、[IsarRef]。
-
-Litex 将数学词汇、依赖定义域条件的表达式构成，以及普通事实检查整合进同一门源码语言。**这些契约也可以由用户构造。** 用户证明并存入可见上下文的 `forall` 事实，会成为新的可复用逻辑契约：当后续目标匹配它受支持的结论形状时，验证器确定参数代换，检查参数所属集合及前提，再引用该全称事实。因此，普通事实验证也能使用用户自己证明建立的契约；这种复用不要求为该事实命名、显式写出实例化调用，或另行注册规则。
-
-```litex
-prop even_integer(n Z):
-    exist k Z st {n = 2 * k}
-
-claim:
-    ? forall n Z:
-        $even_integer(2 * n)
-    witness exist k Z st {2 * n = 2 * k} from n
-    by def $even_integer(2 * n)
-
-have a Z
-$even_integer(2 * a)
-```
-
-`prop` 引入数学词汇；`claim` 通过构造存在性见证并折叠谓词定义，证明全称事实。最后一行按 `n = a` 实例化并引用该事实，无须重新书写见证证明。这样，用户证明数学的过程，也扩展了后续检查可使用的契约，而验证仍使用同一套原生机制。检索在后续目标出现时按需进行，受当前作用域、支持的局部匹配与前提检查约束。这种通过已证明事实扩展契约的能力，与原生数学契约一起构成默认语句语义，减少例行证明步骤的显式编排。
-
-Litex 的原生集合对象模型也不同于 HOL 的有类型项和有类型集合。此外，[HOL 函数是全函数](https://www.isabelle.in.tum.de/library/Doc/Functions/Functions.html)：类型正确的应用总有一个值，即使尚未建立另行规定的定义域谓词 [HOLFunctions]。Litex 则在带条件调用的良定义性检查中要求定义域条件成立。这为“先建立数学前提，再允许使用表达式”的约定提供了原生支持。对受支持的事实，默认检查还减少了事实流和证明方法的显式编排。这些优势针对所选择的数学接口；Isabelle 的通用框架和可扩展证明基础设施服务于更广的用途。
-
-<a id="comparison-with-mizar"></a>
-
-#### 与 Mizar 比较
-
-[Mizar](https://mizar.uwb.edu.pl/cicm_tutorial/mizar.pdf) 在数学惯用语和前向声明式证明方面与 Litex 最为接近。它使用经典一阶推理和 scheme 构造，MML 以集合论为基础，[软类型](https://www.cs.ru.nl/~freek/mizar/miztype.pdf)用于分类建立在无类型集合论基础上的表达式；结构化数学陈述和等式链也早已得到支持。系统综述与软类型论文对这些机制给出了专门说明 [Mizar15]、[Wiedijk07]。因此，集合对象和可读事实语句都不能单独构成差异。
-
-函数应用的可接受性存在具体区别。Mizar 通常使用的函数取值运算由 [`FUNCT_1:def 2`](https://mizar.uwb.edu.pl/version/current/html/funct_1.html) 定义：`f.x` 在 `dom f` 内取对应值，在定义域之外取空集 [MizarApply]。Litex 的带条件调用则要求先建立声明的定义域条件，才能使用该应用。对于希望通过禁止表达式使用来暴露缺失定义域假设的作者，这是直接的语义优势。
-
-例行前提检索也有区别。Mizar 的基本 `by` 推理针对所引用的前提检查结论，同时提供类型注册等自动机制，语法也允许省略 justification [MizarChecker]、[MizarGrammar]。Litex 的普通验证路径可以按结论结构检索可见的全称事实，对其进行实例化并检查适用条件。在受支持的情形中，作者可以直接写下一条事实，减少标签和显式前提引用。这里比较的是默认接口，而不是声称 Mizar 没有自动化。参见 [Mizar 检查器说明](https://www.cs.ru.nl/~freek/mizar/by.pdf)及 [justification 语法](https://mizar.uwb.edu.pl/language/pages/justification.html)。
-
-<a id="the-language-design-question"></a>
-
-#### 语言设计问题
-
-Litex 所探索的贡献，是小型概念接口、原生数学契约与上下文验证的组合。`Obj`／`Fact`／`Stmt` 的区分为作者与实现提供了语义组织；三个类别名称本身并不建立新颖性或最小演算。相关假设是，这种组织能够减少构建和复用可检查数学时的表示、论证与修正工作。例子展示了特定写作操作的减少；普遍的学习成本和生产率结论仍需比较实验。精确的表达与验证支持范围由语言字典和[信任边界](#trust-boundary)说明。
-
-<a id="selected-technical-references"></a>
-
-#### 技术参考文献
-
-这些文献说明被比较机制的定义与设计依据。Litex 的行为由本手册及上述例子说明；跨系统的比较结论属于接口分析，不是被引作者报告的 Litex 实验结果。
-
-| 编号 | 一手文献 | 本文引用用途 |
-| --- | --- | --- |
-| [Deductive84] | Hervé Gallaire, Jack Minker, Jean-Marie Nicolas. *Logic and Databases: A Deductive Approach*. ACM Computing Surveys 16(2), pp. 153–185, 1984. | 事实、规则与派生查询结果；演绎数据库已有的研究背景。 |
-| [MetamathDB] | Metamath project. *Home Page and Mini FAQ*. official project description. | 证明数据库、多种数学基础及显式证明检查。 |
-| [SMTTheory] | SMT-LIB Initiative / Cesare Tinelli. *Reals_Ints*. SMT-LIB 2.7 theory declaration, updated 2024-07-21. | 通过预期解释规定数值与算术运算的含义。 |
-| [ATPProcess] | Geoff Sutcliffe / TPTP project. *The ATP Process*. TPTP World Tutorial. | 问题描述、自动寻找逻辑后果与证明检查的职责区分。 |
-| [IsabelleGeneric] | Isabelle project. *Overview*. official project description. | 交互证明、自动化、Isabelle/Pure 与多种对象逻辑。 |
-| [MMT] | Florian Rabe and Michael Kohlhase. *A Scalable Module System*. research paper. | 基础无关的数学知识表示及其语义契约。 |
-| [Compare06] | Freek Wiedijk (ed.). *The Seventeen Provers of the World*. LNCS 3600, 2006; author-hosted comparison manuscript. | 通过同一数学例子比较证明风格与表达；作为比较方法的历史参照。 |
-| [Lean21] | Leonardo de Moura and Sebastian Ullrich. *The Lean 4 Theorem Prover and Programming Language*. CADE 2021, LNCS 12699, pp. 625–635. | Lean 4 的系统架构，以及详化器、策略与元编程的可扩展性。 |
-| [LeanElab] | Lean project. *Lean Language Reference: Elaboration and Compilation*. official reference. | 源码到核心表示的处理路径，以及详化与检查的区别。 |
-| [LeanCoercions] | Lean project. *Lean Language Reference: Coercions*. official reference. | 强制转换的自动插入及其边界，避免将所有表示转换都说成手写操作。 |
-| [RocqCore] | Rocq Development Team. *Rocq Reference Manual: Core language*. version 9.1.0. | CIC、证明项、内核，以及内核与详化器、策略的职责分离。 |
-| [RocqElab] | Rocq Development Team. *Rocq Reference Manual: Command level processing*. version 9.1.0. | 核心类型检查之前的记号解释、预处理与详化机制。 |
-| [RocqProof] | Rocq Development Team. *Rocq Reference Manual: Proof mode*. version 9.1.0. | 证明状态、局部上下文与证明项的增量构造。 |
-| [RocqProgram] | Rocq Development Team. *Rocq Reference Manual: Program*. version 9.1.0. | 谓词子类型、生成的证明义务与自动义务求解。 |
-| [Sozeau07] | Matthieu Sozeau. *Subset Coercions in Coq*. TYPES 2006, LNCS 4502, pp. 237–252, published 2007. | 通过子集转换与证明义务，将富含规格的程序详化为 CIC 项。 |
-| [SSReflect10] | Georges Gonthier and Assia Mahboubi. *An introduction to small scale reflection in Coq*. Journal of Formalized Reasoning 3(2), pp. 95–152, 2010. | 结构化证明语言扩展，以及基于反射的数学推理方法。 |
-| [Isar99] | Markus Wenzel. *Isar — a Generic Interpretative Approach to Readable Formal Proof Documents*. TPHOLs 1999, LNCS 1690. | 可读形式证明文档，以及 Isar 的操作解释语义（§4.2）。 |
-| [IsarRef] | Isabelle project. *Isabelle/Isar Reference Manual: The Isabelle/Isar Framework*. Isabelle2026-RC0 documentation. | 通用框架、对象逻辑、结构化事实与证明方法。 |
-| [HOLFunctions] | Alexander Krauss / Isabelle project. *Isabelle function tutorial: Partiality and domain predicates*. official function-package tutorial. | HOL 全函数语义，以及部分函数处理中定义域谓词的作用。 |
-| [Mizar15] | Grzegorz Bancerek et al. *Mizar: State-of-the-Art and Beyond*. CICM 2015, LNCS 9150, pp. 261–279. | 数学惯用语、系统机制与隐式注册等设施。 |
-| [Wiedijk07] | Freek Wiedijk. *Mizar’s Soft Type System*. TPHOLs 2007, LNCS 4732, pp. 383–399. | 建立在无类型集合论之上的表达式分类及其软类型规则。 |
-| [MizarChecker] | Andrzej Trybulec; compiled by Freek Wiedijk. *CHECKER*. technical account. | 前提引用与基本 by 推理的机制说明，不作为当前版本性能数据。 |
-| [MizarApply] | Czesław Byliński / Mizar Mathematical Library. *Functions and Their Basic Properties: FUNCT_1:def 2*. library definition. | 普通 f.x 在定义域之外取值的精确定义。 |
-| [MizarGrammar] | Mizar project. *Mizar language: Justification*. official grammar. | 可省略的直接论证语法，避免声称每句都必须写 by。 |
-
-[Deductive84]: https://rg1-teaching.mpi-inf.mpg.de/old-ag2/logik-datenbanken/LogicAndDatabasesDeductiveApproach.pdf
-[MetamathDB]: https://us.metamath.org/
-[SMTTheory]: https://smt-lib.org/theories-Reals_Ints.shtml
-[ATPProcess]: https://tptp.org/UserDocs/TPTPWorldTutorial/ATPProcess.html
-[IsabelleGeneric]: https://www.isabelle.in.tum.de/overview.html
-[MMT]: https://www.kwarc.info/people/frabe/Research/mmt.pdf
-[Compare06]: https://www.cs.ru.nl/~freek/comparison/comparison.pdf
-[Lean21]: https://www.microsoft.com/en-us/research/publication/the-lean-4-theorem-prover-and-programming-language/
-[LeanElab]: https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/
-[LeanCoercions]: https://lean-lang.org/doc/reference/latest/Coercions/
-[RocqCore]: https://rocq-prover.org/doc/V9.1.0/refman/language/core/index.html
-[RocqElab]: https://rocq-prover.org/doc/V9.1.0/refman/language/extensions/compil-steps.html
-[RocqProof]: https://rocq-prover.org/doc/V9.1.0/refman/proofs/writing-proofs/proof-mode.html
-[RocqProgram]: https://rocq-prover.org/doc/V9.1.0/refman/addendum/program.html
-[Sozeau07]: https://sozeau.gitlabpages.inria.fr/www/research/publications/Subset_Coercions_in_Coq.pdf
-[SSReflect10]: https://jfr.unibo.it/article/view/1979
-[Isar99]: https://wwwbroy.in.tum.de/~wenzelm/papers/Isar-TPHOLs99.pdf
-[IsarRef]: https://isabelle.in.tum.de/website-Isabelle2026-RC0/dist/library/Doc/Isar_Ref/Framework.html
-[HOLFunctions]: https://www.isabelle.in.tum.de/library/Doc/Functions/Functions.html
-[Mizar15]: https://mizar.uwb.edu.pl/people/romat/mizar-cicm2015.pdf
-[Wiedijk07]: https://www.cs.ru.nl/~freek/mizar/miztype.pdf
-[MizarChecker]: https://www.cs.ru.nl/~freek/mizar/by.pdf
-[MizarApply]: https://mizar.uwb.edu.pl/version/current/html/funct_1.html
-[MizarGrammar]: https://mizar.uwb.edu.pl/language/pages/justification.html
+集合论背景参考包括 Terence Tao 的 *Analysis I*，以及郝兆宽、杨跃的《集合论：对无穷概念的探索》。这些书籍提供数学背景；当前实现使用的基础与假设见[信任边界](#trust-boundary)。
 
 <a id="appendix"></a>
 

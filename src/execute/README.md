@@ -241,7 +241,7 @@ overload `searched_proof`. When adding a result field, ask: can a human
 explain this step from the JSON, and can the Lean compiler map this field to
 a tactic without re-searching?
 
-Product prose: `docs/Litex_Blueprint.md` (Section 4). Compiler consumption:
+Compiler consumption:
 [`src/compile_to_lean/`](../compile_to_lean/). Agent constraint when reshaping
 types: `.cursor/skills/litex-pipeline-result-types/SKILL.md`.
 
@@ -415,7 +415,6 @@ intersection and product explicitly require a nonempty index set in WD,
 for named and anonymous families alike. Definition-unfold residuals keep
 `can_rewrite: false`; explicit chains retain their checked endpoints.
 
-
 ## One-step function-application unfold substitution
 
 [`search_equal_fact_by_fn_application_unfold_substitution.rs`](execute_fact_stmt/verify_atomic_fact/verify_equality/search_equal_fact_by_fn_application_unfold_substitution.rs)
@@ -559,7 +558,6 @@ integer ranges are enumerable; Cartesian-product domains are unsupported.
 success carries the source WD proof; a domain failure retains the typed WD
 result. Evaluation output is not stored as a mathematical fact.
 
-
 Atomic Direct search reads stored proofs, then tries pure closed evaluation and
 structural membership. The latter builds a typed carrier tree over smaller AST
 children with fixed raw-known/closed/intrinsic leaves; it cannot enter higher
@@ -674,12 +672,9 @@ All leaves inherit the caller's bounded premise state. Whole-fact WD precedes
 truth search and owns numeric domains, actual callable signatures and fold
 laws. These changes add no AST or runtime-state representation.
 
-See the source-owned acceptance record (historical task record; retired)
-and the original fifteen [proof-node capabilities](../../examples/proof_nodes/README.md).
-Cartesian reconstruction now consumes the complete set definition; its old
+See the original fifteen [proof-node capabilities](../../examples/proof_nodes/README.md). Cartesian reconstruction now consumes the complete set definition; its old
 constructor-shape leaf was removed, and its positive/negative and output/scope
-consumers remain in the same acceptance suite.
-The scoped consumer gates cover typed/Normal/Detailed and ten languages;
+consumers remain in the same acceptance suite. The scoped consumer gates cover typed/Normal/Detailed and ten languages;
 repository-wide publication and independent Lean replay remain separate gates.
 
 Function graph nonemptiness consumes checked complete-domain sources and
@@ -720,7 +715,6 @@ covers ordinary returns and literal, aliased and guarded empty domains. The
 negative manifest preserves nonempty return and undefined-body failures.
 
 Retired product operators fail at the object-WD entry before known WD memory is consulted. Their legacy by-definition WD producers have been removed. Legacy shape fact payloads fail at the predicate-signature stage before stored-fact/domain reuse; this keeps internal or stale payloads from bypassing parser retirement while their AST deletion awaits concrete approval. Ordinary coordinate beta, reconstruction and homogeneous carrier readers consume the actual member/equality/domain source and retain generic-call fallthrough.
-
 
 ## Additional trigonometric interval leaves (2026-10-06)
 
@@ -797,7 +791,6 @@ same carrier (including its recorded equality transport). This does not reopen
 search. Literal construction still checks all inner WD and pairwise distinctness.
 The complete finite-expectation declaration is a regression consumer.
 
-
 ## Checked expression membership composition
 
 The shared truth-only `search_membership_of_checked_object` routine derives
@@ -857,7 +850,6 @@ an explicit replay consumer exists. The three direct analysis tracers cover
 independent tests additionally check original explicit calls, false neighbours,
 permission ceilings, complete domains and failed-scope publication.
 
-
 ### Fixed native matrix equalities
 
 `verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_native_matrix_laws.rs`
@@ -884,7 +876,6 @@ Unimplemented expression or proof routes still require explicit refusal.
 The canonical `native_matrix_laws.lit` and focused Rust tests cover direct and
 reversed statements, unchanged explicit calls, false neighbours, missing
 conditions, empty dimensions, inherited ceilings and failed publication.
-
 
 ## Native commutative-ring equality normalization
 
@@ -976,7 +967,6 @@ Focused producer and compiler controls live under
 generated reading capture consume the same typed result; the compiler replays
 the selected property into existing proved Lean bridges, including a proved
 natural-vector-sum triangle bridge.
-
 
 ### Direct determinant formulas
 

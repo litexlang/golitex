@@ -28,12 +28,8 @@ needed for identity and peer comparison.
 
 ## Entry and search order
 
-The geo CPU stage diagnosis (historical task record; retired)
-measured ordinary stored-fact argument matching repeatedly entering graph-level
-alpha endpoint scans. The user subsequently approved removing that implicit
-discovery capability: Direct now compares the submitted pair by exact IR or
-structural alpha, follows exact stored equality paths, and returns a miss.
-Forall candidate alias discovery also follows exact stored edges without
+Direct compares the submitted pair by exact IR or
+structural alpha, follows exact stored equality paths, and returns a miss. Forall candidate alias discovery also follows exact stored edges without
 alpha-anchoring unrelated classes. Nested binders in the submitted pair remain
 supported by the existing structural comparison; no Obj metadata field is added.
 
@@ -43,11 +39,7 @@ theorem instantiation, not an alpha-search switch; no new alpha strategy is
 introduced. The existing Strategy-level peer comparison retains its ceiling
 and can compare reachable class members locally. The new
 [tracer](../../../../../examples/proof_nodes/equal/by_they_are_the_same/local_alpha_without_graph_scan.lit)
-and regression sources are added but **not run**, as requested by the user.
-The implementation note (historical task record; retired)
-records the reduced Direct capability and distinguishes historical diagnostic
-timings from this untested implementation.
-
+and associated regression sources are provided. This section does not report a completed run of those tests.
 
 Known forall equality conclusions are compiled when recorded into the
 scope-owned `ForallEqualityIndex`. Its trie distinguishes nested leaf
@@ -340,7 +332,6 @@ evidence. The maintained tracers are `examples/proof_nodes/equal/by_builtin_rule
 The [verification record](verification.md) gives the exact baseline, measured
 coverage, remaining failures, and current CLI/harness limitations.
 
-
 ## Exact numeric and periodic leaves
 
 `rational_expression::exact_rational` owns checked signed integer powers and
@@ -399,8 +390,6 @@ evaluation. See `tests/unit/execute/closed_exact_elementary_calculation/tests.rs
 and the four `closed_*_calculation.lit` tracers.
 
 Power-set membership now has a local known-subset route: both fixed subset arguments are the already checked membership element and PowerSet base. `PowerSetMembershipSubsetProof::KnownSubset` retains the queried subset and the existing read-only cite/argument-identity proofs. `VerifiedSubset` keeps the former independent successful verifier route and unchanged premise ceiling. This does not change raw known lookup, atomic WD, caching, publication or search permissions. The maintained tracer is `examples/proof_nodes/atomic/by_builtin_rule/in_power_set_from_restricted_image.lit`.
-
-Focused alpha-reuse acceptance: 2026-10-08 receipt (historical task record; retired) records the equality-family tests, strict aggregate premise tracer, assumption-replay boundary and executable documentation gate.
 
 ### Parent-checked template beta
 

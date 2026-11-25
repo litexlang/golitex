@@ -4,7 +4,7 @@ Mathematical examples and the phase-oriented acceptance tree for the current
 Litex pipeline (`src/`).
 
 [Definitions and proofs](proof_search/README.md) pairs an offline interactive
-diagram with editable journal-style figures: a checked object declaration builds
+diagram with editable verification figures: a checked object declaration builds
 the context, then staged proof search uses it to verify a new fact.
 
 [From checked evidence to Lean](lean_compilation/README.md) follows a real
@@ -41,7 +41,6 @@ examples/
   topology/separation_compactness/ separation axioms and general finite-subcover compactness
   agent_session_demo/    Python driver for persistent-Session authoring
   knowledge_base/       persist / restore goldens
-  litex_vs_lean_speed/  Litex / Lean checking-time comparisons and harness
   _internal/            fixtures / drafts / non-public regressions
   *.lit                focused standalone regressions
 ```

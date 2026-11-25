@@ -14,11 +14,11 @@ the maintained public plane-geometry library in
 The published subject files and their configured modules have passed strict
 verification on the same release binary used for the dated checks in their
 READMEs. The geometry module was checked through its complete file and actual
-standalone module entry. Lean analogies are outside these Litex verification
+standalone module entry. handwritten Lean examples are outside these Litex verification
 results.
 
 The current public Litex sources contain no direct `trust` or global axioms.
-Each module README states its verification boundary; Lean analogies are
+Each module README states its verification boundary; handwritten Lean examples are
 separate comparison artifacts.
 
 Use `release thm name(args)` for theorem instances in this collection.
@@ -32,7 +32,7 @@ The usual project artifacts are:
 - `litex.config`: the standalone module entry;
 - `README.md`: scope, run command, and trust boundary;
 - `math_collections.md`: the concept/interface inventory; and
-- `same_math_in_lean.lean`, when provided: a separate handwritten Lean analogy.
+- `same_math_in_lean.lean`, when provided: a separate handwritten handwritten Lean example.
 
 | No. | Project | Main line / flagship |
 | ---: | --- | --- |
@@ -68,7 +68,7 @@ contexts are expressed as predicates with explicit theorem premises during
 this migration; structs are for values that must be constructed,
 stored, passed, compared, or returned.
 
-Active Litex sources contain no direct `trust` or global axioms. Lean analogies state
+Active Litex sources contain no direct `trust` or global axioms. handwritten Lean examples state
 missing mathematics as explicit structure fields or theorem hypotheses;
 analytic comparisons may use the repository's Mathlib environment for
 standard objects such as real series.

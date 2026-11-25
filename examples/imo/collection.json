@@ -22,8 +22,7 @@
       "source_sha256": {
         "inequalities/imo_1983_p6.lit": "8466d930f10af1cf3cb0ae07838ec7d24bea73b513d499939785867413443551"
       },
-      "verification_status": "pass",
-      "historical_evidence": "inequalities/verification-2026-10-11.json"
+      "verification_status": "pass"
     },
     {
       "id": "imo_1995_p2",
@@ -44,8 +43,7 @@
       "source_sha256": {
         "inequalities/imo_1995_p2.lit": "cdb75693e7a8eef6270b5299fbffa6aa9aa37c863e1cb071f52c1403fdaf71ef"
       },
-      "verification_status": "pass",
-      "historical_evidence": "inequalities/verification-2026-10-11.json"
+      "verification_status": "pass"
     },
     {
       "id": "imo_2001_p2",
@@ -66,8 +64,7 @@
       "source_sha256": {
         "inequalities/imo_2001_p2.lit": "ac21d7379d1feefdc1e612c36e330b4de08e05f5815158f848d79b478b36cf41"
       },
-      "verification_status": "pass",
-      "historical_evidence": "inequalities/verification-2026-10-11.json"
+      "verification_status": "pass"
     },
     {
       "id": "imo_2005_p3",
@@ -88,8 +85,7 @@
       "source_sha256": {
         "inequalities/imo_2005_p3.lit": "ef1a997fc6351211ebd97d15673d703f7bae5b33a56748736bf51fae8c40d0e4"
       },
-      "verification_status": "pass",
-      "historical_evidence": "inequalities/verification-2026-10-11.json"
+      "verification_status": "pass"
     },
     {
       "id": "imo_2006_p3",
@@ -110,8 +106,7 @@
       "source_sha256": {
         "inequalities/imo_2006_p3.lit": "15b4ca5f265cce1f0430a3245c240909e97c1100913dfae3ac7580cd9146d9cc"
       },
-      "verification_status": "pass",
-      "historical_evidence": "inequalities/verification-2026-10-11.json"
+      "verification_status": "pass"
     },
     {
       "id": "imo_1960_p3",
@@ -143,8 +138,7 @@
         "geometry/imo_1960_p3/Solution-1/theorem.lit": "18a1fa9336b75fd7ffb4c5e4b03af6eafa9aa5b00dff4722f5d6eb80dcb5866b",
         "geometry/imo_1960_p3/Solution-1/litex.config": "94378a1e561836d0bcc65ca868f4fed8c5f691f42242e892472d2ed6d7c6edad"
       },
-      "verification_status": "pass",
-      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+      "verification_status": "pass"
     },
     {
       "id": "imo_1960_p3",
@@ -176,8 +170,7 @@
         "geometry/imo_1960_p3/Solution-2/theorem.lit": "55cb439397732f43db258b042f996e34361203f66c5cc5667b6c1daafb7560e4",
         "geometry/imo_1960_p3/Solution-2/litex.config": "94378a1e561836d0bcc65ca868f4fed8c5f691f42242e892472d2ed6d7c6edad"
       },
-      "verification_status": "not_rerun",
-      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+      "verification_status": "not_rerun"
     },
     {
       "id": "imo_1960_p6",
@@ -209,8 +202,7 @@
         "geometry/imo_1960_p6/Solution-1/theorem.lit": "3d10eb0a01d057d86c1d9cbe186eda297eb84a93d33a92c98610518b967d3a1e",
         "geometry/imo_1960_p6/Solution-1/litex.config": "6454662734f05f7f1d405435178d3f49f0c87e1221fc1334d740b52611772b35"
       },
-      "verification_status": "not_rerun",
-      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+      "verification_status": "not_rerun"
     },
     {
       "id": "imo_1960_p6",
@@ -240,8 +232,7 @@
         "geometry/imo_1960_p6/Solution-2/theorem.lit": "6c67575458c46ba03256563381e336c1a21703fb07fcbee9840fd98233fc9961",
         "geometry/imo_1960_p6/Solution-2/litex.config": "af950d2f4aaec298fc37e59949079f80fa0bee8b02f11f182fcc217ae0126a9e"
       },
-      "verification_status": "not_rerun",
-      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+      "verification_status": "not_rerun"
     },
     {
       "id": "imo_1961_p4",
@@ -267,8 +258,7 @@
         "geometry/imo_1961_p4/solution.lit": "e9772a94c7ad23eef9b729c472bb190058b2dae0475e70c781cdbe5d692aa392",
         "geometry/imo_1961_p4/litex.config": "8079085630fc31203913aff020235e35d41600f199a42f67bdf20f9b1aa8cd2d"
       },
-      "verification_status": "not_rerun",
-      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+      "verification_status": "not_rerun"
     },
     {
       "id": "imo_1961_p5",
@@ -294,8 +284,7 @@
         "geometry/imo_1961_p5/solution.lit": "dbb06c9f32aae116337c7167a8e2b6e8d9e5f6889041d5e6545e8a81313585d3",
         "geometry/imo_1961_p5/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
       },
-      "verification_status": "not_rerun",
-      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+      "verification_status": "not_rerun"
     },
     {
       "id": "imo_1962_p6",
@@ -321,8 +310,7 @@
         "geometry/imo_1962_p6/Solution-1/solution.lit": "abeae52d0e44b8584dfc53f3d81f5c09b9d78cdca99c8d3b0c710308174a67d5",
         "geometry/imo_1962_p6/Solution-1/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
       },
-      "verification_status": "not_rerun",
-      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+      "verification_status": "not_rerun"
     },
     {
       "id": "imo_1962_p6",
@@ -348,8 +336,7 @@
         "geometry/imo_1962_p6/Solution-2/solution.lit": "0cf1d4eee1031adbd86a1e7142390baabe4807db295c40db3063c373c91f585c",
         "geometry/imo_1962_p6/Solution-2/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
       },
-      "verification_status": "not_rerun",
-      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+      "verification_status": "not_rerun"
     },
     {
       "id": "imo_1963_p3",
@@ -375,8 +362,7 @@
         "geometry/imo_1963_p3/solution.lit": "30eb64d4da13b8073af4922ee5bae64d5572578f142b2f3652e37b8b054d2520",
         "geometry/imo_1963_p3/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
       },
-      "verification_status": "not_rerun",
-      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+      "verification_status": "not_rerun"
     },
     {
       "id": "imo_1966_p6",
@@ -402,8 +388,7 @@
         "geometry/imo_1966_p6/solution.lit": "5aafe004109c25a1eae78e2338f1bc6926659c7a5012930582e36a39632caa18",
         "geometry/imo_1966_p6/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
       },
-      "verification_status": "pass",
-      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+      "verification_status": "pass"
     },
     {
       "id": "imo_1967_p1",
@@ -429,8 +414,7 @@
         "geometry/imo_1967_p1/solution.lit": "18a4d4e136b829437c91c082089b8e9abe463bc192d6aa3799b088467d7ee87e",
         "geometry/imo_1967_p1/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
       },
-      "verification_status": "not_rerun",
-      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+      "verification_status": "not_rerun"
     },
     {
       "id": "imo_1968_p1",
@@ -456,8 +440,7 @@
         "geometry/imo_1968_p1/solution.lit": "037953d95d3095fdf61d9f4d20b153568d2527f316bd77da81d9bc4c6e72fdc1",
         "geometry/imo_1968_p1/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
       },
-      "verification_status": "not_rerun",
-      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+      "verification_status": "not_rerun"
     },
     {
       "id": "imo_1969_p4",
@@ -483,8 +466,7 @@
         "geometry/imo_1969_p4/solution.lit": "838f12230f11f8b2cbc2ef69c6a364565a1c520fef12422fd69372685e08a463",
         "geometry/imo_1969_p4/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
       },
-      "verification_status": "not_rerun",
-      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+      "verification_status": "not_rerun"
     },
     {
       "id": "imo_1970_p1",
@@ -510,8 +492,7 @@
         "geometry/imo_1970_p1/solution.lit": "1bddd924a569031bab16813788d1d55951f4680ab9e53d918f1bec4797ba914f",
         "geometry/imo_1970_p1/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
       },
-      "verification_status": "not_rerun",
-      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+      "verification_status": "not_rerun"
     },
     {
       "id": "imo_1970_p6",
@@ -537,8 +518,7 @@
         "geometry/imo_1970_p6/solution.lit": "0dab2aa414baaa2918fc47b8c9d59bc62098be1b3fad7a9f43108854954e4a8e",
         "geometry/imo_1970_p6/litex.config": "451d6fece213e27da7833478612dc97389483cb59a4f317318f302040a3218c6"
       },
-      "verification_status": "not_rerun",
-      "historical_evidence": "../../showcases/verification_runs/2026-10-14-showcase-repair.md"
+      "verification_status": "not_rerun"
     },
     {
       "id": "imo_1972_p5",

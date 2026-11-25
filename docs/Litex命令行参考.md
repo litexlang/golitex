@@ -12,7 +12,7 @@
 
 Markdown 源码：https://github.com/litexlang/golitex/blob/main/docs/cli.md
 
-> **Litex 是一个仍处于 beta 阶段的实验性业余项目，使用中可能遇到不完善之处。**
+> **Litex 目前处于 beta 阶段。接口与覆盖范围以当前版本的文档为准。**
 
 <a id="before-you-start"></a>
 

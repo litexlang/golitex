@@ -44,8 +44,6 @@ target/release/litex -strict -lean -f lean/examples/one_equals_itself/statement.
 The second command writes Lean source to stdout. Generating that source and
 checking it with the Lean kernel are separate steps.
 
-The [proof-command checkpoint](Litex_To_Lean_Proof_Commands.md) adds paired examples for compound contradiction, set/function extensionality, strong induction, finite enumeration and midpoint geometry. It records the checked scope and each adapter's current domain boundaries.
-
 ## Explore the example collection
 
 For the shortest complete source/generated/Adapter/Final walkthrough, start
@@ -2187,8 +2185,3 @@ then follow the [rational inverse-map walkthrough](#two-rational-maps-from-defin
 Each example directory in the table contains its `.lit` source beside the
 actual generated `.lean`. Browse the [full source/generated collection](../lean/examples/)
 to see how these capabilities combine into proofs that Lean can consume.
-
-The [coverage plan](Litex_To_Lean_Coverage_Plan.md) inventories the remaining
-statement, object and builtin-rule routes as of 2026-10-23 and groups them into
-implementation phases. Its counts describe compiler entrypoints and planned
-work; the examples above provide the checked mathematical coverage.

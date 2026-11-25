@@ -90,7 +90,7 @@ via unions of rectangles. The notes do not yet construct a general
 `TopologicalSpace` whose opens are exactly the product opens of arbitrary
 factors; they verify discrete and indiscrete grids on
 `cart({0,1},{0,1})` and prove that a product of two trivial-open spaces is
-connected. A full product-topology constructor remains future work.
+connected. A full product-topology constructor is not provided by this module.
 
 ## Compact Hausdorff packaging
 

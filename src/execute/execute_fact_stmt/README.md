@@ -271,8 +271,7 @@ lookup sees the current environment again, with no persistent cache or new
 proof-search route.
 Detailed output retains `by_closed_calculation` and exact values, rather than
 labelling computed proofs as citations or builtin rules.
-See the [verification receipt](builtin_entry_verification.md) and
-[Direct tracer](../../../examples/proof_nodes/equal/direct_closed_calculation.lit).
+See the [Direct tracer](../../../examples/proof_nodes/equal/direct_closed_calculation.lit).
 Remaining composition and geo failures are tracked separately.
 No independent strategy/deep depth budget remains.
 

@@ -17,13 +17,12 @@ argument, concrete examples and exercises with answers.
 
 ## Mathematical lecture notes
 
-A lecture develops a small mathematical world: definitions lead to examples,
-lemmas and a few central theorems. Inspiration from a book does not make a
-lecture a chapter-by-chapter adaptation.
+Each lecture introduces definitions, examples, lemmas and selected theorems.
+The scope column identifies the included material.
 
 | Collection | Mathematical progression | Scope |
 | --- | --- | --- |
-| [Linear Algebra in Litex](linear_algebra/README.md) | Coordinate operations → vector spaces and subspaces → span, bases and unique coordinates | Selected lectures inspired by Axler's *Linear Algebra Done Right*, using the real plane. |
+| [Linear Algebra in Litex](linear_algebra/README.md) | Coordinate operations → vector spaces and subspaces → span, bases and unique coordinates | Selected linear-algebra lectures using the real plane; background reference: Axler's *Linear Algebra Done Right*. |
 | [From derivatives to definite integrals](analysis/calculus/README.md) | Point derivatives → antiderivatives → Newton–Leibniz → substitution and integration by parts | A standalone strict calculus lecture using native analysis interfaces; separate from the Tao chapter adaptation. |
 | [Topology in Litex](topology/README.md) | Open and closed sets → continuous maps → homeomorphisms | Two chapters with discrete and indiscrete two-point spaces, continuous composition and the closed-preimage criterion. |
 | [Abstract Algebra in Litex](abstract_algebra/README.md) | Groups and subgroups → homomorphisms → kernels and injectivity | Two chapters on group theory, using integer addition, multiples, doubling and the zero map. |

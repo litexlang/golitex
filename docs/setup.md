@@ -1,6 +1,6 @@
 # Set Up Litex
 
-Litex is an experimental hobby project in beta. Expect rough edges.
+Litex is beta software. Interfaces and coverage are described for the current version.
 
 To try Litex without installing anything, use the
 [online playground](https://litexlang.com).

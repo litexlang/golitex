@@ -7,9 +7,8 @@ book, all exercises, or Chapters 9–11.
 
 The separate [calculus companion](calculus/README.md) now demonstrates native
 point derivatives, antiderivatives, Newton–Leibniz, nonmonotone substitution
-and integration by parts. Its own manifest and strict
-[2026-10-24 receipt](../verification_runs/2026-10-24-native-calculus.json)
-cover that module only. It adds no source trust or chapter assumptions and
+and integration by parts. Its manifest and documented strict check cover that
+module only. It adds no source trust or chapter assumptions and
 does not certify a translation of Chapters 9–11. Native derivatives require
 interior points; the book's relative-domain and endpoint derivatives have a
 wider meaning.
@@ -19,10 +18,7 @@ wider meaning.
 The selected development includes natural-number induction, maps and finite
 cardinality, rational and real-number interfaces, sequence limits, series
 convergence tests, countable unions, Cantor's power-set argument and product
-representations. The ten selected mainline targets were completed in the
-original verified inputs. Two comment-only introduction exports have since
-been removed, leaving eight executable mainline targets. The public copies preserve all their executable
-code, including the following results:
+representations. The public sources include the following results:
 
 - Chapter 5: `zero_positive_fractional_power`.
 - Chapter 6: `positive_base_power_preserves_sequence_limit`.
@@ -33,19 +29,17 @@ code, including the following results:
 
 ## Omitted for space
 
-Eighteen earlier direct-trust sites belonged to branches deliberately removed
-from the selection. Of 65 earlier sites, 47 were replaced by proofs and 18
-removed with these branches, leaving zero active direct trusts. Their removal
-is scope reduction, not proof completion:
+The following branches are outside this selection. Their omission is not a
+proof of the omitted statements.
 
-| Omitted branch | Earlier direct-trust sites |
-| --- | ---: |
-| Finite integer shift variant | 1 |
-| Ratio-limit-one implies root-limit-one extension/example | 1 |
-| Set-indexed sums, cofinality, finite support, zero extension and operations | 9 |
-| Conditional positive/negative subseries and Riemann rearrangement construction | 2 |
-| Decimal proof of real uncountability | 1 |
-| Finite total order, good-chain and advanced order/Zorn branch | 4 |
+| Omitted branch |
+| --- |
+| Finite integer shift variant |
+| Ratio-limit-one implies root-limit-one extension/example |
+| Set-indexed sums, cofinality, finite support, zero extension and operations |
+| Conditional positive/negative subseries and Riemann rearrangement construction |
+| Decimal proof of real uncountability |
+| Finite total order, good-chain and advanced order/Zorn branch |
 
 The independent Cantor power-set argument is included. Decimal-series proof
 fragments are not presented as completed results. Chapters 9–11 and examples
@@ -89,9 +83,3 @@ The earlier small-example receipt is retained as
 Its strict result applies to that dated four-export selection, which includes
 a separate public sequence-limit dependency; it does not certify the current
 chapter exports.
-
-The [2026-10-14 repair receipt](../verification_runs/2026-10-14-showcase-repair.md)
-records fresh ordinary acceptance of all eleven current exports, plus a strict
-check of the three small examples with their explicit map dependency. The
-finite-product proof now supplies explicit carrier and predicate projections;
-its two original theorem goal blocks remain unchanged.

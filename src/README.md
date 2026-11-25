@@ -115,86 +115,19 @@ Once the central model is clear, choose the component matching your question:
 | How do files and modules share knowledge? | [LitexConfig](module_manager/litex_config.rs), [GlobalModuleManager](module_manager/global_module_manager.rs), [ExportFileAndItsExecEnv](module_manager/export_file.rs) | [run_file_with_config](run_module/run_file_with_config.rs), [run_import_module](run_module/run_import_module.rs); [run_module guide](run_module/README.md) and [module manager guide](module_manager/README.md). Each completed export retains its own environment. |
 | How are quantified facts instantiated? | [TypedParameterList](ast/param.rs), [BoundName](ast/names.rs), [Fact](ast/fact/fact.rs) | [instantiate/](instantiate/), plus [known-forall search](execute/execute_fact_stmt/verify_atomic_fact/search_proof_by_known_forall_fact.rs). |
 | How do results become explanations? | `RunLitexCodeResult`, `ExecStmtResult`, `VerifyFactResult` | [json_output/emit.rs](json_output/emit.rs): `emit_run_normal`, `emit_run_detailed`; [JSON guide](json_output/README.md). |
-| How does interactive textbook reading work? | Versioned reading JSON: actual typed evidence, scoped facts, inference outputs, symbol identities and source ranges | [Reading subsystem](reading/README.md), [integration guide](../docs/reading.md) and [design](reading/DESIGN.md). `-reading` provides local import/preview, JSON and static export; the same viewer mounts in a website or iframe. |
+| How does interactive textbook reading work? | Versioned reading JSON: actual typed evidence, scoped facts, inference outputs, symbol identities and source ranges | [Reading subsystem](reading/README.md) and [host example](../examples/reading/website/README.md). `-reading` provides local import/preview, JSON and static export; the same viewer mounts in a website or iframe. |
 | How are supported proofs replayed into Lean? | The same typed results, retained environments and cited IDs | [LitexToLeanCompiler](compile_to_lean/litex_to_lean_compiler.rs): `compile_run`; [compiler guide](compile_to_lean/README.md). Generation and independent Lean checking are separate steps, and replay supports a bounded subset. |
 | How is mathematical source exported to LaTeX? | Parsed `Stmt`, `Fact` and `Obj` | [compile_to_latex/source.rs](compile_to_latex/source.rs): `to_latex`; [LaTeX guide](compile_to_latex/README.md). This path renders parsed source without verifying it. |
 | How are computational fragments extracted? | [extract_executable_code/program.rs](extract_executable_code/program.rs) | [source_extraction.rs](extract_executable_code/source_extraction.rs): `extract_code_from_source`; [extraction guide](extract_executable_code/README.md). |
 | How is checked module knowledge persisted? | [knowledge_base/](knowledge_base/) codecs for definitions and facts | [knowledge-base guide](knowledge_base/README.md), especially its import/cache compatibility boundary. |
 
-## Points that look like bugs but are not
+## Validation boundary
 
-The kernel contains deliberate defenses that are easy to misread as defects.
-Each row below names the suspicious behavior, the mechanism that makes it
-intentional, and the file holding the actual code. The one genuine gap is
-called out at the end.
-
-### Identity and naming
-
-| Looks suspicious | Why it is not a bug | Where |
-| --- | --- | --- |
-| `ir()` once collapsed `(a^b)^c` and `a^(b^c)` (and `-(a^b)` vs `(-a)^b`, `(a%b)%c` vs `a%(b%c)`) | `fmt_obj` now fully parenthesizes every arithmetic constructor, so `ir()` is injective by construction. | [display_and_ir/obj.rs](display_and_ir/obj.rs) |
-| `Number(-5).ir()` equals `Neg(5).ir()` (both `"(-5)"`) | Intentional normalization: a generated negative literal and a parsed unary minus denote the same number. | [display_and_ir/obj.rs](display_and_ir/obj.rs) |
-| Same-name binders are rejected instead of shadowed | A parse-time occupy fence forbids nested/shadowing reuse; this is deliberate, not an oversight. | [identifier_identity.md](identifier_identity.md) |
-| A name-identical but id-different binder is rejected on lookup | `stored_identifier_definition_visible` compares `IdentifierId`, so a local same-name binder never captures an outer binding. | [execute/env_stack_lookup.rs](execute/env_stack_lookup.rs) |
-| The same name may reappear in sibling scopes | Each binding gets a fresh monotonic `IdentifierId`; identity is id-based, not spelling-based. | [runtime/runtime_ids.rs](runtime/runtime_ids.rs) |
-| Merging a child env that re-defines a name raises `InternalBug` | Defense in depth: the parse fence makes the collision unreachable on the success path. | [exec_env/merge_exec_env.rs](exec_env/merge_exec_env.rs) |
-| Generated Lean names (`h_N`, `_object_iN`, `_value_iN`, `_Host_iN`) look collision-prone | All names are derived from distinct `FactId`/`IdentifierId` with separated prefixes; user source names never enter the Lean namespace. | [compile_to_lean/names.rs](compile_to_lean/names.rs) |
-
-### Free parameters and substitution
-
-| Looks suspicious | Why it is not a bug | Where |
-| --- | --- | --- |
-| A rigid subterm demands whole-value equality before constructor descent | `free.is_disjoint(param_set)` routes param-free patterns to strict equality first; only free params may bind. | [match_forall_conclusion_args.rs](execute/execute_fact_stmt/verify_atomic_fact/match_forall_conclusion_args.rs) |
-| Substitution removes a binder from the map before entering its body | `shadow_binder_ids` implements capture avoidance; unique ids make it safe. | [instantiate/capture.rs](instantiate/capture.rs) |
-| Builder/function signature matching rejects a substitution that mentions a local binder | The closing `subst.values()` check blocks local-binder capture. | [match_forall_conclusion_args.rs](execute/execute_fact_stmt/verify_atomic_fact/match_forall_conclusion_args.rs) |
-| Dom-only middle parameters are completed by scanning known atomics | `complete_forall_subst_with_equality` requires each round to add bindings (`trial.len() > subst.len()`), so it cannot invent witnesses. | [match_forall_conclusion_args.rs](execute/execute_fact_stmt/verify_atomic_fact/match_forall_conclusion_args.rs) |
-| A parameter bound twice may fail even if each side alone matches | `try_bind_forall_param`'s rebound branch requires the previous binding to equal the new one. | [match_forall_conclusion_args.rs](execute/execute_fact_stmt/verify_atomic_fact/match_forall_conclusion_args.rs) |
-
-### Indexes and lookup
-
-| Looks suspicious | Why it is not a bug | Where |
-| --- | --- | --- |
-| Shape-only index keys omit arguments and look "too coarse" | Keys only bucket candidates; the real match is a separate full alpha-equality / parameter match. | [or_fact_index_key.rs](exec_env/or_fact_index_key.rs), [exist_shaped_fact_index_key.rs](exec_env/exist_shaped_fact_index_key.rs), [forall_conclusion_index_key.rs](exec_env/forall_conclusion_index_key.rs) |
-| Equivalence classes are keyed by `ObjIR` | Safe because `ir()` is injective; the generating `EqualFact`s remain in `facts_by_id` for evidence. | [known_fact_memory.rs](exec_env/known_fact_memory.rs) |
-| `known_closed_numeric_equal` indexes only when exactly one side is closed | Both-closed and neither-closed equalities are deliberately skipped to avoid wrong representatives. | [known_fact_memory.rs](exec_env/known_fact_memory.rs) |
-| `predicates_share_visible_definition` uses `std::ptr::eq` | Identity belongs to the visible declaration object, never to a printed name or equal clauses. | [env_stack_lookup.rs](execute/env_stack_lookup.rs) |
-| A qualified name can fall back to the live stack | `lookup_named_definition` checks the finished export first and only falls back while that exact source is live. | [env_stack_lookup.rs](execute/env_stack_lookup.rs) |
-
-### Alpha-equality
-
-| Looks suspicious | Why it is not a bug | Where |
-| --- | --- | --- |
-| A free identifier never matches a bound identifier | `plain_ids_alpha_equal` requires exact id equality plus `map.values()` exclusion. | [by_they_are_the_same/helper.rs](execute/execute_fact_stmt/verify_atomic_fact/verify_equality/by_they_are_the_same/helper.rs) |
-| Alpha-equality rejects two binders with the same target id | `extend_binder_map` refuses shadowed binders; incomplete, but never unsound. | [by_they_are_the_same/helper.rs](execute/execute_fact_stmt/verify_atomic_fact/verify_equality/by_they_are_the_same/helper.rs) |
-
-### Numeric normalization
-
-| Looks suspicious | Why it is not a bug | Where |
-| --- | --- | --- |
-| `-0` becomes `0`, `5.0` becomes `5` | `normalize_decimal_number_string` produces one canonical spelling per value. | [rational_expression/decimal_arithmetic.rs](rational_expression/decimal_arithmetic.rs) |
-| Negative `mod`/`quot`/`floor`/`ceil` look arbitrary | They use the floor convention, applied consistently across evaluation and order rules. | [rational_expression/decimal_arithmetic.rs](rational_expression/decimal_arithmetic.rs) |
-| `0^0 = 1` | The natural-power convention used by the power-law rules. | [by_power_laws.rs](execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_power_laws.rs) |
-
-### Execution boundary and merge
-
-| Looks suspicious | Why it is not a bug | Where |
-| --- | --- | --- |
-| A failed statement might pollute the session | Each statement runs in a temp child env; only success merges it into the parent. | [exec_stmt.rs](execute/exec_stmt.rs), [merge_exec_env.rs](exec_env/merge_exec_env.rs) |
-| `session_view` could be copied into child scopes | It is never merged; only the file-level env owns it. | [merge_exec_env.rs](exec_env/merge_exec_env.rs) |
-
-### Lean compiler
-
-| Looks suspicious | Why it is not a bug | Where |
-| --- | --- | --- |
-| Many proof routes return `LeanCompileError::unsupported` | The compiler is deliberately conservative: it fails instead of emitting Lean it cannot justify (incomplete, not unsound). | [compile_to_lean/](compile_to_lean/) |
-| Compiled output seems to trust the result tree | `validate_statement_capture` / `instantiated_object_matches` reject any source-vs-result mismatch before emission. | [compile_to_lean/helper.rs](compile_to_lean/helper.rs) |
-
-### Known genuine gap
-
-- Generated Lean is compared as text against golden files in `cargo test`; it is
-  **not** type-checked against the Lean kernel there. Lean-kernel acceptance is a
-  separate Mathlib + `lake` step. See
-  [tests/unit/run/lean_command/README.md](../tests/unit/run/lean_command/README.md).
+Text comparisons of generated Lean files are separate from Lean type checking.
+Use the [Lean command tests](../tests/unit/run/lean_command/README.md) to identify
+which checks generate source and which invoke Lean. The
+[compiler guide](../docs/Litex_To_Lean_Compiler_Guide.md) describes supported
+proof routes and rejection boundaries.
 
 [lib.rs](lib.rs) lists the wired Rust modules. When a type, dispatcher or
 component ownership changes, update its row here alongside the owning

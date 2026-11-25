@@ -138,6 +138,3 @@ The earlier small [induction](naturals.lit), [map](maps.lit) and
 Their [dated strict receipt](selected-examples-verification.json) covers the
 previous small-example selection, not the current chapter manifest.
 For Litex usage, see the [CLI documentation](../../docs/cli.md).
-
-The [2026-10-14 source repair and fresh CLI acceptance](../verification_runs/2026-10-14-showcase-repair.md)
-records the current module check and per-file repair evidence.

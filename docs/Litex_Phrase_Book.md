@@ -125,27 +125,3 @@ claim:
 This combines familiar mathematical actions: specify a variable's domain, state existence, and give a concrete construction. The existential proposition specifies what is required; `witness` supplies an object satisfying the conditions.
 
 The witness may depend on the current x. Replacing “for every x, there is a y” with “there is a y that works for every x” changes the mathematical meaning. A completed local proof exports its goal fact; its internal variables do not become global names.
-
-## Coverage and expansion
-
-The phrasebook has three layers. Readers can learn common expressions first, then consult the complete language as needed.
-
-| Layer | Content | Organization |
-| --- | --- | --- |
-| Core patterns | Introduction and naming, facts and conditions, quantifiers, definitions, local proofs, and common proof actions | Use the entry format above, with correspondence examples and composition links |
-| Complete language index | Other constructions, structs and templates, recursion, extensionality, reuse, modules, and related features | Map public constructs to entries, including their conditions and boundaries |
-| Mathematical vocabulary | Number sets, set and function operations, domain concepts, and library interfaces | Explain mathematical meanings and conditions of use while reusing familiar patterns |
-
-The size of the core is a teaching choice, not a substitute for checking complete coverage. Maintain the full index against the current Manual's [statement dictionary](Manual.md#statement-dictionary), [fact shapes](Manual.md#factual-statements), [object dictionary](Manual.md#object-dictionary), and [module documentation](Manual.md#project-organization).
-
-Composition must follow the actual grammar. For example, the condition bodies of existential facts and set builders cannot directly contain arbitrary universal quantification; name the condition with a concrete `prop` when needed. Explain such boundaries where readers encounter the combination, so they do not assume that all patterns can be nested arbitrarily.
-
-Prioritize further entries on extracting witnesses, unique existence, case analysis, contradiction, induction, set and function equality, and named theorems and their use. Then complete the language index.
-
-## Evaluating the phrasebook
-
-The main goal is to reduce the extra effort needed to express known mathematics correctly in Litex. Evaluate it with beginners who have the required mathematical background, using unfamiliar tasks. Record time to the first correct translation, lookups, revisions, hints, and semantic errors.
-
-Check separately whether readers understand the core patterns, can find other language constructs, and can combine learned patterns into new correct statements and proofs. Semantic correctness needs review; program acceptance alone is insufficient. Learning times and accuracy require actual experiments. The current examples do not establish learning outcomes or coverage of all mathematics.
-
-For precise syntax, see the [Manual](Manual.md). For everyday authoring, see the [Learner Cheatsheet](Litex_Learner_Cheatsheet.md). When checking and revising code incrementally, follow the persistent Session workflow in the [Agent Guide](AgentGuide.md).

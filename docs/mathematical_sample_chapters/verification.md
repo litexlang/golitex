@@ -33,11 +33,6 @@ sources. They are covered by those sources' gates rather than being run with
 their required definitions missing. Relative links and the geometry figure's
 target are checked separately.
 
-The [machine-readable acceptance record](../../showcases/verification_runs/2026-10-24-mathematical-sample-chapters.json)
-contains binary and source SHA-256 values, exact commands, process results,
-snippet hashes, excerpt locations and the link audit. It also preserves the
-initial linear-algebra naming failure and the final repair evidence.
-
 ## Mathematical and checking boundaries
 
 The chapters' selected source files contain no active user `trust`, `axiom`
@@ -55,15 +50,6 @@ certificate, finite probability data, relational sequence convergence and
 real coordinate geometry. General certificate existence, a general event
 probability space and a synthetic construction foundation are outside these
 interfaces.
-
-The only mathematical-source edit is a bound-variable rename in eight
-linear-algebra declarations. The newly reserved matrix name `trace` had
-conflicted with a local partial-sum name. It is now `partial_sums`; the
-statements and proofs are unchanged modulo that renaming. The accepted prefix
-was retained in one Session, and the changed declarations and their
-intervening dependencies were checked there before materialization. The
-complete source then passed a fresh strict gate. No kernel, AST or
-environment implementation was changed by this task.
 
 ## Rechecking the material
 

@@ -4,8 +4,8 @@ A compact onboarding text for an agent that must write Litex. It is meant to be
 read once, as a file, instead of loading `Manual.md` or `Learn_Litex.md` into the
 conversation.
 
-Use it with [Agent Prompt Authoring](Agent_Prompt_Authoring.md), which explains
-the layout, the incremental checking loop and the measured effects. Every
+Use it with the [Agent Guide](AgentGuide.md), which explains the persistent
+Session and incremental checking loop. Every
 executable snippet below is self-contained. The Facts and Moves galleries are
 schematic syntax references; their names and placeholders need a caller's context.
 
